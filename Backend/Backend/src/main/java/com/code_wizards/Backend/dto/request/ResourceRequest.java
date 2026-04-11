@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalTime;
-
+//DTO for incoming resource data (create/update)
 public class ResourceRequest {
 
     @NotBlank(message = "Resource name is required")
@@ -39,7 +39,7 @@ public class ResourceRequest {
 
     public ResourceRequest() {
     }
-
+// Getters and setters
     public String getName() {
         return name;
     }
