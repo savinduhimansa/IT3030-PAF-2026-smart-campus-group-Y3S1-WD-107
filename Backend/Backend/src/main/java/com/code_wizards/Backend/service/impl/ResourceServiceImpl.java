@@ -14,6 +14,12 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Paragraph;
+import java.io.ByteArrayOutputStream;
+
 @Service
 public class ResourceServiceImpl implements ResourceService {
 
@@ -24,18 +30,46 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     @Override
+    public byte[] generateResourcesPdf() {
+        List<Resource> resources = resourceRepository.findAll();
+        // Create PDF in memory
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PdfWriter writer = new PdfWriter(baos);
+        PdfDocument pdf = new PdfDocument(writer);
+        Document document = new Document(pdf);
+        // Add content to PDF
+        document.add(new Paragraph("Resource List"));
+        // Add each resource to PDF
+        for (Resource resource : resources) {
+            document.add(new Paragraph(
+                "ID: " + resource.getResourceId() + ", Name: " + resource.getName() + ", Type: " + resource.getType() +
+                ", Capacity: " + resource.getCapacity() + ", Location: " + resource.getLocation() +
+                ", Status: " + resource.getStatus()
+            ));
+        }
+        document.close();
+        // Return PDF as byte array
+        return baos.toByteArray();
+    }
+
+    @Override
     public ResourceResponse createResource(ResourceRequest request) {
+        // Validate availability time
         validateAvailabilityWindow(request.getAvailableFrom(), request.getAvailableTo());
 
         Resource resource = new Resource();
+        // Convert request → entity
         mapRequestToEntity(request, resource);
 
         Resource savedResource = resourceRepository.save(resource);
+        // Save to DB
         return mapEntityToResponse(savedResource);
+        // Return response DTO
     }
 
     @Override
     public List<ResourceResponse> getAllResources() {
+        // Fetch all resources
         return resourceRepository.findAll()
                 .stream()
                 .map(this::mapEntityToResponse)
@@ -44,12 +78,13 @@ public class ResourceServiceImpl implements ResourceService {
 
     @Override
     public ResourceResponse getResourceById(Long resourceId) {
+        // Find resource or throw error
         Resource resource = resourceRepository.findById(resourceId)
             .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
-
+// Convert to response
         return mapEntityToResponse(resource);
     }
-
+//update resource
     @Override
     public ResourceResponse updateResource(Long resourceId, ResourceRequest request) {
         validateAvailabilityWindow(request.getAvailableFrom(), request.getAvailableTo());
@@ -63,6 +98,7 @@ public class ResourceServiceImpl implements ResourceService {
         return mapEntityToResponse(updatedResource);
     }
 
+    //Delete resource
     @Override
     public void deleteResource(Long resourceId) {
         Resource existingResource = resourceRepository.findById(resourceId)
@@ -71,6 +107,7 @@ public class ResourceServiceImpl implements ResourceService {
         resourceRepository.delete(existingResource);
     }
 
+    //search resources with filters
     @Override
     public List<ResourceResponse> searchResources(ResourceType type, Integer minCapacity, String location,
                                                   ResourceStatus status, LocalTime availableFrom, LocalTime availableTo) {
@@ -88,13 +125,13 @@ public class ResourceServiceImpl implements ResourceService {
                 .map(this::mapEntityToResponse)
                 .collect(Collectors.toList());
     }
-
+//Validation method
     private void validateAvailabilityWindow(LocalTime from, LocalTime to) {
         if (from != null && to != null && !from.isBefore(to)) {
             throw new IllegalArgumentException("availableFrom must be earlier than availableTo");
         }
     }
-
+//Mapping methods
     private void mapRequestToEntity(ResourceRequest request, Resource resource) {
         resource.setName(request.getName());
         resource.setType(request.getType());

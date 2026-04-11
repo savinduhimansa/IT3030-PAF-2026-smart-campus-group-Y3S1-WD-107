@@ -19,7 +19,7 @@ public interface ResourceService {
     ResourceResponse updateResource(Long resourceId, ResourceRequest request);
 
     void deleteResource(Long resourceId);
-
+// Search resources with filters
     List<ResourceResponse> searchResources(
             ResourceType type,
             Integer minCapacity,
@@ -28,4 +28,6 @@ public interface ResourceService {
             LocalTime availableFrom,
             LocalTime availableTo
     );
+    // Generate PDF report
+    byte[] generateResourcesPdf();
 }

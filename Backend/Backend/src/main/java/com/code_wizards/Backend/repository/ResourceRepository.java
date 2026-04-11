@@ -26,7 +26,7 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
             String location,
             ResourceStatus status
     );
-
+ // Find resources available within time range
     List<Resource> findByAvailableFromLessThanEqualAndAvailableToGreaterThanEqual(
             LocalTime availableFrom,
             LocalTime availableTo

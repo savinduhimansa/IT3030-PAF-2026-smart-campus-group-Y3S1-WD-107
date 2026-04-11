@@ -4,7 +4,7 @@ import com.code_wizards.Backend.entity.ResourceStatus;
 import com.code_wizards.Backend.entity.ResourceType;
 
 import java.time.LocalTime;
-
+//DTO for sending resource data to client
 public class ResourceResponse {
 
     private Long resourceId;
@@ -20,7 +20,7 @@ public class ResourceResponse {
 
     public ResourceResponse() {
     }
-
+  // Constructor to set all fields
     public ResourceResponse(Long resourceId, String name, ResourceType type, Integer capacity, String location,
                             String description, ResourceStatus status, LocalTime availableFrom,
                             LocalTime availableTo, Boolean isBookable) {
@@ -35,7 +35,7 @@ public class ResourceResponse {
         this.availableTo = availableTo;
         this.isBookable = isBookable;
     }
-
+ // Getters and setters
     public Long getResourceId() {
         return resourceId;
     }
