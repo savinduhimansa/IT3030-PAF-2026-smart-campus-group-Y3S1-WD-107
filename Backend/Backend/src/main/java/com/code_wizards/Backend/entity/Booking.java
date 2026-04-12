@@ -26,6 +26,12 @@ public class Booking {
 
     private LocalDateTime createdAt;
 
+    private String contactEmail;
+
+    private String department;
+
+    private String specialReqs;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -106,5 +112,29 @@ public class Booking {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+    
+    public String getContactEmail() {
+        return contactEmail;
+    }
+
+    public void setContactEmail(String contactEmail) {
+        this.contactEmail = contactEmail;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public String getSpecialReqs() {
+        return specialReqs;
+    }
+
+    public void setSpecialReqs(String specialReqs) {
+        this.specialReqs = specialReqs;
     }
 }

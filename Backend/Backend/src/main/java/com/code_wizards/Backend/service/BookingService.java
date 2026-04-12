@@ -32,6 +32,9 @@ public class BookingService {
         booking.setEndTime(updatedBooking.getEndTime());
         booking.setPurpose(updatedBooking.getPurpose());
         booking.setExpectedAttendees(updatedBooking.getExpectedAttendees());
+        booking.setContactEmail(updatedBooking.getContactEmail());
+        booking.setDepartment(updatedBooking.getDepartment());
+        booking.setSpecialReqs(updatedBooking.getSpecialReqs());
         return bookingRepository.save(booking);
     }
 
