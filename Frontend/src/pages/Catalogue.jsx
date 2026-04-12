@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
-import { Zap } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Search,
   MapPin,
@@ -12,9 +11,12 @@ import {
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react'
+import Navbar from '../components/Navbar'
+import Footer from '../components/Footer'
 import { RESOURCE_TYPES, STATUSES, getTypeInfo, getStatusInfo } from '../constants'
 import { resourceApi } from '../services/api'
 import ResourceDetailModal from '../components/ResourceDetailModal'
+
 
 export default function Catalogue() {
   const [searchParams, setSearchParams] = useSearchParams()
@@ -150,45 +152,15 @@ export default function Catalogue() {
 
   return (
     <>
-      
-      <nav
-        className="fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 flex items-center justify-between transition-all duration-250 py-4 bg-surface-dark/85 backdrop-blur-2xl border-b border-border"
-        id="home-navbar"
-      >
-        <Link to="/" className="flex items-center gap-3 no-underline text-text-primary">
-          <div className="w-[42px] h-[42px] rounded-xl gradient-primary flex items-center justify-center shadow-glow">
-            <Zap size={22} color="white" />
-          </div>
-          <h1 className="text-[22px] font-extrabold gradient-text">SpaceLink</h1>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          <Link to="/" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
-            Home
-          </Link>
-          <Link to="/about" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
-            About
-          </Link>
-          <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
-            Catalogue
-          </Link>
-          <Link to="/booking" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
-            Booking
-          </Link>
-          <Link to="/signup" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
-            Signup
-          </Link>
-          <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
-            Login
-          </Link>
-        </div>
-      </nav>
+      <Navbar />
       <div style={{ height: '72px' }} /> {/* Spacer for navbar */}
       <div className="page-header" id="catalogue-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1>Facilities Catalogue</h1>
-            <p>Browse and search all campus resources — lecture halls, labs, meeting rooms, and equipment</p>
+            <h1 style={{display:'flex',alignItems:'center',gap:8}}>
+              Facilities Catalogue <span style={{fontSize:24}}>✨</span>
+            </h1>
+            <p>Browse and search all campus resources — <span style={{color:'var(--accent-blue)',fontWeight:600}}>lecture halls</span>, <span style={{color:'var(--accent-green)',fontWeight:600}}>labs</span>, <span style={{color:'var(--accent-orange)',fontWeight:600}}>meeting rooms</span>, and <span style={{color:'var(--accent-pink)',fontWeight:600}}>equipment</span></p>
           </div>
           <button className="btn btn-secondary btn-sm" onClick={fetchResources} title="Refresh">
             <RefreshCw size={14} /> Refresh
@@ -198,8 +170,8 @@ export default function Catalogue() {
 
       <div className="page-body">
         {/* Filter Bar */}
-        <div className="filter-bar" id="filter-bar">
-          <div className="search-input-wrapper">
+        <div className="filter-bar creative-filter-bar" id="filter-bar">
+          <div className="search-input-wrapper creative-search">
             <Search className="search-icon" size={18} />
             <input
               type="text"
@@ -212,7 +184,7 @@ export default function Catalogue() {
           </div>
 
           <select
-            className="filter-select"
+            className="filter-select creative-select"
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             id="filter-type"
@@ -226,7 +198,7 @@ export default function Catalogue() {
           </select>
 
           <select
-            className="filter-select"
+            className="filter-select creative-select"
             value={locationFilter}
             onChange={(e) => setLocationFilter(e.target.value)}
             id="filter-location"
@@ -240,7 +212,7 @@ export default function Catalogue() {
           </select>
 
           <select
-            className="filter-select"
+            className="filter-select creative-select"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
             id="filter-status"
@@ -254,7 +226,7 @@ export default function Catalogue() {
           </select>
 
           <select
-            className="filter-select"
+            className="filter-select creative-select"
             value={capacityFilter}
             onChange={(e) => setCapacityFilter(e.target.value)}
             id="filter-capacity"
@@ -268,13 +240,13 @@ export default function Catalogue() {
           </select>
 
           {hasFilters && (
-            <button className="btn btn-secondary btn-sm" onClick={clearFilters} id="clear-filters">
+            <button className="btn btn-accent btn-sm creative-clear" onClick={clearFilters} id="clear-filters">
               <X size={14} /> Clear
             </button>
           )}
 
-          <span className="results-count">
-            {filteredResources.length} result{filteredResources.length !== 1 ? 's' : ''}
+          <span className="results-count creative-results-count">
+            <span role="img" aria-label="sparkle">🌟</span> {filteredResources.length} result{filteredResources.length !== 1 ? 's' : ''}
           </span>
         </div>
 
@@ -314,22 +286,27 @@ export default function Catalogue() {
             )}
           </div>
         ) : (
-          <div className="resource-grid" id="resource-grid">
+          <div className="resource-grid creative-grid" id="resource-grid">
             {filteredResources.map((resource, i) => {
               const typeInfo = getTypeInfo(resource.type)
               const statusInfo = getStatusInfo(resource.status)
               return (
                 <div
                   key={resource.resourceId}
-                  className="resource-card animate-in"
+                  className="resource-card animate-in creative-card"
                   onClick={() => setSelectedResource(resource)}
                   id={`resource-card-${resource.resourceId}`}
-                  style={{ animationDelay: `${i * 50}ms` }}
+                  style={{ animationDelay: `${i * 50}ms`, boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
                   <div
                     className="resource-card-banner"
                     style={{
                       background: `linear-gradient(90deg, ${typeInfo.color} 0%, ${typeInfo.color}66 100%)`,
+                      minHeight: 8,
+                      borderTopLeftRadius: 12,
+                      borderTopRightRadius: 12
                     }}
                   />
                   <div className="resource-card-body">
@@ -357,12 +334,14 @@ export default function Catalogue() {
                       </span>
                     </div>
 
-                    <h3>{resource.name}</h3>
+                    <h3 style={{display:'flex',alignItems:'center',gap:6}}>
+                      {typeInfo.icon} {resource.name}
+                    </h3>
                     <p className="resource-card-desc">
                       {resource.description || 'No description available.'}
                     </p>
 
-                    <div className="resource-card-meta">
+                    <div className="resource-card-meta creative-meta">
                       <span>
                         <MapPin className="meta-icon" size={14} />
                         {resource.location}
@@ -410,6 +389,18 @@ export default function Catalogue() {
           onClose={() => setSelectedResource(null)}
         />
       )}
+      {/* Creative styles */}
+      <style>{`
+        .creative-filter-bar { background: var(--surface-glass); border-radius: 16px; box-shadow: 0 2px 16px 0 rgba(0,0,0,0.04); margin-bottom: 18px; }
+        .creative-search input { border-radius: 8px; border: 1px solid var(--border); }
+        .creative-select { border-radius: 8px; border: 1px solid var(--border); }
+        .creative-clear { background: var(--accent-pink); color: white; }
+        .creative-results-count { font-weight: 600; color: var(--accent-blue); }
+        .creative-grid { gap: 28px; }
+        .creative-card { border-radius: 14px; }
+        .creative-meta span { background: var(--surface-glass); border-radius: 6px; padding: 2px 8px; margin-right: 6px; }
+      `}</style>
+      <Footer />
     </>
   )
 }
