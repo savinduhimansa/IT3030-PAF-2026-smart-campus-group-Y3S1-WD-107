@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalTime;
 import java.util.List;
 
-
 /**
  * Handles all resource APIs (CRUD, search, report)
  */
@@ -27,7 +26,8 @@ public class ResourceController {
     public ResourceController(ResourceService resourceService) {
         this.resourceService = resourceService;
     }
-// Download all resources as PDF
+
+    // Download all resources as PDF
     @GetMapping("/pdf")
     public ResponseEntity<byte[]> downloadResourcesPdf() {
         byte[] pdfBytes = resourceService.generateResourcesPdf();
@@ -43,7 +43,8 @@ public class ResourceController {
         ResourceResponse response = resourceService.createResource(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
- // Get all or filtered resources
+
+    // Get all or filtered resources
     @GetMapping
     public ResponseEntity<List<ResourceResponse>> getAllResources(
             @RequestParam(required = false) ResourceType type,
@@ -51,32 +52,32 @@ public class ResourceController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) ResourceStatus status,
             @RequestParam(required = false) LocalTime availableFrom,
-            @RequestParam(required = false) LocalTime availableTo
-    ) {
-          // If filters exist → search
+            @RequestParam(required = false) LocalTime availableTo) {
+        // If filters exist → search
         if (type != null || minCapacity != null || location != null || status != null
                 || availableFrom != null || availableTo != null) {
             return ResponseEntity.ok(
-                    resourceService.searchResources(type, minCapacity, location, status, availableFrom, availableTo)
-            );
+                    resourceService.searchResources(type, minCapacity, location, status, availableFrom, availableTo));
         }
- // Otherwise return all
+        // Otherwise return all
         return ResponseEntity.ok(resourceService.getAllResources());
     }
-// Get resource by ID
+
+    // Get resource by ID
     @GetMapping("/{resourceId}")
     public ResponseEntity<ResourceResponse> getResourceById(@PathVariable Long resourceId) {
         return ResponseEntity.ok(resourceService.getResourceById(resourceId));
     }
-  // Update resource by ID
+
+    // Update resource by ID
     @PutMapping("/{resourceId}")
     public ResponseEntity<ResourceResponse> updateResource(
             @PathVariable Long resourceId,
-            @Valid @RequestBody ResourceRequest request
-    ) {
+            @Valid @RequestBody ResourceRequest request) {
         return ResponseEntity.ok(resourceService.updateResource(resourceId, request));
     }
-// Delete resource by ID
+
+    // Delete resource by ID
     @DeleteMapping("/{resourceId}")
     public ResponseEntity<Void> deleteResource(@PathVariable Long resourceId) {
         resourceService.deleteResource(resourceId);

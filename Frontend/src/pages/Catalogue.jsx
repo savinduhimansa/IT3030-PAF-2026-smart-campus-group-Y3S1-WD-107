@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Search,
   MapPin,
@@ -10,23 +10,24 @@ import {
   Loader2,
   AlertTriangle,
   RefreshCw,
-} from 'lucide-react'
-import Navbar from '../components/Navbar'
-import Footer from '../components/Footer'
-import { RESOURCE_TYPES, STATUSES, getTypeInfo, getStatusInfo } from '../constants'
-import { resourceApi } from '../services/api'
+} from 'lucide-react';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { RESOURCE_TYPES, STATUSES, getTypeInfo, getStatusInfo } from '../constants';
+import { resourceApi } from '../services/api';
 import ResourceDetailModal from '../components/ResourceDetailModal'
 
 
 export default function Catalogue() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-  const [resources, setResources] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [resources, setResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // Client-side filters
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState(searchParams.get('type') || '')
   const [statusFilter, setStatusFilter] = useState('')
   const [capacityFilter, setCapacityFilter] = useState('')
@@ -155,16 +156,21 @@ export default function Catalogue() {
       <Navbar />
       <div style={{ height: '72px' }} /> {/* Spacer for navbar */}
       <div className="page-header" id="catalogue-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
             <h1 style={{display:'flex',alignItems:'center',gap:8}}>
               Facilities Catalogue <span style={{fontSize:24}}>✨</span>
             </h1>
             <p>Browse and search all campus resources — <span style={{color:'var(--accent-blue)',fontWeight:600}}>lecture halls</span>, <span style={{color:'var(--accent-green)',fontWeight:600}}>labs</span>, <span style={{color:'var(--accent-orange)',fontWeight:600}}>meeting rooms</span>, and <span style={{color:'var(--accent-pink)',fontWeight:600}}>equipment</span></p>
           </div>
-          <button className="btn btn-secondary btn-sm" onClick={fetchResources} title="Refresh">
-            <RefreshCw size={14} /> Refresh
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
+            <button className="btn btn-primary" onClick={() => navigate('/find-best-lab')} style={{ marginBottom: 6 }}>
+              Find Best Lab
+            </button>
+            <button className="btn btn-secondary btn-sm" onClick={fetchResources} title="Refresh">
+              <RefreshCw size={14} /> Refresh
+            </button>
+          </div>
         </div>
       </div>
 
