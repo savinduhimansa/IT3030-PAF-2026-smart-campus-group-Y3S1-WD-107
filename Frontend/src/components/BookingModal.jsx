@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, Users, FileText } from 'lucide-react';
 
-export default function BookingModal({ isOpen, onClose, onSubmit }) {
+export default function BookingModal({ isOpen, onClose, onSubmit, initialData }) {
     const [formData, setFormData] = useState({
         resourceId: '',
         bookingDate: '',
@@ -11,8 +11,37 @@ export default function BookingModal({ isOpen, onClose, onSubmit }) {
         expectedAttendees: '',
         contactEmail: '',
         department: '',
-        specialReqs: ''
+        specialRequirements: ''
     });
+
+    // Prefill form when editing
+    useEffect(() => {
+        if (isOpen && initialData) {
+            setFormData({
+                resourceId: initialData.resourceId || '',
+                bookingDate: initialData.bookingDate || '',
+                startTime: initialData.startTime || '',
+                endTime: initialData.endTime || '',
+                purpose: initialData.purpose || '',
+                expectedAttendees: initialData.expectedAttendees || '',
+                contactEmail: initialData.contactEmail || '',
+                department: initialData.department || '',
+                specialRequirements: initialData.specialRequirements || ''
+            });
+        } else if (isOpen && !initialData) {
+            setFormData({
+                resourceId: '',
+                bookingDate: '',
+                startTime: '',
+                endTime: '',
+                purpose: '',
+                expectedAttendees: '',
+                contactEmail: '',
+                department: '',
+                specialRequirements: ''
+            });
+        }
+    }, [isOpen, initialData]);
 
     if (!isOpen) return null;
 
