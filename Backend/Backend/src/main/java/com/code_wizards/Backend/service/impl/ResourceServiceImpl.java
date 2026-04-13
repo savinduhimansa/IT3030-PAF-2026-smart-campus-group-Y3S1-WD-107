@@ -42,10 +42,10 @@ public class ResourceServiceImpl implements ResourceService {
         // Add each resource to PDF
         for (Resource resource : resources) {
             document.add(new Paragraph(
-                "ID: " + resource.getResourceId() + ", Name: " + resource.getName() + ", Type: " + resource.getType() +
-                ", Capacity: " + resource.getCapacity() + ", Location: " + resource.getLocation() +
-                ", Status: " + resource.getStatus()
-            ));
+                    "ID: " + resource.getResourceId() + ", Name: " + resource.getName() + ", Type: "
+                            + resource.getType() +
+                            ", Capacity: " + resource.getCapacity() + ", Location: " + resource.getLocation() +
+                            ", Status: " + resource.getStatus()));
         }
         document.close();
         // Return PDF as byte array
@@ -80,17 +80,18 @@ public class ResourceServiceImpl implements ResourceService {
     public ResourceResponse getResourceById(Long resourceId) {
         // Find resource or throw error
         Resource resource = resourceRepository.findById(resourceId)
-            .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
-// Convert to response
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
+        // Convert to response
         return mapEntityToResponse(resource);
     }
-//update resource
+
+    // update resource
     @Override
     public ResourceResponse updateResource(Long resourceId, ResourceRequest request) {
         validateAvailabilityWindow(request.getAvailableFrom(), request.getAvailableTo());
 
         Resource existingResource = resourceRepository.findById(resourceId)
-            .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
 
         mapRequestToEntity(request, existingResource);
 
@@ -98,19 +99,19 @@ public class ResourceServiceImpl implements ResourceService {
         return mapEntityToResponse(updatedResource);
     }
 
-    //Delete resource
+    // Delete resource
     @Override
     public void deleteResource(Long resourceId) {
         Resource existingResource = resourceRepository.findById(resourceId)
-            .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
+                .orElseThrow(() -> new ResourceNotFoundException("Resource not found with id: " + resourceId));
 
         resourceRepository.delete(existingResource);
     }
 
-    //search resources with filters
+    // search resources with filters
     @Override
     public List<ResourceResponse> searchResources(ResourceType type, Integer minCapacity, String location,
-                                                  ResourceStatus status, LocalTime availableFrom, LocalTime availableTo) {
+            ResourceStatus status, LocalTime availableFrom, LocalTime availableTo) {
 
         List<Resource> resources = resourceRepository.findAll();
 
@@ -125,13 +126,15 @@ public class ResourceServiceImpl implements ResourceService {
                 .map(this::mapEntityToResponse)
                 .collect(Collectors.toList());
     }
-//Validation method
+
+    // Validation method
     private void validateAvailabilityWindow(LocalTime from, LocalTime to) {
         if (from != null && to != null && !from.isBefore(to)) {
             throw new IllegalArgumentException("availableFrom must be earlier than availableTo");
         }
     }
-//Mapping methods
+
+    // Mapping methods
     private void mapRequestToEntity(ResourceRequest request, Resource resource) {
         resource.setName(request.getName());
         resource.setType(request.getType());
@@ -155,7 +158,6 @@ public class ResourceServiceImpl implements ResourceService {
                 resource.getStatus(),
                 resource.getAvailableFrom(),
                 resource.getAvailableTo(),
-                resource.getIsBookable()
-        );
+                resource.getIsBookable());
     }
 }
