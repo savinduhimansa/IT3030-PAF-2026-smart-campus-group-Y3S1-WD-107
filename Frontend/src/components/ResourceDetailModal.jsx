@@ -1,12 +1,16 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, MapPin, Users, Clock, Shield, CheckCircle, XCircle } from 'lucide-react'
 import { getTypeInfo, getStatusInfo } from '../constants'
+import FeedbackList from './FeedbackList'
+import FeedbackForm from './FeedbackForm'
 
-export default function ResourceDetailModal({ resource, onClose }) {
+// Pass 'user' prop (null if not logged in)
+export default function ResourceDetailModal({ resource, onClose, user }) {
   const navigate = useNavigate();
   const typeInfo = getTypeInfo(resource.type)
   const statusInfo = getStatusInfo(resource.status)
+  const [feedbackRefresh, setFeedbackRefresh] = useState(false);
 
   // Close on Escape key
   useEffect(() => {
@@ -184,6 +188,23 @@ export default function ResourceDetailModal({ resource, onClose }) {
                 No availability window defined for this resource
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Feedback Section */}
+        <div className="modal-section" style={{ maxHeight: 140, overflowY: 'auto', marginBottom: 32, paddingRight: 8 }}>
+          <FeedbackList resourceId={resource.resourceId} key={feedbackRefresh} />
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '16px 0' }}>
+            <button
+              className="btn btn-accent"
+              onClick={() => {
+                onClose();
+                navigate(`/feedback/${resource.resourceId}`);
+              }}
+              id="add-feedback-btn"
+            >
+              Add Feedback
+            </button>
           </div>
         </div>
 
