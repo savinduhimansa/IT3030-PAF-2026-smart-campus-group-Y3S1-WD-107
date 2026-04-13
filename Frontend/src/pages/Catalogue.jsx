@@ -294,7 +294,6 @@ export default function Catalogue() {
                 <div
                   key={resource.resourceId}
                   className="resource-card animate-in creative-card"
-                  onClick={() => setSelectedResource(resource)}
                   id={`resource-card-${resource.resourceId}`}
                   style={{ animationDelay: `${i * 50}ms`, boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
@@ -371,7 +370,7 @@ export default function Catalogue() {
                         </span>
                       )}
                     </div>
-                    <span className="view-link">
+                    <span className="view-link" onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); }} style={{ cursor: 'pointer', color: 'var(--accent-blue)' }}>
                       View <ChevronRight size={14} />
                     </span>
                   </div>
