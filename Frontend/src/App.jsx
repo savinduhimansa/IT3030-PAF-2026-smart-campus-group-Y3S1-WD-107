@@ -7,6 +7,7 @@ import {
   Menu,
   X,
   Zap,
+  Ticket,
 } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import Dashboard from './pages/Dashboard'
@@ -15,11 +16,15 @@ import AdminPanel from './pages/AdminPanel'
 import AddFeedback from './pages/AddFeedback'
 import AllFeedbacks from './pages/AllFeedbacks'
 import FindBestLab from './pages/FindBestLab'
+import TicketDashboard from './pages/TicketDashboard'
+import TicketDetail from './pages/TicketDetail'
+import CreateTicketForm from './components/CreateTicketForm'
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Admin Panel', icon: Settings },
   { path: '/find-best-lab', label: 'Find Best Lab', icon: BookOpen },
+  { path: '/tickets', label: 'Tickets', icon: Ticket },
 ]
 
 function AppLayout() {
@@ -114,6 +119,9 @@ function AppLayout() {
           <Route path="/feedbacks/:resourceId" element={<AllFeedbacks />} />
           <Route path="/all-feedbacks" element={<AllFeedbacks />} />
           <Route path="/find-best-lab" element={<FindBestLab />} />
+          <Route path="/tickets" element={<TicketDashboard />} />
+          <Route path="/tickets/new" element={<CreateTicketForm />} />
+          <Route path="/tickets/:id" element={<TicketDetail />} />
         </Routes>
       </main>
     </div>
