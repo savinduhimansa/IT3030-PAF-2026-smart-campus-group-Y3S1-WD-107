@@ -67,6 +67,9 @@ export default function HomePage() {
           <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
             Catalogue
           </Link>
+          <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 no-underline flex items-center gap-1">
+            Report Issue
+          </Link>
           <Link to="/booking" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
             Booking
           </Link>
@@ -208,6 +211,7 @@ export default function HomePage() {
         <div className="flex gap-6">
           <Link to="/dashboard" className="text-[13px] text-text-muted hover:text-text-primary transition-colors no-underline">Dashboard</Link>
           <Link to="/catalogue" className="text-[13px] text-text-muted hover:text-text-primary transition-colors no-underline">Catalogue</Link>
+          <Link to="/tickets/new" className="text-[13px] text-text-muted hover:text-red-400 transition-colors no-underline">Report Issue</Link>
           <Link to="/admin" className="text-[13px] text-text-muted hover:text-text-primary transition-colors no-underline">Admin</Link>
         </div>
       </footer>
