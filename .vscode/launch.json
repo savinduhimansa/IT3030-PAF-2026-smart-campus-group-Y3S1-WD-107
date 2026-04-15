@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Run LMS Backend",
+            "request": "launch",
+            "mainClass": "com.code_wizards.Backend.BackendApplication",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
