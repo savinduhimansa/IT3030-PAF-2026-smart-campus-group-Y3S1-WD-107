@@ -1,23 +1,29 @@
 package com.code_wizards.Backend.service;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 
 import com.code_wizards.Backend.entity.Booking;
 import com.code_wizards.Backend.entity.BookingStatus;
+import com.code_wizards.Backend.entity.BookingStatusHistory;
 import com.code_wizards.Backend.repository.BookingRepository;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class BookingService {
 
     private final BookingRepository bookingRepository;
+    private final BookingHistoryRepository bookingStatusHistoryRepository;
 
-    public BookingService(BookingRepository bookingRepository) {
-        this.bookingRepository = bookingRepository;
-    }
+
 
     @Transactional
     public Booking updateBooking(Long id, Booking updatedBooking) {
@@ -53,6 +59,13 @@ public class BookingService {
             throw new IllegalStateException("Time slot conflicts with an existing booking.");
         }
         booking.setStatus(BookingStatus.PENDING);
+
+        if (booking.getContactEmail() == null)
+            booking.setContactEmail("");
+        if (booking.getDepartment() == null)
+            booking.setDepartment("");
+        if (booking.getSpecialRequirements() == null)
+            booking.setSpecialRequirements("");
         return bookingRepository.save(booking);
     }
 
@@ -73,7 +86,7 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking approveBooking(Long id) {
+    public Booking approveBooking(Long id, String changeBy) {
         Booking booking = getBooking(id);
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("Only pending bookings can be approved.");
@@ -94,13 +107,14 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking rejectBooking(Long id, String reason) {
+    public Booking rejectBooking(Long id, String reason, String changedBy) {
         Booking booking = getBooking(id);
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("Only pending bookings can be rejected.");
         }
         booking.setStatus(BookingStatus.REJECTED);
         booking.setRejectionReason(reason);
+        logStatusChange(booking, BookingStatus.REJECTED, changedBy);
         return bookingRepository.save(booking);
     }
 
@@ -115,6 +129,26 @@ public class BookingService {
         }
         booking.setStatus(BookingStatus.CANCELLED);
         return bookingRepository.save(booking);
+    }
+
+    public List<BookingStatusHistory> getBookingHistory(Long bookingId) {
+        return bookingRepository.findByBooking_IdOrderByChangedAtAsc(bookingId);
+    }
+
+    private void logStatusChange(Booking booking, BookingStatus status, String changedBy) {
+        BookingStatusHistory history = new BookingStatusHistory(
+                booking,
+                status,
+                java.time.LocalDateTime.now(),
+                changedBy);
+        bookingRepository.save(history);
+    }
+
+    public boolean checkAvailability(String resourceId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+        List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
+        List<Booking> overlapping = bookingRepository.findOverlappingBookings(
+                resourceId, date, startTime, endTime, activeStatuses);
+        return overlapping.isEmpty();
     }
     
 }
