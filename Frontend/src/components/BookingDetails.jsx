@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon } from 'lucide-react';
-import { getMyBookings, createBooking, cancelBooking, updateBooking } from './api';
+import { getMyBookings, createBooking, cancelBooking, updateBooking } from '../services/api';
+
 import BookingModal from './BookingModal';
-import { format, parseISO } from 'date-fns';
+
 
 // Booking history modal
 function BookingHistoryModal({ isOpen, onClose, history }) {
@@ -31,8 +32,7 @@ function BookingHistoryModal({ isOpen, onClose, history }) {
         </div>
     );
 }
-import BookingModal from './BookingModal';
-import { format, parseISO } from 'date-fns';
+
 
 
 

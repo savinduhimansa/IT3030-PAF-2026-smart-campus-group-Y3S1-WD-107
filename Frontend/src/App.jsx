@@ -19,6 +19,7 @@ import FindBestLab from './pages/FindBestLab'
 import TicketDashboard from './pages/TicketDashboard'
 import TicketDetail from './pages/TicketDetail'
 import CreateTicketForm from './components/CreateTicketForm'
+import BookingDashboard from './components/BookingDetails'
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -122,11 +123,13 @@ function AppLayout() {
           <Route path="/tickets" element={<TicketDashboard />} />
           <Route path="/tickets/new" element={<CreateTicketForm />} />
           <Route path="/tickets/:id" element={<TicketDetail />} />
+          <Route path="/booking" element={<BookingDashboard user={{id: 1}} />} />
         </Routes>
       </main>
     </div>
   );
 }
+
 
 
 
