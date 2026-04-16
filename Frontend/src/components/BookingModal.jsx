@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { X, Calendar, Clock, Users, FileText } from 'lucide-react';
 
+// Availability checker helper
+const checkAvailability = async (resourceId, bookingDate, startTime, endTime) => {
+    const response = await axios.get('http://localhost:8080/api/bookings/availability', {
+        params: { resourceId, date: bookingDate, startTime, endTime }
+    });
+    return response.data.available;
+};
+
 export default function BookingModal({ isOpen, onClose, onSubmit, initialData }) {
     const [formData, setFormData] = useState({
         resourceId: '',
@@ -13,6 +21,13 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
         department: '',
         specialRequirements: ''
     });
+
+        // Availability state
+    const [availability, setAvailability] = useState(null); // null | true | false
+    const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+    // Error message from backend
+    const [error, setError] = useState('');
 
     // Prefill form when editing
     useEffect(() => {
@@ -41,14 +56,74 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
                 specialRequirements: ''
             });
         }
+
+        // Reset availability and error when modal opens/closes
+        setAvailability(null);
+        setError('');
     }, [isOpen, initialData]);
+
+    useEffect(() => {
+        const { resourceId, bookingDate, startTime, endTime } = formData;
+
+        // Only check if all four fields are filled and it's a new booking (not edit)
+        if (!resourceId || !bookingDate || !startTime || !endTime || initialData) {
+            setAvailability(null);
+            return;
+        }
+
+        // Don't check if end time is before or equal to start time
+        if (endTime <= startTime) {
+            setAvailability(null);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setCheckingAvailability(true);
+            try {
+                const available = await checkAvailability(resourceId, bookingDate, startTime, endTime);
+                setAvailability(available);
+            } catch {
+                setAvailability(null); // silently fail — don't block the form
+            } finally {
+                setCheckingAvailability(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer); // cleanup on re-render
+    }, [formData.resourceId, formData.bookingDate, formData.startTime, formData.endTime]);
 
     if (!isOpen) return null;
 
-    const handleSubmit = (e) => {
+     const handleSubmit = async (e) => {
         e.preventDefault();
-        onSubmit(formData);
+        setError('');
+        // Block submission if slot is taken (only for new bookings)
+        if (!initialData && availability === false) return;
+        try {
+            // onSubmit can be async and may throw error (e.g., from backend)
+            await onSubmit(formData);
+        } catch (err) {
+            // Show a friendly message for booking conflict
+            if (
+                err?.response?.status === 400 &&
+                err?.response?.data?.error === 'Time slot conflicts with an existing booking.'
+            ) {
+                setError('This resource is already booked for the selected time slot. Please choose a different time.');
+            } else {
+                // Try to extract error message
+                let msg = 'An error occurred.';
+                if (err?.response?.data?.message) {
+                    msg = err.response.data.message;
+                } else if (typeof err === 'string') {
+                    msg = err;
+                } else if (err?.message) {
+                    msg = err.message;
+                }
+                setError(msg);
+            }
+        }
     };
+
 
     return (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 transition-opacity">
@@ -113,6 +188,29 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
                             </div>
                         </div>
                     </div>
+
+                    {!initialData && (
+                        <div className="flex items-center gap-2 -mt-2 min-h-[24px]">
+                            {checkingAvailability && (
+                                <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" /></svg>
+                                    Checking availability...
+                                </span>
+                            )}
+                            {!checkingAvailability && availability === true && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="2 7 5 10 11 4"/></svg>
+                                    Slot available
+                                </span>
+                            )}
+                            {!checkingAvailability && availability === false && (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-500 border border-red-200">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+                                    Slot taken — choose another time
+                                </span>
+                            )}
+                        </div>
+                    )}
                     <div className="grid grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Attendees</label>
@@ -130,9 +228,23 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Special Requirements</label>
                         <textarea className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none min-h-[48px] resize-y" placeholder="e.g. Projector, wheelchair access, etc." value={formData.specialRequirements} onChange={e => setFormData({ ...formData, specialRequirements: e.target.value })} />
                     </div>
+
+                    {error && (
+                        <div className="mb-2 px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm font-medium">
+                            {error}
+                        </div>
+                    )}
                     <div className="pt-4 flex gap-3">
-                        <button type="submit" className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                            Submit Request
+                         <button
+                            type="submit"
+                            disabled={!initialData && availability === false}
+                            className={`flex-1 py-3 rounded-xl font-semibold transition-all shadow-md
+                                ${!initialData && availability === false
+                                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
+                                    : 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-lg transform hover:-translate-y-0.5'
+                                }`}
+                        >
+                            {initialData ? 'Update Booking' : 'Submit Request'}
                         </button>
                         <button type="button" onClick={onClose} className="flex-1 bg-white text-gray-700 border border-gray-300 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-all">
                             Cancel

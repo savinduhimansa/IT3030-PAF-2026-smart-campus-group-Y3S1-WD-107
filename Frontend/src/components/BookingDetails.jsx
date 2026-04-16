@@ -5,6 +5,36 @@ import { getMyBookings, createBooking, cancelBooking, updateBooking } from './ap
 import BookingModal from './BookingModal';
 import { format, parseISO } from 'date-fns';
 
+// Booking history modal
+function BookingHistoryModal({ isOpen, onClose, history }) {
+    if (!isOpen) return null;
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
+                <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700">
+                    <XIcon size={22} />
+                </button>
+                <h2 className="text-lg font-bold mb-4 text-[#4F46E5]">Booking History</h2>
+                {history.length === 0 ? (
+                    <div className="text-gray-500 text-sm">No history found.</div>
+                ) : (
+                    <ul className="divide-y divide-gray-200">
+                        {history.map((h, i) => (
+                            <li key={i} className="py-2 flex flex-col">
+                                <span className="font-semibold text-[#0F172A]">{h.status}</span>
+                                <span className="text-xs text-gray-500">{new Date(h.changedAt).toLocaleString()} by {h.changedBy}</span>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        </div>
+    );
+}
+import BookingModal from './BookingModal';
+import { format, parseISO } from 'date-fns';
+
+
 
 
 
@@ -28,6 +58,19 @@ function BookingDashboard({ user }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [editingBooking, setEditingBooking] = useState(null); 
+    const [historyModalOpen, setHistoryModalOpen] = useState(false);
+    const [historyData, setHistoryData] = useState([]);
+    // Show booking history modal
+    const handleShowHistory = async (bookingId) => {
+        try {
+            setError('');
+            const data = await getBookingHistory(bookingId);
+            setHistoryData(data);
+            setHistoryModalOpen(true);
+        } catch (err) {
+            setError('Failed to fetch booking history.');
+        }
+    };
 
     const fetchBookings = async () => {
         try {
@@ -160,6 +203,9 @@ function BookingDashboard({ user }) {
                                                 <XCircle size={22} />
                                             </button>
                                         )}
+                                        <button onClick={() => handleShowHistory(b.id)} className="text-[#4F46E5] hover:bg-[#EEF2FF] p-2 rounded-full transition-colors" title="View History">
+                                            <History size={22} />
+                                        </button>
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-1 px-5 pb-5">
@@ -191,6 +237,12 @@ function BookingDashboard({ user }) {
                     onClose={() => { setIsModalOpen(false); setEditingBooking(null); }}
                     onSubmit={handleSubmitBooking}
                     initialData={editingBooking}
+                />
+
+                <BookingHistoryModal
+                    isOpen={historyModalOpen}
+                    onClose={() => setHistoryModalOpen(false)}
+                    history={historyData}
                 />
             </main>
         </div>
