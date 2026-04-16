@@ -96,7 +96,7 @@ export default function CreateTicketForm() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
-              <select required name="category" value={formData.category} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors">
+              <select required name="category" value={formData.category} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors text-gray-900">
                 <option value="">Select a category</option>
                 <option value="Hardware">Hardware Issue</option>
                 <option value="Software">Software Bug</option>
@@ -108,7 +108,7 @@ export default function CreateTicketForm() {
             
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Priority</label>
-              <select name="priority" value={formData.priority} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors">
+              <select name="priority" value={formData.priority} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors text-gray-900">
                 <option value="Low">Low</option>
                 <option value="Medium">Medium</option>
                 <option value="High">High</option>
@@ -120,21 +120,21 @@ export default function CreateTicketForm() {
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
              <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Resource ID</label>
-              <input required type="text" name="resourceId" placeholder="e.g. SRV-001" value={formData.resourceId} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors" />
+              <input required type="text" name="resourceId" placeholder="e.g. SRV-001" value={formData.resourceId} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors text-gray-900" />
             </div>
              <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Resource Location</label>
-              <input required type="text" name="resourceLocation" placeholder="e.g. Server Room A" value={formData.resourceLocation} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors" />
+              <input required type="text" name="resourceLocation" placeholder="e.g. Server Room A" value={formData.resourceLocation} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors text-gray-900" />
             </div>
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Details</label>
-              <input required type="text" name="contactDetails" placeholder="Email or Phone" value={formData.contactDetails} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors" />
+              <input required type="text" name="contactDetails" placeholder="Email or Phone" value={formData.contactDetails} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors text-gray-900" />
             </div>
           </div>
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Description</label>
-            <textarea required name="description" rows="4" value={formData.description} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors resize-none" placeholder="Provide detailed information about the issue..."></textarea>
+            <textarea required name="description" rows="4" value={formData.description} onChange={handleInputChange} className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 transition-colors resize-none text-gray-900" placeholder="Provide detailed information about the issue..."></textarea>
           </div>
 
           <div>

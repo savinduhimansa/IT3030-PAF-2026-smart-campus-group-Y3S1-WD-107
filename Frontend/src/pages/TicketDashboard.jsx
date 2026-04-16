@@ -58,7 +58,7 @@ export default function TicketDashboard() {
               <input 
                 type="text" 
                 placeholder="Search tickets..." 
-                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-gray-900"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -66,7 +66,7 @@ export default function TicketDashboard() {
               <select 
                 value={filter} 
                 onChange={(e) => setFilter(e.target.value)}
-                className="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                className="border border-gray-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-gray-900"
               >
                 <option value="">All Tickets</option>
                 <option value="OPEN">Open</option>
