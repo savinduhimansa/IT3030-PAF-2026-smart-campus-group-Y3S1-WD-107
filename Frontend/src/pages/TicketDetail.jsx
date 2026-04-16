@@ -190,7 +190,7 @@ export default function TicketDetail() {
                      <textarea 
                         value={resolutionNotes} 
                         onChange={(e) => setResolutionNotes(e.target.value)}
-                        className="w-full border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl px-4 py-3 bg-white shadow-sm resize-none text-sm"
+                        className="w-full border-0 focus:ring-2 focus:ring-indigo-500 rounded-xl px-4 py-3 bg-white shadow-sm resize-none text-sm text-gray-900"
                         placeholder="Add internal tech notes..."
                         rows="4"
                      ></textarea>
@@ -234,7 +234,7 @@ export default function TicketDetail() {
                              <textarea 
                                value={editCommentText}
                                onChange={(e) => setEditCommentText(e.target.value)}
-                               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none"
+                               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 resize-none text-gray-900"
                                rows="2"
                              />
                              <div className="flex gap-2 mt-2">
@@ -268,7 +268,7 @@ export default function TicketDetail() {
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Add a comment to this ticket..." 
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 resize-none text-sm transition-all"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-gray-50/50 resize-none text-sm transition-all text-gray-900"
                   rows="3"
                ></textarea>
                <div className="flex justify-end mt-2">
