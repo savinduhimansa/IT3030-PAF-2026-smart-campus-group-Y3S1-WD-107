@@ -9,6 +9,7 @@ import com.code_wizards.Backend.entity.Booking;
 import com.code_wizards.Backend.entity.BookingStatus;
 import com.code_wizards.Backend.entity.BookingStatusHistory;
 import com.code_wizards.Backend.repository.BookingRepository;
+import com.code_wizards.Backend.repository.BookingHistoryRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -64,8 +65,8 @@ public class BookingService {
             booking.setContactEmail("");
         if (booking.getDepartment() == null)
             booking.setDepartment("");
-        if (booking.getSpecialRequirements() == null)
-            booking.setSpecialRequirements("");
+        if (booking.getSpecialReqs() == null)
+            booking.setSpecialReqs("");
         return bookingRepository.save(booking);
     }
 
@@ -132,7 +133,7 @@ public class BookingService {
     }
 
     public List<BookingStatusHistory> getBookingHistory(Long bookingId) {
-        return bookingRepository.findByBooking_IdOrderByChangedAtAsc(bookingId);
+        return bookingStatusHistoryRepository.findByBooking_IdOrderByChangedAtAsc(bookingId);
     }
 
     private void logStatusChange(Booking booking, BookingStatus status, String changedBy) {
@@ -141,13 +142,15 @@ public class BookingService {
                 status,
                 java.time.LocalDateTime.now(),
                 changedBy);
-        bookingRepository.save(history);
+        bookingStatusHistoryRepository.save(history);
     }
 
-    public boolean checkAvailability(String resourceId, LocalDate date, LocalTime startTime, LocalTime endTime) {
+    public boolean checkAvailability(Long resourceId, LocalDate date, LocalTime startTime, LocalTime endTime) {
         List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
+        java.time.LocalDateTime startDateTime = java.time.LocalDateTime.of(date, startTime);
+        java.time.LocalDateTime endDateTime = java.time.LocalDateTime.of(date, endTime);
         List<Booking> overlapping = bookingRepository.findOverlappingBookings(
-                resourceId, date, startTime, endTime, activeStatuses);
+                resourceId, startDateTime, endDateTime, activeStatuses);
         return overlapping.isEmpty();
     }
     

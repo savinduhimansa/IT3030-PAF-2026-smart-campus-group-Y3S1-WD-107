@@ -40,7 +40,6 @@ export const resourceApi = {
 // Get booking history (audit trail)
 export const getBookingHistory = (bookingId) =>
     api.get(`/${bookingId}/history`).then(res => res.data);
-import axios from 'axios';
 
 const Historyapi = axios.create({
     baseURL: 'http://localhost:8082/api/bookings'

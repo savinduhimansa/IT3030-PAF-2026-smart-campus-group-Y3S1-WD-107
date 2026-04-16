@@ -81,7 +81,7 @@ public class BookingController {
         if (!"ADMIN".equals(role)) {
             return ResponseEntity.status(403).build();
         }
-        return ResponseEntity.ok(bookingService.approveBooking(id));
+        return ResponseEntity.ok(bookingService.approveBooking(id, userId));
     }
 
     @PostMapping("/{id}/reject")
@@ -94,7 +94,7 @@ public class BookingController {
             return ResponseEntity.status(403).build();
         }
         String reason = body.getOrDefault("reason", "No reason provided");
-        return ResponseEntity.ok(bookingService.rejectBooking(id, reason));
+        return ResponseEntity.ok(bookingService.rejectBooking(id, reason, userId));
     }
 
 
@@ -111,7 +111,7 @@ public class BookingController {
 
     @GetMapping("/availability")
     public ResponseEntity<Map<String, Boolean>> checkAvailability(
-            @RequestParam String resourceId,
+            @RequestParam Long resourceId,
             @RequestParam String date,
             @RequestParam String startTime,
             @RequestParam String endTime) {
