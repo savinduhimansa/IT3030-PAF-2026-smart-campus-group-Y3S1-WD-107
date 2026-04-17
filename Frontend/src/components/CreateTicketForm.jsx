@@ -3,7 +3,7 @@ import axios from 'axios';
 import { UploadCloud, X, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const API_URL = 'http://localhost:8080/api/tickets';
+const API_URL = 'http://localhost:8090/api/tickets';
 
 export default function CreateTicketForm() {
   const navigate = useNavigate();
@@ -63,7 +63,8 @@ export default function CreateTicketForm() {
     try {
       await axios.post(API_URL, submitData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          'X-User-Id': localStorage.getItem('userId') || ''
         }
       });
       navigate('/tickets');

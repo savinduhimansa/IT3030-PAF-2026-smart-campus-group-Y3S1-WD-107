@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import { PlusCircle, Search, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
-const API_URL = 'http://localhost:8080/api/tickets';
+const API_URL = 'http://localhost:8090/api/tickets';
 
 export default function TicketDashboard() {
   const [tickets, setTickets] = useState([]);
@@ -18,7 +18,11 @@ export default function TicketDashboard() {
     try {
       setLoading(true);
       const url = filter ? `${API_URL}?status=${filter}` : API_URL;
-      const response = await axios.get(url);
+      const role = localStorage.getItem('role') || 'USER';
+      const userId = localStorage.getItem('userId') || '';
+      const response = await axios.get(url, {
+        headers: { 'X-User-Role': role, 'X-User-Id': userId }
+      });
       setTickets(response.data);
     } catch (error) {
       console.error("Error fetching tickets:", error);
