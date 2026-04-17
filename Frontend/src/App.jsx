@@ -36,10 +36,8 @@ function AppLayout() {
   const closeSidebar = () => setSidebarOpen(false);
   const hideSidebar = location.pathname.startsWith('/feedbacks/') || location.pathname === '/find-best-lab' || location.pathname === '/register' || location.pathname === '/login';
 
-  // 2. Browser එකේ තියෙන Role එක ගන්නවා
   const userRole = localStorage.getItem('role');
 
-  // 3. Role එක ADMIN නෙවෙයි නම්, adminOnly තියෙන ලින්ක් එක අයින් කරනවා
   const visibleNavItems = navItems.filter(item => !item.adminOnly || userRole === 'ADMIN');
 
   return (
@@ -80,7 +78,6 @@ function AppLayout() {
               </div>
 
               <nav className="flex-1 p-3 flex flex-col gap-1" id="main-nav">
-                {/* 4. navItems වෙනුවට visibleNavItems එක පාවිච්චි කරනවා */}
                 {visibleNavItems.map((item) => (
                     <NavLink
                         key={item.path}
@@ -134,32 +131,12 @@ function AppLayout() {
             <Route path="/tickets/:id" element={<TicketDetail />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/booking" element={<BookingDashboard user={{id: 1}} />} />
           </Routes>
         </main>
       </div>
-      {/* Main content */}
-      <main className={hideSidebar ? 'flex-1 min-h-screen' : 'ml-0 md:ml-[260px] flex-1 min-h-screen'} id="main-content">
-        <Routes>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/catalogue" element={<Catalogue />} />
-          <Route path="/add-feedback" element={<AddFeedback />} />
-          <Route path="/feedback/:resourceId" element={<AddFeedback />} />
-          <Route path="/feedbacks/:resourceId" element={<AllFeedbacks />} />
-          <Route path="/all-feedbacks" element={<AllFeedbacks />} />
-          <Route path="/find-best-lab" element={<FindBestLab />} />
-          <Route path="/tickets" element={<TicketDashboard />} />
-          <Route path="/tickets/new" element={<CreateTicketForm />} />
-          <Route path="/tickets/:id" element={<TicketDetail />} />
-          <Route path="/booking" element={<BookingDashboard user={{id: 1}} />} />
-        </Routes>
-      </main>
-    </div>
   );
 }
-
-
-
 
 function App() {
   const location = useLocation();
