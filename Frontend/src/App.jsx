@@ -27,7 +27,7 @@ const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Admin Panel', icon: Settings, adminOnly: true },
   { path: '/find-best-lab', label: 'Find Best Lab', icon: BookOpen },
-  { path: '/tickets', label: 'Tickets', icon: Ticket },
+  { path: '/tickets', label: 'Tickets', icon: Ticket, userPath: '/tickets/new' },
   { path: '/booking', label: 'Bookings', icon: BookOpen, adminOnly: true },
 ]
 
@@ -79,10 +79,12 @@ function AppLayout() {
               </div>
 
               <nav className="flex-1 p-3 flex flex-col gap-1" id="main-nav">
-                {visibleNavItems.map((item) => (
+                {visibleNavItems.map((item) => {
+                    const targetPath = item.userPath && userRole !== 'ADMIN' ? item.userPath : item.path;
+                    return (
                     <NavLink
                         key={item.path}
-                        to={item.path}
+                        to={targetPath}
                         className={({ isActive }) =>
                             `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium cursor-pointer transition-all duration-150 border border-transparent no-underline relative overflow-hidden ${
                                 isActive
@@ -96,7 +98,8 @@ function AppLayout() {
                       <item.icon className="w-5 h-5 shrink-0" size={20} />
                       <span>{item.label}</span>
                     </NavLink>
-                ))}
+                    );
+                })}
               </nav>
 
               <div className="p-4 border-t border-border">
