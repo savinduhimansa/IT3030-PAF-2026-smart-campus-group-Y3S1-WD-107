@@ -2,9 +2,11 @@ package com.code_wizards.Backend.dto.request;
 
 import com.code_wizards.Backend.entity.ResourceStatus;
 import com.code_wizards.Backend.entity.ResourceType;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 import java.time.LocalTime;
 //DTO for incoming resource data (create/update)
@@ -22,6 +24,12 @@ public class ResourceRequest {
 
     @NotBlank(message = "Location is required")
     private String location;
+
+    @JsonAlias("faculty")
+    @Pattern(
+            regexp = "Faculty of Computing|Faculty of Humanities and Science|Faculty of Business|Faculty of Engineering",
+            message = "Department must be one of: Faculty of Computing, Faculty of Humanities and Science, Faculty of Business, Faculty of Engineering")
+    private String department;
 
     private String description;
 
@@ -70,6 +78,14 @@ public class ResourceRequest {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
 
     public String getDescription() {

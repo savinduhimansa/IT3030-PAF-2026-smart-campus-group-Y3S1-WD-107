@@ -140,6 +140,7 @@ public class ResourceServiceImpl implements ResourceService {
         resource.setType(request.getType());
         resource.setCapacity(request.getCapacity());
         resource.setLocation(request.getLocation());
+        resource.setDepartment(request.getDepartment());
         resource.setDescription(request.getDescription());
         resource.setStatus(request.getStatus());
         resource.setAvailableFrom(request.getAvailableFrom());
@@ -148,7 +149,7 @@ public class ResourceServiceImpl implements ResourceService {
     }
 
     private ResourceResponse mapEntityToResponse(Resource resource) {
-        return new ResourceResponse(
+        ResourceResponse response = new ResourceResponse(
                 resource.getResourceId(),
                 resource.getName(),
                 resource.getType(),
