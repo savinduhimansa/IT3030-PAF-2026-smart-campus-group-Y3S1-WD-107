@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-const API_BASE = 'http://localhost:8090/api'
+// Use Vite dev proxy in development (see vite.config.js). For production, you can
+// set VITE_API_BASE_URL (e.g. https://api.example.com/api).
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api'
 
 const api = axios.create({
     baseURL: API_BASE,
@@ -42,7 +44,7 @@ export const getBookingHistory = (bookingId) =>
     Historyapi.get(`/${bookingId}/history`).then((res) => res.data);
 
 const Historyapi = axios.create({
-    baseURL: 'http://localhost:8090/api/bookings'
+    baseURL: `${API_BASE}/bookings`
 });
 
 export const getMyBookings = (userId) => Historyapi.get('/my', { headers: { 'X-User-Id': userId } }).then(res => res.data);

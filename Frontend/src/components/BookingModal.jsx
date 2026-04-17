@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Calendar, Clock, Users, FileText } from 'lucide-react';
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+
 const getTodayLocalISODate = () => {
     const now = new Date();
     const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -13,7 +15,7 @@ const getTodayLocalISODate = () => {
 
 // Availability checker helper
 const checkAvailability = async (resourceId, bookingDate, startTime, endTime) => {
-    const response = await axios.get('http://localhost:8090/api/bookings/availability', {
+    const response = await axios.get(`${API_BASE}/bookings/availability`, {
         params: { resourceId, date: bookingDate, startTime, endTime }
     });
     return response.data.available;

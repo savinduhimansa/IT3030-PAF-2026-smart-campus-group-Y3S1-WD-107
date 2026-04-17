@@ -26,7 +26,6 @@ import BookingDashboard from './pages/BookingDashboard'
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Admin Panel', icon: Settings, adminOnly: true },
-  { path: '/find-best-lab', label: 'Find Best Lab', icon: BookOpen },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
   { path: '/booking', label: 'Bookings', icon: BookOpen, adminOnly: true },
 ]

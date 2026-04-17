@@ -34,7 +34,7 @@ export default function HomePage() {
           capacity: data.reduce((sum, r) => sum + (r.capacity || 0), 0),
         })
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   const features = [
@@ -47,7 +47,7 @@ export default function HomePage() {
   ]
 
   return (
-    <div className="min-h-screen relative z-[1] overflow-x-hidden">
+    <div className="min-h-screen relative overflow-x-hidden light-theme">
       {/* Navbar */}
       <nav
         className="fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 flex items-center justify-between transition-all duration-250 py-4 bg-surface-dark/85 backdrop-blur-2xl border-b border-border"
@@ -87,7 +87,7 @@ export default function HomePage() {
         id="home-hero"
         style={{
           backgroundImage: `url(${campusImg})`,
-         backgroundSize: "cover",
+          backgroundSize: "cover",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat"
         }}
@@ -193,9 +193,9 @@ export default function HomePage() {
             <Link to="/catalogue" className="btn-primary text-base px-8 py-3.5 font-bold no-underline">
               Explore Catalogue <ArrowRight size={18} />
             </Link>
-            <Link to="/admin" className="btn-secondary text-base px-8 py-3.5 no-underline">
+            {/* <Link to="/admin" className="btn-secondary text-base px-8 py-3.5 no-underline">
               <Settings size={18} /> Admin Panel
-            </Link>
+            </Link> */}
           </div>
         </div>
       </section>
