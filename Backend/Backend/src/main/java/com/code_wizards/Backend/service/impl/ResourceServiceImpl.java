@@ -160,9 +160,5 @@ public class ResourceServiceImpl implements ResourceService {
                 resource.getAvailableFrom(),
                 resource.getAvailableTo(),
                 resource.getIsBookable());
-
-        response.setDepartment(resource.getDepartment());
-
-        return response;
     }
 }
