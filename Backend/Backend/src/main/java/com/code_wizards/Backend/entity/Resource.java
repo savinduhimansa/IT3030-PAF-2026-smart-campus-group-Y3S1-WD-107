@@ -1,5 +1,6 @@
 package com.code_wizards.Backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.persistence.*;
 import java.time.LocalTime;
 
@@ -23,6 +24,10 @@ public class Resource {
 
     @Column(nullable = false)
     private String location;
+
+    @JsonAlias("faculty")
+    @Column(name = "faculty")
+    private String department;
 
     @Column(length = 1000)
     private String description;
@@ -96,6 +101,14 @@ public class Resource {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
 
     public String getDescription() {
