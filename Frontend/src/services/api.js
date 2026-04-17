@@ -73,4 +73,13 @@ export const updateBooking = (userId, id, data) =>
 export const deleteBooking = (role, id) =>
     Historyapi.delete(`/${id}`, { headers: { 'X-User-Role': role } });
 
+// ─── Auth endpoints (Member 4) ───
+export const authApi = {
+    // POST /api/auth/register
+    register: (userData) => api.post('/auth/register', userData),
+
+    // POST /api/auth/login
+    login: (credentials) => api.post('/auth/login', credentials),
+};
+
 export default Historyapi
