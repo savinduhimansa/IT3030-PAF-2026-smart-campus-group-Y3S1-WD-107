@@ -21,8 +21,8 @@ import TicketDetail from './pages/TicketDetail'
 import CreateTicketForm from './components/CreateTicketForm'
 import Register from './pages/Register'
 import Login from './pages/Login'
+import BookingDashboard from './components/BookingDetails'
 
-// 1. Admin Panel එකට 'adminOnly: true' කියලා අලුත් කෑල්ලක් දැම්මා
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Admin Panel', icon: Settings, adminOnly: true },
@@ -137,8 +137,29 @@ function AppLayout() {
           </Routes>
         </main>
       </div>
+      {/* Main content */}
+      <main className={hideSidebar ? 'flex-1 min-h-screen' : 'ml-0 md:ml-[260px] flex-1 min-h-screen'} id="main-content">
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/catalogue" element={<Catalogue />} />
+          <Route path="/add-feedback" element={<AddFeedback />} />
+          <Route path="/feedback/:resourceId" element={<AddFeedback />} />
+          <Route path="/feedbacks/:resourceId" element={<AllFeedbacks />} />
+          <Route path="/all-feedbacks" element={<AllFeedbacks />} />
+          <Route path="/find-best-lab" element={<FindBestLab />} />
+          <Route path="/tickets" element={<TicketDashboard />} />
+          <Route path="/tickets/new" element={<CreateTicketForm />} />
+          <Route path="/tickets/:id" element={<TicketDetail />} />
+          <Route path="/booking" element={<BookingDashboard user={{id: 1}} />} />
+        </Routes>
+      </main>
+    </div>
   );
 }
+
+
+
 
 function App() {
   const location = useLocation();

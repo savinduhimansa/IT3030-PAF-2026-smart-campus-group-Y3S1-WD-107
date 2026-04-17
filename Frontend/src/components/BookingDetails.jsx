@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon } from 'lucide-react';
-import { getMyBookings, createBooking, cancelBooking, updateBooking } from './api';
-import BookingModal from './BookingModal';
 import { format, parseISO } from 'date-fns';
+import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon } from 'lucide-react';
+import { getMyBookings, createBooking, cancelBooking, updateBooking, getBookingHistory } from '../services/api';
+
+import BookingModal from './BookingModal';
+
 
 // Booking history modal
 function BookingHistoryModal({ isOpen, onClose, history }) {
@@ -31,8 +33,7 @@ function BookingHistoryModal({ isOpen, onClose, history }) {
         </div>
     );
 }
-import BookingModal from './BookingModal';
-import { format, parseISO } from 'date-fns';
+
 
 
 
@@ -204,14 +205,14 @@ function BookingDashboard({ user }) {
                                             </button>
                                         )}
                                         <button onClick={() => handleShowHistory(b.id)} className="text-[#4F46E5] hover:bg-[#EEF2FF] p-2 rounded-full transition-colors" title="View History">
-                                            <History size={22} />
+                                            <FileText size={22} />
                                         </button>
                                     </div>
                                 </div>
                                 <div className="flex flex-col gap-1 px-5 pb-5">
                                     <div className="flex items-center gap-2 text-[14px] text-[#4F46E5] font-medium">
                                         <Calendar size={16} />
-                                        {format(parseISO(b.bookingDate), 'MMM d, yyyy')}
+                                        {b.bookingDate ? format(parseISO(b.bookingDate), 'MMM d, yyyy') : 'N/A'}
                                     </div>
                                     <div className="flex items-center gap-2 text-[14px] text-[#4F46E5] font-medium">
                                         <Clock size={16} />
