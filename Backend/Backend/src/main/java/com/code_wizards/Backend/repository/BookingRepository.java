@@ -1,7 +1,5 @@
 package com.code_wizards.Backend.repository;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,8 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import com.code_wizards.Backend.entity.Booking;
 import com.code_wizards.Backend.entity.BookingStatus;
-import com.code_wizards.Backend.entity.BookingStatusHistory;
-
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long>{
 

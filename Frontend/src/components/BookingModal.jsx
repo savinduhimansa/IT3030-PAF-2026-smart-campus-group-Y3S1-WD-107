@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Calendar, Clock, Users, FileText } from 'lucide-react';
 
 // Availability checker helper
 const checkAvailability = async (resourceId, bookingDate, startTime, endTime) => {
-    const response = await axios.get('http://localhost:8080/api/bookings/availability', {
+    const response = await axios.get('http://localhost:8090/api/bookings/availability', {
         params: { resourceId, date: bookingDate, startTime, endTime }
     });
     return response.data.available;
@@ -94,14 +94,41 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
 
     if (!isOpen) return null;
 
-     const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
         // Block submission if slot is taken (only for new bookings)
         if (!initialData && availability === false) return;
         try {
-            // onSubmit can be async and may throw error (e.g., from backend)
-            await onSubmit(formData);
+            // Prepare data with correct types and ISO datetime
+            const {
+                resourceId,
+                bookingDate,
+                startTime,
+                endTime,
+                purpose,
+                expectedAttendees,
+                contactEmail,
+                department,
+                specialRequirements
+            } = formData;
+
+            // Compose ISO 8601 datetime strings
+            const startDateTime = bookingDate && startTime ? `${bookingDate}T${startTime}` : null;
+            const endDateTime = bookingDate && endTime ? `${bookingDate}T${endTime}` : null;
+
+            const submitData = {
+                resourceId: resourceId ? Number(resourceId) : null,
+                startTime: startDateTime,
+                endTime: endDateTime,
+                purpose,
+                expectedAttendees: expectedAttendees ? Number(expectedAttendees) : 0,
+                contactEmail,
+                department,
+                specialReqs: specialRequirements
+            };
+
+            await onSubmit(submitData);
         } catch (err) {
             // Show a friendly message for booking conflict
             if (

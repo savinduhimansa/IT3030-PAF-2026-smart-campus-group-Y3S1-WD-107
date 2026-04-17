@@ -11,6 +11,7 @@ public class ResourceResponse {
     private Long resourceId;
     private String name;
     private ResourceType type;
+    private String department;
     private Integer capacity;
     private String location;
     private String description;
@@ -61,6 +62,14 @@ public class ResourceResponse {
 
     public void setType(ResourceType type) {
         this.type = type;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
     }
 
     public Integer getCapacity() {

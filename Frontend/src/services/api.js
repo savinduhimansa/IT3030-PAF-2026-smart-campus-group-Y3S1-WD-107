@@ -3,46 +3,46 @@ import axios from 'axios'
 const API_BASE = 'http://localhost:8080/api'
 
 const api = axios.create({
-  baseURL: API_BASE,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+    baseURL: API_BASE,
+    headers: {
+        'Content-Type': 'application/json',
+    },
 })
 
 // ─── Resource endpoints ───
 
 export const resourceApi = {
-  // GET /api/resources  (with optional filters)
-  getAll: (params = {}) => {
-    // Clean out empty/null params before sending
-    const cleanParams = {}
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== '' && value !== null && value !== undefined) {
-        cleanParams[key] = value
-      }
-    })
-    return api.get('/resources', { params: cleanParams })
-  },
+    // GET /api/resources  (with optional filters)
+    getAll: (params = {}) => {
+        // Clean out empty/null params before sending
+        const cleanParams = {}
+        Object.entries(params).forEach(([key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) {
+                cleanParams[key] = value
+            }
+        })
+        return api.get('/resources', { params: cleanParams })
+    },
 
-  // GET /api/resources/:id
-  getById: (resourceId) => api.get(`/resources/${resourceId}`),
+    // GET /api/resources/:id
+    getById: (resourceId) => api.get(`/resources/${resourceId}`),
 
-  // POST /api/resources
-  create: (data) => api.post('/resources', data),
+    // POST /api/resources
+    create: (data) => api.post('/resources', data),
 
-  // PUT /api/resources/:id
-  update: (resourceId, data) => api.put(`/resources/${resourceId}`, data),
+    // PUT /api/resources/:id
+    update: (resourceId, data) => api.put(`/resources/${resourceId}`, data),
 
-  // DELETE /api/resources/:id
-  delete: (resourceId) => api.delete(`/resources/${resourceId}`),
+    // DELETE /api/resources/:id
+    delete: (resourceId) => api.delete(`/resources/${resourceId}`),
 }
 
 // Get booking history (audit trail)
 export const getBookingHistory = (bookingId) =>
-    api.get(`/${bookingId}/history`).then(res => res.data);
+    Historyapi.get(`/${bookingId}/history`).then((res) => res.data);
 
 const Historyapi = axios.create({
-    baseURL: 'http://localhost:8082/api/bookings'
+    baseURL: 'http://localhost:8080/api/bookings'
 });
 
 export const getMyBookings = (userId) => Historyapi.get('/my', { headers: { 'X-User-Id': userId } }).then(res => res.data);
@@ -72,5 +72,14 @@ export const updateBooking = (userId, id, data) =>
 // New: Delete booking (DELETE)
 export const deleteBooking = (role, id) =>
     Historyapi.delete(`/${id}`, { headers: { 'X-User-Role': role } });
+
+// ─── Auth endpoints (Member 4) ───
+export const authApi = {
+    // POST /api/auth/register
+    register: (userData) => api.post('/auth/register', userData),
+
+    // POST /api/auth/login
+    login: (credentials) => api.post('/auth/login', credentials),
+};
 
 export default Historyapi
