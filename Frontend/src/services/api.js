@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE = 'http://localhost:8080/api'
+const API_BASE = 'http://localhost:8090/api'
 
 const api = axios.create({
     baseURL: API_BASE,
@@ -42,7 +42,7 @@ export const getBookingHistory = (bookingId) =>
     Historyapi.get(`/${bookingId}/history`).then((res) => res.data);
 
 const Historyapi = axios.create({
-    baseURL: 'http://localhost:8080/api/bookings'
+    baseURL: 'http://localhost:8090/api/bookings'
 });
 
 export const getMyBookings = (userId) => Historyapi.get('/my', { headers: { 'X-User-Id': userId } }).then(res => res.data);
