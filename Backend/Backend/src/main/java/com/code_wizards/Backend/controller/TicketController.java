@@ -23,11 +23,11 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    // A POST endpoint to create a new ticket.
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Ticket> createTicket(
             @Valid @RequestPart("ticket") TicketCreateDto ticketDto,
-            @RequestPart(value = "files", required = false) MultipartFile[] files) {
+            @RequestPart(value = "files", required = false) MultipartFile[] files,
+            @RequestHeader("X-User-Id") Long creatorId) {
         
         Ticket ticket = Ticket.builder()
                 .resourceId(ticketDto.getResourceId())
@@ -36,6 +36,7 @@ public class TicketController {
                 .priority(ticketDto.getPriority())
                 .resourceLocation(ticketDto.getResourceLocation())
                 .contactDetails(ticketDto.getContactDetails())
+                .creatorId(creatorId)
                 .build();
                 
         Ticket createdTicket = ticketService.createTicket(ticket, files);
@@ -44,8 +45,12 @@ public class TicketController {
 
     // A GET endpoint to retrieve tickets (with optional filtering by status).
     @GetMapping
-    public ResponseEntity<List<Ticket>> getTickets(@RequestParam(required = false) TicketStatus status) {
-        List<Ticket> tickets = ticketService.getTickets(status);
+    public ResponseEntity<List<Ticket>> getTickets(
+            @RequestParam(required = false) TicketStatus status,
+            @RequestHeader(value = "X-User-Role", defaultValue = "USER") String role,
+            @RequestHeader(value = "X-User-Id", defaultValue = "0") Long userId) {
+        boolean isAdmin = role.equalsIgnoreCase("ADMIN");
+        List<Ticket> tickets = ticketService.getTickets(status, userId, isAdmin);
         return ResponseEntity.ok(tickets);
     }
 
@@ -61,6 +66,17 @@ public class TicketController {
                 updateRequest.getResolutionNotes()
         );
         return ResponseEntity.ok(updatedTicket);
+    }
+
+    // A POST endpoint to add a comment to a ticket.
+    @PostMapping("/{ticketId}/comments")
+    public ResponseEntity<com.code_wizards.Backend.entity.Comment> addComment(
+            @PathVariable Long ticketId,
+            @RequestHeader("X-User-Id") Long authorId,
+            @Valid @RequestBody com.code_wizards.Backend.dto.CommentUpdateDto commentDto) {
+        
+        com.code_wizards.Backend.entity.Comment comment = ticketService.addComment(ticketId, authorId, commentDto.getText());
+        return new ResponseEntity<>(comment, HttpStatus.CREATED);
     }
 
     // A DELETE endpoint to delete a specific comment, enforcing a check to ensure the user requesting the deletion is the owner of the comment.

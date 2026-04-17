@@ -1,24 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { PlusCircle, Search, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
 
 const API_URL = 'http://localhost:8090/api/tickets';
 
 export default function TicketDashboard() {
-  const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
 
   useEffect(() => {
-    const role = localStorage.getItem('role') || 'USER';
-    if (role.toUpperCase() !== 'ADMIN') {
-      navigate('/tickets/new', { replace: true });
-    } else {
-      fetchTickets();
-    }
-  }, [filter, navigate]);
+    fetchTickets();
+  }, [filter]);
 
   const fetchTickets = async () => {
     try {

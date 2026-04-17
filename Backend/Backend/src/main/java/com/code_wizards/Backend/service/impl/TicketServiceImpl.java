@@ -52,11 +52,33 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
-    public List<Ticket> getTickets(TicketStatus status) {
-        if (status != null) {
-            return ticketRepository.findByStatus(status);
+    public List<Ticket> getTickets(TicketStatus status, Long creatorId, boolean isAdmin) {
+        if (isAdmin) {
+            if (status != null) {
+                return ticketRepository.findByStatus(status);
+            }
+            return ticketRepository.findAll();
+        } else {
+            if (status != null) {
+                return ticketRepository.findByStatusAndCreatorId(status, creatorId);
+            }
+            return ticketRepository.findByCreatorId(creatorId);
         }
-        return ticketRepository.findAll();
+    }
+
+    @Override
+    @Transactional
+    public Comment addComment(Long ticketId, Long authorId, String text) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new TicketNotFoundException("Ticket not found with id: " + ticketId));
+
+        Comment comment = Comment.builder()
+                .ticket(ticket)
+                .authorId(authorId)
+                .text(text)
+                .build();
+
+        return commentRepository.save(comment);
     }
 
     @Override
