@@ -111,7 +111,7 @@ public class ResourceServiceImpl implements ResourceService {
     // search resources with filters
     @Override
     public List<ResourceResponse> searchResources(ResourceType type, Integer minCapacity, String location,
-            ResourceStatus status, LocalTime availableFrom, LocalTime availableTo) {
+                                                  ResourceStatus status, LocalTime availableFrom, LocalTime availableTo) {
 
         List<Resource> resources = resourceRepository.findAll();
 
@@ -158,6 +158,7 @@ public class ResourceServiceImpl implements ResourceService {
                 resource.getStatus(),
                 resource.getAvailableFrom(),
                 resource.getAvailableTo(),
-                resource.getIsBookable());
+                resource.getIsBookable()
+        );
     }
 }
