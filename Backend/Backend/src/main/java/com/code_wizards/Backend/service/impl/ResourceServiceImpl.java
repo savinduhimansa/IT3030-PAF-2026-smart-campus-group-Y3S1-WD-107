@@ -160,5 +160,6 @@ public class ResourceServiceImpl implements ResourceService {
                 resource.getAvailableFrom(),
                 resource.getAvailableTo(),
                 resource.getIsBookable());
+        return response;
     }
 }
