@@ -61,13 +61,21 @@ public class BookingService {
         }
         booking.setStatus(BookingStatus.PENDING);
 
+        if (booking.getCreatedAt() == null) {
+            booking.setCreatedAt(java.time.LocalDateTime.now());
+        }
+
         if (booking.getContactEmail() == null)
             booking.setContactEmail("");
         if (booking.getDepartment() == null)
             booking.setDepartment("");
         if (booking.getSpecialReqs() == null)
             booking.setSpecialReqs("");
-        return bookingRepository.save(booking);
+
+        Booking saved = bookingRepository.save(booking);
+        // Seed the audit trail with the initial status
+        logStatusChange(saved, BookingStatus.PENDING, String.valueOf(saved.getUserId()));
+        return saved;
     }
 
     public Booking getBooking(Long id) {
@@ -100,10 +108,12 @@ public class BookingService {
         if (hasApprovedConflict) {
             booking.setStatus(BookingStatus.REJECTED);
             booking.setRejectionReason("Auto-rejected due to conflict with another approved booking");
+            logStatusChange(booking, BookingStatus.REJECTED, changeBy);
             bookingRepository.save(booking);
             throw new IllegalStateException("Conflict detected with an already approved booking.");
         }
         booking.setStatus(BookingStatus.APPROVED);
+        logStatusChange(booking, BookingStatus.APPROVED, changeBy);
         return bookingRepository.save(booking);
     }
 
@@ -129,10 +139,27 @@ public class BookingService {
             throw new IllegalStateException("Booking is already inactive.");
         }
         booking.setStatus(BookingStatus.CANCELLED);
+        logStatusChange(booking, BookingStatus.CANCELLED, String.valueOf(userId));
         return bookingRepository.save(booking);
     }
 
+    @Transactional
     public List<BookingStatusHistory> getBookingHistory(Long bookingId) {
+        List<BookingStatusHistory> history = bookingStatusHistoryRepository.findByBooking_IdOrderByChangedAtAsc(bookingId);
+        if (!history.isEmpty()) {
+            return history;
+        }
+
+        // Backfill a single "current status" entry for older bookings that were created
+        // before audit logging was implemented.
+        Booking booking = getBooking(bookingId);
+        BookingStatusHistory seed = new BookingStatusHistory(
+                booking,
+                booking.getStatus(),
+                booking.getCreatedAt() != null ? booking.getCreatedAt() : java.time.LocalDateTime.now(),
+                String.valueOf(booking.getUserId()));
+        bookingStatusHistoryRepository.save(seed);
+
         return bookingStatusHistoryRepository.findByBooking_IdOrderByChangedAtAsc(bookingId);
     }
 
