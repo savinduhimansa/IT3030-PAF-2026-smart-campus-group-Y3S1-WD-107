@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByStatus(TicketStatus status);
+    List<Ticket> findByCreatorId(Long creatorId);
+    List<Ticket> findByStatusAndCreatorId(TicketStatus status, Long creatorId);
 }
