@@ -22,19 +22,26 @@ import CreateTicketForm from './components/CreateTicketForm'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import BookingDashboard from './pages/BookingDashboard'
+import BookingDetails from './components/BookingDetails'
+import Navbar from './components/Navbar'
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Admin Panel', icon: Settings, adminOnly: true },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
-  { path: '/booking', label: 'Bookings', icon: BookOpen, adminOnly: true },
+  { path: '/bookingDetails', label: 'Bookings', icon: BookOpen, adminOnly: true },
 ]
 
 function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const closeSidebar = () => setSidebarOpen(false);
-  const hideSidebar = location.pathname.startsWith('/feedbacks/') || location.pathname === '/find-best-lab' || location.pathname === '/register' || location.pathname === '/login';
+  const hideSidebar =
+    location.pathname.startsWith('/feedbacks/') ||
+    location.pathname === '/find-best-lab' ||
+    location.pathname === '/register' ||
+    location.pathname === '/login' ||
+    location.pathname === '/bookingDetails';
 
   const userRole = localStorage.getItem('role');
 
@@ -132,6 +139,7 @@ function AppLayout() {
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/booking" element={<BookingDashboard user={{ id: 1, role: userRole || 'USER' }} />} />
+            <Route path="/bookingDetails" element={<BookingDetails user={{ id: 1, role: userRole || 'USER' }} />} />
           </Routes>
         </main>
       </div>
@@ -142,12 +150,23 @@ function App() {
   const location = useLocation();
   const isHomepage = location.pathname === '/';
   const isCatalogue = location.pathname === '/catalogue';
+  const isBookingDetails = location.pathname === '/bookingDetails';
+
+  const userRole = localStorage.getItem('role');
 
   if (isHomepage) {
     return <HomePage />;
   }
   if (isCatalogue) {
     return <Catalogue />;
+  }
+  if (isBookingDetails) {
+    return (
+      <>
+        <Navbar />
+        <BookingDetails user={{ id: 1, role: userRole || 'USER' }} />
+      </>
+    );
   }
   return <AppLayout />;
 }
