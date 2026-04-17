@@ -1,21 +1,21 @@
 package com.code_wizards.Backend.service;
 
+import com.code_wizards.Backend.entity.Booking;
+import com.code_wizards.Backend.entity.BookingStatus;
+import com.code_wizards.Backend.entity.BookingStatusHistory;
+import com.code_wizards.Backend.entity.Resource;
+import com.code_wizards.Backend.entity.ResourceStatus;
+import com.code_wizards.Backend.repository.BookingHistoryRepository;
+import com.code_wizards.Backend.repository.BookingRepository;
+import com.code_wizards.Backend.repository.ResourceRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
-
-import com.code_wizards.Backend.entity.Booking;
-import com.code_wizards.Backend.entity.BookingStatus;
-import com.code_wizards.Backend.entity.BookingStatusHistory;
-import com.code_wizards.Backend.repository.BookingRepository;
-import com.code_wizards.Backend.repository.BookingHistoryRepository;
-
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.transaction.annotation.Transactional;
-
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -23,8 +23,7 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final BookingHistoryRepository bookingStatusHistoryRepository;
-
-
+    private final ResourceRepository resourceRepository;
 
     @Transactional
     public Booking updateBooking(Long id, Booking updatedBooking) {
@@ -33,8 +32,8 @@ public class BookingService {
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("Only pending bookings can be updated.");
         }
-        // Update allowed fields
-        booking.setResourceId(updatedBooking.getResourceId());
+
+        booking.setResource(requireBookableActiveResource(updatedBooking.getResourceId()));
         booking.setStartTime(updatedBooking.getStartTime());
         booking.setEndTime(updatedBooking.getEndTime());
         booking.setPurpose(updatedBooking.getPurpose());
@@ -53,12 +52,16 @@ public class BookingService {
 
     @Transactional
     public Booking createBookingRequest(Booking booking) {
-        java.util.List<BookingStatus> activeStatuses = java.util.Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
-        java.util.List<Booking> overlapping = bookingRepository.findOverlappingBookings(
-            booking.getResourceId(), booking.getStartTime(), booking.getEndTime(), activeStatuses);
+        Resource resource = requireBookableActiveResource(booking.getResourceId());
+        booking.setResource(resource);
+
+        List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
+        List<Booking> overlapping = bookingRepository.findOverlappingBookings(
+                resource.getResourceId(), booking.getStartTime(), booking.getEndTime(), activeStatuses);
         if (!overlapping.isEmpty()) {
             throw new IllegalStateException("Time slot conflicts with an existing booking.");
         }
+
         booking.setStatus(BookingStatus.PENDING);
 
         if (booking.getCreatedAt() == null) {
@@ -82,29 +85,39 @@ public class BookingService {
         return bookingRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Booking not found."));
     }
 
-    public java.util.List<Booking> getUserBookings(Long userId) {
+    public List<Booking> getUserBookings(Long userId) {
         return bookingRepository.findByUserId(userId);
     }
 
     public List<Booking> getAllBookings() {
         return bookingRepository.findAll();
     }
-    
-    public java.util.List<Booking> getAllBookingsByStatus(BookingStatus status) {
+
+    public List<Booking> getAllBookingsByStatus(BookingStatus status) {
         return bookingRepository.findByStatus(status);
     }
 
     @Transactional
     public Booking approveBooking(Long id, String changeBy) {
         Booking booking = getBooking(id);
+
+        // Step 1: Validate booking is PENDING
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("Only pending bookings can be approved.");
         }
-        java.util.List<BookingStatus> activeStatuses = java.util.Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
-        java.util.List<Booking> overlapping = bookingRepository.findOverlappingBookings(
-            booking.getResourceId(), booking.getStartTime(), booking.getEndTime(), activeStatuses);
+
+        Resource resource = booking.getResource();
+        if (resource == null || resource.getResourceId() == null) {
+            throw new IllegalStateException("Booking has no associated resource.");
+        }
+
+        // Step 2: Check for time conflicts with other APPROVED bookings
+        List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
+        List<Booking> overlapping = bookingRepository.findOverlappingBookings(
+                resource.getResourceId(), booking.getStartTime(), booking.getEndTime(), activeStatuses);
         boolean hasApprovedConflict = overlapping.stream()
                 .anyMatch(b -> !b.getId().equals(booking.getId()) && b.getStatus() == BookingStatus.APPROVED);
+
         if (hasApprovedConflict) {
             booking.setStatus(BookingStatus.REJECTED);
             booking.setRejectionReason("Auto-rejected due to conflict with another approved booking");
@@ -112,8 +125,16 @@ public class BookingService {
             bookingRepository.save(booking);
             throw new IllegalStateException("Conflict detected with an already approved booking.");
         }
+
+        // Step 3: Approve booking and UPDATE RESOURCE AVAILABILITY
         booking.setStatus(BookingStatus.APPROVED);
         logStatusChange(booking, BookingStatus.APPROVED, changeBy);
+
+        // KEY FIX: Mark resource as booked
+        resource.setIsBookable(false);
+
+        // Step 4: Save both entities
+        resourceRepository.save(resource);
         return bookingRepository.save(booking);
     }
 
@@ -138,6 +159,16 @@ public class BookingService {
         if (booking.getStatus() == BookingStatus.CANCELLED || booking.getStatus() == BookingStatus.REJECTED) {
             throw new IllegalStateException("Booking is already inactive.");
         }
+
+        // KEY FIX: If booking was APPROVED, make resource available again
+        if (booking.getStatus() == BookingStatus.APPROVED) {
+            Resource resource = booking.getResource();
+            if (resource != null) {
+                resource.setIsBookable(true);
+                resourceRepository.save(resource);
+            }
+        }
+
         booking.setStatus(BookingStatus.CANCELLED);
         logStatusChange(booking, BookingStatus.CANCELLED, String.valueOf(userId));
         return bookingRepository.save(booking);
@@ -172,6 +203,26 @@ public class BookingService {
         bookingStatusHistoryRepository.save(history);
     }
 
+    private Resource requireBookableActiveResource(Long resourceId) {
+        if (resourceId == null) {
+            throw new IllegalArgumentException("resourceId is required");
+        }
+
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new IllegalArgumentException("Resource not found with id: " + resourceId));
+
+        if (Boolean.FALSE.equals(resource.getIsBookable())) {
+            throw new IllegalStateException("Selected resource is no longer available for booking");
+        }
+
+        if (resource.getStatus() != ResourceStatus.ACTIVE) {
+            throw new IllegalStateException(
+                    "Resource is in " + resource.getStatus() + " status and cannot be booked");
+        }
+
+        return resource;
+    }
+
     public boolean checkAvailability(Long resourceId, LocalDate date, LocalTime startTime, LocalTime endTime) {
         List<BookingStatus> activeStatuses = Arrays.asList(BookingStatus.PENDING, BookingStatus.APPROVED);
         java.time.LocalDateTime startDateTime = java.time.LocalDateTime.of(date, startTime);
@@ -180,5 +231,4 @@ public class BookingService {
                 resourceId, startDateTime, endDateTime, activeStatuses);
         return overlapping.isEmpty();
     }
-    
 }

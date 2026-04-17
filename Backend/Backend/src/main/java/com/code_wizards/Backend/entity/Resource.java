@@ -1,8 +1,11 @@
 package com.code_wizards.Backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "resources")
@@ -44,6 +47,10 @@ public class Resource {
 
     @Column(nullable = false)
     private Boolean isBookable = true;
+
+    @OneToMany(mappedBy = "resource", cascade = CascadeType.PERSIST)
+    @JsonIgnore
+    private List<Booking> bookings = new ArrayList<>();
 
     public Resource() {
     }
@@ -149,5 +156,13 @@ public class Resource {
 
     public void setIsBookable(Boolean isBookable) {
         this.isBookable = isBookable;
+    }
+
+    public List<Booking> getBookings() {
+        return bookings;
+    }
+
+    public void setBookings(List<Booking> bookings) {
+        this.bookings = bookings;
     }
 }

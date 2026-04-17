@@ -16,11 +16,9 @@ public interface BookingRepository extends JpaRepository<Booking, Long>{
 
        List<Booking> findByStatus(BookingStatus status);
     
-       List<Booking> findByResourceIdAndStatus(Long resourceId, BookingStatus status);
+       List<Booking> findByResource_ResourceIdAndStatus(Long resourceId, BookingStatus status);
 
-
-
-    @Query("SELECT b FROM Booking b WHERE b.resourceId = :resourceId " +
+    @Query("SELECT b FROM Booking b WHERE b.resource.resourceId = :resourceId " +
            "AND b.status IN :statuses " +
            "AND b.startTime < :newEndTime " +
            "AND b.endTime > :newStartTime")

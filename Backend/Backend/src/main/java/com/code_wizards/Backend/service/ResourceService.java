@@ -29,6 +29,8 @@ public interface ResourceService {
             LocalTime availableFrom,
             LocalTime availableTo);
 
+    List<ResourceResponse> getAvailableResources(ResourceType type, Integer minCapacity, String location);
+
     // Generate PDF report
     byte[] generateResourcesPdf();
 }

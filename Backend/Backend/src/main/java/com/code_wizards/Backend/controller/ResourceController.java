@@ -52,7 +52,12 @@ public class ResourceController {
             @RequestParam(required = false) String location,
             @RequestParam(required = false) ResourceStatus status,
             @RequestParam(required = false) LocalTime availableFrom,
-            @RequestParam(required = false) LocalTime availableTo) {
+            @RequestParam(required = false) LocalTime availableTo,
+            @RequestParam(required = false, defaultValue = "false") Boolean bookableOnly) {
+
+        if (Boolean.TRUE.equals(bookableOnly)) {
+            return ResponseEntity.ok(resourceService.getAvailableResources(type, minCapacity, location));
+        }
         // If filters exist → search
         if (type != null || minCapacity != null || location != null || status != null
                 || availableFrom != null || availableTo != null) {
