@@ -27,9 +27,11 @@ const Login = () => {
 
             const token = response.data?.token;
             const userRole = response.data?.role || 'USER';
+            const userId = response.data?.id;
 
             if (token) localStorage.setItem('token', token);
             localStorage.setItem('role', userRole);
+            if (userId) localStorage.setItem('userId', userId);
 
             if (userRole === 'ADMIN') {
                 navigate('/admin');

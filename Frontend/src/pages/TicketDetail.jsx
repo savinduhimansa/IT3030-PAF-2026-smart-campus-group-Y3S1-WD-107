@@ -3,14 +3,17 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Trash2, Edit2, MessageSquare, Image as ImageIcon } from 'lucide-react';
 
-const API_URL = 'http://localhost:8080/api/tickets';
-const MOCK_USER_ID = 1; // Assuming logged in user ID is 1 for testing purposes
+const API_URL = 'http://localhost:8090/api/tickets';
 
 export default function TicketDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const role = localStorage.getItem('role') || 'USER';
+  const isAdmin = role.toUpperCase() === 'ADMIN';
+  const userId = Number(localStorage.getItem('userId')) || 0;
   
   const [status, setStatus] = useState('');
   const [resolutionNotes, setResolutionNotes] = useState('');
@@ -27,8 +30,12 @@ export default function TicketDetail() {
 
   const fetchTicket = async () => {
     try {
-      // In a real app we'd fetch a single ticket. Assuming our backend returns all for now and we filter, or we hit a /:id endpoint
-      const response = await axios.get(API_URL);
+      const response = await axios.get(API_URL, { 
+        headers: { 
+          'X-User-Role': role,
+          'X-User-Id': userId
+        } 
+      });
       const found = response.data.find(t => t.id.toString() === id);
       if (found) {
         setTicket(found);
@@ -48,6 +55,8 @@ export default function TicketDetail() {
       const response = await axios.patch(`${API_URL}/${id}`, {
         status,
         resolutionNotes
+      }, {
+        headers: { 'X-User-Role': role }
       });
       setTicket(response.data);
       alert('Ticket updated successfully!');
@@ -61,7 +70,7 @@ export default function TicketDetail() {
     if (!window.confirm("Are you sure you want to delete this comment?")) return;
     try {
       await axios.delete(`${API_URL}/${id}/comments/${commentId}`, {
-        headers: { 'X-User-Id': MOCK_USER_ID.toString() }
+        headers: { 'X-User-Id': userId }
       });
       setComments(comments.filter(c => c.id !== commentId));
     } catch (error) {
@@ -74,7 +83,7 @@ export default function TicketDetail() {
     try {
       await axios.put(`${API_URL}/${id}/comments/${commentId}`, 
         { text: editCommentText },
-        { headers: { 'X-User-Id': MOCK_USER_ID.toString() } }
+        { headers: { 'X-User-Id': userId } }
       );
       setComments(comments.map(c => c.id === commentId ? { ...c, text: editCommentText } : c));
       setEditingCommentId(null);
@@ -91,17 +100,17 @@ export default function TicketDetail() {
   };
 
   const handleAddComment = async () => {
-    // This assumes a backend POST comment endpoint exists 
-    // If it doesn't, this serves as UI placeholder per requirements
-    alert("Add comment logic goes here. Mapped to your hypothetical POST /comments endpoint.");
-    const newC = {
-       id: Math.random(),
-       text: newComment,
-       authorId: MOCK_USER_ID,
-       temp: true
-    };
-    setComments([...comments, newC]);
-    setNewComment('');
+    try {
+      const response = await axios.post(`${API_URL}/${id}/comments`, 
+        { text: newComment },
+        { headers: { 'X-User-Id': userId } }
+      );
+      setComments([...comments, response.data]);
+      setNewComment('');
+    } catch (error) {
+      console.error(error);
+      alert("Failed to post comment.");
+    }
   };
 
   if (loading) return <div className="min-h-screen pt-20 text-center font-medium text-gray-500 bg-gray-50">Loading ticket #{id}...</div>;
@@ -123,21 +132,25 @@ export default function TicketDetail() {
            </div>
            
            <div className="flex flex-col items-end gap-3">
-              <span className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${
-                 ticket.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
-                 ticket.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
-                 ticket.status === 'RESOLVED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-              }`}>
-                {ticket.status}
-              </span>
-              <span className="text-sm font-medium text-gray-500 px-3 border border-gray-200 rounded-lg py-1">Priority: {ticket.priority}</span>
+              {isAdmin && (
+                <>
+                  <span className={`px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${
+                     ticket.status === 'OPEN' ? 'bg-blue-100 text-blue-700' :
+                     ticket.status === 'IN_PROGRESS' ? 'bg-amber-100 text-amber-700' :
+                     ticket.status === 'RESOLVED' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+                  }`}>
+                    {ticket.status}
+                  </span>
+                  <span className="text-sm font-medium text-gray-500 px-3 border border-gray-200 rounded-lg py-1">Priority: {ticket.priority}</span>
+                </>
+              )}
            </div>
         </div>
 
         {/* Content & Technician Control Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className={`grid grid-cols-1 ${isAdmin ? 'md:grid-cols-3' : 'md:grid-cols-1'} gap-6`}>
           
-          <div className="col-span-2 space-y-6">
+          <div className={`${isAdmin ? 'col-span-2' : 'col-span-1'} space-y-6`}>
             <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
               <h3 className="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Description</h3>
               <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{ticket.description}</p>
@@ -145,19 +158,22 @@ export default function TicketDetail() {
               {ticket.attachments?.length > 0 && (
                  <div className="mt-8">
                     <h4 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2 uppercase tracking-wider"><ImageIcon size={16}/> Attachments</h4>
-                    <div className="flex gap-3 overflow-x-auto pb-2">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pb-2">
                        {ticket.attachments.map((att, idx) => (
-                           <div key={idx} className="bg-gray-50 rounded-xl p-3 border border-gray-100 min-w-[120px] text-center">
-                              <span className="text-xs font-semibold text-indigo-600 truncate block max-w-[100px]">{att.fileName}</span>
-                           </div>
+                           <a key={idx} href={`http://localhost:8090/${att.fileUrl}`} target="_blank" rel="noopener noreferrer" className="relative group overflow-hidden bg-gray-100 rounded-xl border border-gray-200 aspect-video flex items-center justify-center shadow-sm hover:border-indigo-400 hover:shadow-md transition-all">
+                              <img src={`http://localhost:8090/${att.fileUrl}`} alt={att.fileName} className="object-cover w-full h-full opacity-90 group-hover:scale-105 transition-all duration-300" onError={(e) => { e.target.style.display = 'none'; }} />
+                              <div className="absolute inset-0 bg-indigo-900/60 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center transition-opacity duration-200">
+                                <span className="text-white text-xs font-bold px-3 py-1.5 bg-black/40 rounded-lg truncate max-w-[90%] shadow-lg">{att.fileName}</span>
+                              </div>
+                           </a>
                        ))}
                     </div>
                  </div>
               )}
             </div>
             
-            {/* Resolution Area (if resolved) */}
-            {ticket.resolutionNotes && (
+            {/* Resolution Area (if resolved) - admin only */}
+            {ticket.resolutionNotes && isAdmin && (
                <div className="bg-green-50/50 p-8 rounded-2xl shadow-sm border border-green-100">
                  <h3 className="text-lg font-bold text-green-900 mb-3 border-b border-green-200/50 pb-3">Resolution Notes</h3>
                  <p className="text-green-800">{ticket.resolutionNotes}</p>
@@ -165,7 +181,8 @@ export default function TicketDetail() {
             )}
           </div>
 
-          {/* Tech Control Panel */}
+          {/* Tech Control Panel - admin only */}
+          {isAdmin && (
           <div className="col-span-1">
              <div className="bg-indigo-50/50 rounded-2xl p-6 border border-indigo-100 sticky top-6">
                 <h3 className="text-indigo-900 font-bold mb-4 flex items-center gap-2"><Edit2 size={16}/> Technician Panel</h3>
@@ -206,6 +223,7 @@ export default function TicketDetail() {
                 </div>
              </div>
           </div>
+          )}
         </div>
 
         {/* Comments Section */}
@@ -225,7 +243,7 @@ export default function TicketDetail() {
                        <div className="flex items-center gap-2 mb-1">
                           <span className="font-bold text-sm text-gray-900 flex items-center gap-2">
                             User #{comment.authorId}
-                            {comment.authorId === MOCK_USER_ID && <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">You</span>}
+                            {comment.authorId === userId && <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-xs">You</span>}
                           </span>
                        </div>
                        
@@ -238,7 +256,7 @@ export default function TicketDetail() {
                                rows="2"
                              />
                              <div className="flex gap-2 mt-2">
-                               <button onClick={() => handleEditComment(comment.id)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors">Save Output</button>
+                               <button onClick={() => handleEditComment(comment.id)} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded text-xs font-medium transition-colors">Save</button>
                                <button onClick={() => setEditingCommentId(null)} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs font-medium transition-colors">Cancel</button>
                              </div>
                            </div>
@@ -246,7 +264,7 @@ export default function TicketDetail() {
                          <p className="text-gray-700 mt-1">{comment.text}</p>
                        )}
                     </div>
-                    {comment.authorId === MOCK_USER_ID && editingCommentId !== comment.id && (
+                    {comment.authorId === userId && editingCommentId !== comment.id && (
                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                          <button onClick={() => startEdit(comment)} className="text-blue-500 hover:text-blue-700 p-2 bg-white rounded-full shadow-sm transition-colors">
                            <Edit2 size={16} />
@@ -262,7 +280,7 @@ export default function TicketDetail() {
           </div>
 
           <div className="flex gap-4">
-             <img src={`https://ui-avatars.com/api/?name=User+${MOCK_USER_ID}&background=4f46e5&color=fff&rounded=true`} alt="User avatar" className="w-10 h-10 rounded-full bg-indigo-100" />
+             <img src={`https://ui-avatars.com/api/?name=User+${userId}&background=4f46e5&color=fff&rounded=true`} alt="User avatar" className="w-10 h-10 rounded-full bg-indigo-100" />
              <div className="flex-1">
                <textarea 
                   value={newComment}
