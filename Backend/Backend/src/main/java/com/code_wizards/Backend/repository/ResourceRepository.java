@@ -31,4 +31,6 @@ public interface ResourceRepository extends JpaRepository<Resource, Long> {
             LocalTime availableFrom,
             LocalTime availableTo
     );
+
+        List<Resource> findByIsBookableAndStatus(Boolean isBookable, ResourceStatus status);
 }

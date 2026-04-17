@@ -1,5 +1,7 @@
 package com.code_wizards.Backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,7 +13,10 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long resourceId; // which room/lab/equipment
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "resource_id", nullable = false)
+    @JsonIgnore
+    private Resource resource;
     private Long userId; // who made the booking
 
     private LocalDateTime startTime;
@@ -41,12 +46,28 @@ public class Booking {
         this.id = id;
     }
 
-    public Long getResourceId() {
-        return resourceId;
+    public Resource getResource() {
+        return resource;
     }
 
+    public void setResource(Resource resource) {
+        this.resource = resource;
+    }
+
+    @JsonProperty("resourceId")
+    public Long getResourceId() {
+        return resource != null ? resource.getResourceId() : null;
+    }
+
+    @JsonProperty("resourceId")
     public void setResourceId(Long resourceId) {
-        this.resourceId = resourceId;
+        if (resourceId == null) {
+            this.resource = null;
+            return;
+        }
+        Resource ref = new Resource();
+        ref.setResourceId(resourceId);
+        this.resource = ref;
     }
 
     public Long getUserId() {

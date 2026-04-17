@@ -4,6 +4,8 @@ import { X, MapPin, Users, Clock, Shield, CheckCircle, XCircle } from 'lucide-re
 import { getTypeInfo, getStatusInfo } from '../constants'
 import FeedbackList from './FeedbackList'
 import FeedbackForm from './FeedbackForm'
+import BookingModal from './BookingModal'
+import { createBooking } from '../services/api'
 
 // Pass 'user' prop (null if not logged in)
 export default function ResourceDetailModal({ resource, onClose, user }) {
@@ -11,6 +13,7 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
   const typeInfo = getTypeInfo(resource.type)
   const statusInfo = getStatusInfo(resource.status)
   const [feedbackRefresh, setFeedbackRefresh] = useState(false);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
 
   // Close on Escape key
   useEffect(() => {
@@ -214,8 +217,14 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
             <button
               className="btn btn-primary"
               onClick={() => {
-                onClose();
-                navigate(`/booking?resourceId=${resource.resourceId}`);
+                const storedUserId = localStorage.getItem('userId')
+                if (!storedUserId && !user?.id) {
+                  onClose()
+                  navigate('/login')
+                  return
+                }
+
+                setIsBookingModalOpen(true)
               }}
               id="book-now-btn"
             >
@@ -223,6 +232,21 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
             </button>
           </div>
         )}
+
+        <BookingModal
+          isOpen={isBookingModalOpen}
+          onClose={() => setIsBookingModalOpen(false)}
+          prefillResourceId={resource.resourceId}
+          onSubmit={async (payload) => {
+            const resolvedUserId = user?.id ?? Number(localStorage.getItem('userId'))
+            if (!resolvedUserId) {
+              throw new Error('Please login to make a booking.')
+            }
+            await createBooking(resolvedUserId, payload)
+            setIsBookingModalOpen(false)
+            onClose()
+          }}
+        />
       </div>
     </div>
   )

@@ -127,6 +127,19 @@ public class ResourceServiceImpl implements ResourceService {
                 .collect(Collectors.toList());
     }
 
+            @Override
+            public List<ResourceResponse> getAvailableResources(ResourceType type, Integer minCapacity, String location) {
+            List<Resource> resources = resourceRepository.findByIsBookableAndStatus(true, ResourceStatus.ACTIVE);
+
+            return resources.stream()
+                .filter(resource -> type == null || resource.getType() == type)
+                .filter(resource -> minCapacity == null || resource.getCapacity() >= minCapacity)
+                .filter(resource -> location == null || location.isBlank() ||
+                    resource.getLocation().toLowerCase().contains(location.toLowerCase()))
+                .map(this::mapEntityToResponse)
+                .collect(Collectors.toList());
+            }
+
     // Validation method
     private void validateAvailabilityWindow(LocalTime from, LocalTime to) {
         if (from != null && to != null && !from.isBefore(to)) {

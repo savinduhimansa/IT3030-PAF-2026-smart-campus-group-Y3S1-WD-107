@@ -19,7 +19,7 @@ const checkAvailability = async (resourceId, bookingDate, startTime, endTime) =>
     return response.data.available;
 };
 
-export default function BookingModal({ isOpen, onClose, onSubmit, initialData }) {
+export default function BookingModal({ isOpen, onClose, onSubmit, initialData, prefillResourceId }) {
     const todayISODate = getTodayLocalISODate();
 
     const [formData, setFormData] = useState({
@@ -43,7 +43,9 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
 
     // Prefill form when editing
     useEffect(() => {
-        if (isOpen && initialData) {
+        if (!isOpen) return;
+
+        if (initialData) {
             setFormData({
                 resourceId: initialData.resourceId || '',
                 bookingDate: initialData.bookingDate || '',
@@ -55,9 +57,9 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
                 department: initialData.department || '',
                 specialRequirements: initialData.specialRequirements || ''
             });
-        } else if (isOpen && !initialData) {
+        } else {
             setFormData({
-                resourceId: '',
+                resourceId: prefillResourceId ?? '',
                 bookingDate: '',
                 startTime: '',
                 endTime: '',
@@ -69,10 +71,10 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
             });
         }
 
-        // Reset availability and error when modal opens/closes
+        // Reset availability and error when modal opens
         setAvailability(null);
         setError('');
-    }, [isOpen, initialData]);
+    }, [isOpen, initialData, prefillResourceId]);
 
     useEffect(() => {
         const { resourceId, bookingDate, startTime, endTime } = formData;
