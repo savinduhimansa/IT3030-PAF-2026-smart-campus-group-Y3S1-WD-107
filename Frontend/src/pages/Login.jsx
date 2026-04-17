@@ -49,7 +49,7 @@ const Login = () => {
         <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B1120] px-4 relative overflow-hidden">
             {/* Background Glow Effect */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-                 style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)' }}
+                style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)' }}
             />
 
             {/* Logo Area */}

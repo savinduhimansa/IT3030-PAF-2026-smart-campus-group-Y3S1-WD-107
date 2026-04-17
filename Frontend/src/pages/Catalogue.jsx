@@ -111,7 +111,9 @@ export default function Catalogue() {
 
   if (loading) {
     return (
-      <>
+      <div className="light-theme min-h-screen">
+        <Navbar />
+        <div style={{ height: '72px' }} />
         <div className="page-header" id="catalogue-header">
           <h1>Facilities Catalogue</h1>
           <p>Browse and search all campus resources</p>
@@ -123,13 +125,16 @@ export default function Catalogue() {
           </div>
         </div>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </>
+        <Footer />
+      </div>
     )
   }
 
   if (error) {
     return (
-      <>
+      <div className="light-theme min-h-screen">
+        <Navbar />
+        <div style={{ height: '72px' }} />
         <div className="page-header" id="catalogue-header">
           <h1>Facilities Catalogue</h1>
           <p>Browse and search all campus resources</p>
@@ -147,21 +152,22 @@ export default function Catalogue() {
             </button>
           </div>
         </div>
-      </>
+        <Footer />
+      </div>
     )
   }
 
   return (
-    <>
+    <div className="light-theme min-h-screen">
       <Navbar />
       <div style={{ height: '72px' }} /> {/* Spacer for navbar */}
       <div className="page-header" id="catalogue-header">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
           <div>
-            <h1 style={{display:'flex',alignItems:'center',gap:8}}>
-              Facilities Catalogue <span style={{fontSize:24}}>✨</span>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              Facilities Catalogue <span style={{ fontSize: 24 }}>✨</span>
             </h1>
-            <p>Browse and search all campus resources — <span style={{color:'var(--accent-blue)',fontWeight:600}}>lecture halls</span>, <span style={{color:'var(--accent-green)',fontWeight:600}}>labs</span>, <span style={{color:'var(--accent-orange)',fontWeight:600}}>meeting rooms</span>, and <span style={{color:'var(--accent-pink)',fontWeight:600}}>equipment</span></p>
+            <p>Browse and search all campus resources — <span style={{ color: 'var(--accent-blue)', fontWeight: 600 }}>lecture halls</span>, <span style={{ color: 'var(--accent-green)', fontWeight: 600 }}>labs</span>, <span style={{ color: 'var(--accent-orange)', fontWeight: 600 }}>meeting rooms</span>, and <span style={{ color: 'var(--accent-pink)', fontWeight: 600 }}>equipment</span></p>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'flex-end' }}>
             <button className="btn btn-primary" onClick={() => navigate('/find-best-lab')} style={{ marginBottom: 6 }}>
@@ -184,7 +190,7 @@ export default function Catalogue() {
               className="search-input"
               placeholder="Search by name, location, or description..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+               onChange={(e) => setSearchQuery(e.target.value)}
               id="search-input"
             />
           </div>
@@ -301,7 +307,7 @@ export default function Catalogue() {
                   key={resource.resourceId}
                   className="resource-card animate-in creative-card"
                   id={`resource-card-${resource.resourceId}`}
-                  style={{ animationDelay: `${i * 50}ms`, boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}
+                  style={{ animationDelay: `${i * 50}ms`, transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.03)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 >
@@ -339,7 +345,7 @@ export default function Catalogue() {
                       </span>
                     </div>
 
-                    <h3 style={{display:'flex',alignItems:'center',gap:6}}>
+                    <h3 style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {typeInfo.icon} {resource.name}
                     </h3>
                     <p className="resource-card-desc">
@@ -394,18 +400,7 @@ export default function Catalogue() {
           onClose={() => setSelectedResource(null)}
         />
       )}
-      {/* Creative styles */}
-      <style>{`
-        .creative-filter-bar { background: var(--surface-glass); border-radius: 16px; box-shadow: 0 2px 16px 0 rgba(0,0,0,0.04); margin-bottom: 18px; }
-        .creative-search input { border-radius: 8px; border: 1px solid var(--border); }
-        .creative-select { border-radius: 8px; border: 1px solid var(--border); }
-        .creative-clear { background: var(--accent-pink); color: white; }
-        .creative-results-count { font-weight: 600; color: var(--accent-blue); }
-        .creative-grid { gap: 28px; }
-        .creative-card { border-radius: 14px; }
-        .creative-meta span { background: var(--surface-glass); border-radius: 6px; padding: 2px 8px; margin-right: 6px; }
-      `}</style>
       <Footer />
-    </>
+    </div>
   )
 }
