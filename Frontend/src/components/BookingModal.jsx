@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { X, Calendar, Clock, Users, FileText } from 'lucide-react';
+
+const getTodayLocalISODate = () => {
+    const now = new Date();
+    const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const localMidnightISO = new Date(localMidnight.getTime() - localMidnight.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 10);
+    return localMidnightISO;
+};
 
 // Availability checker helper
 const checkAvailability = async (resourceId, bookingDate, startTime, endTime) => {
@@ -10,6 +20,8 @@ const checkAvailability = async (resourceId, bookingDate, startTime, endTime) =>
 };
 
 export default function BookingModal({ isOpen, onClose, onSubmit, initialData }) {
+    const todayISODate = getTodayLocalISODate();
+
     const [formData, setFormData] = useState({
         resourceId: '',
         bookingDate: '',
@@ -113,6 +125,11 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
                 specialRequirements
             } = formData;
 
+            if (bookingDate && bookingDate < todayISODate) {
+                setError('Please select today or a future date.');
+                return;
+            }
+
             // Compose ISO 8601 datetime strings
             const startDateTime = bookingDate && startTime ? `${bookingDate}T${startTime}` : null;
             const endDateTime = bookingDate && endTime ? `${bookingDate}T${endTime}` : null;
@@ -194,7 +211,7 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData })
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Date</label>
                             <div className="relative">
-                                <input required type="date" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none text-gray-900" value={formData.bookingDate} onChange={e => setFormData({ ...formData, bookingDate: e.target.value })} />
+                                <input required type="date" min={todayISODate} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none text-gray-900" value={formData.bookingDate} onChange={e => setFormData({ ...formData, bookingDate: e.target.value })} />
                                 <Calendar className="absolute left-3.5 top-3 text-gray-400" size={18} />
                             </div>
                         </div>
