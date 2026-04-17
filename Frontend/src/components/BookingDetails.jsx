@@ -131,7 +131,7 @@ function BookingDashboard({ user }) {
     };
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="min-h-screen bg-[#F8FAFC] pt-24">
             <main className="px-8 py-10">
                 <div className="flex flex-col gap-2 mb-8">
                     <h1 className="text-[28px] font-bold text-[#0F172A]">My Bookings</h1>
