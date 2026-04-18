@@ -566,10 +566,77 @@
       transform: translateX(120%) scale(0.9);
       opacity: 0;
     }
+
     to {
       transform: translateX(0) scale(1);
       opacity: 1;
     }
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  @keyframes glow-pulse {
+
+    0%,
+    100% {
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+
+    50% {
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+    }
+  }
+
+  @keyframes scroll-down {
+    0% {
+      transform: translateY(0);
+      opacity: 0;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      transform: translateY(12px);
+      opacity: 0;
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
+
+  .animate-scroll {
+    animation: scroll-down 2s ease-in-out infinite;
+  }
+
+  .glass-card-premium {
+    @apply backdrop-blur-2xl border border-white/20 shadow-2xl;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .perspective-card {
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+  }
+
+  .perspective-card:hover {
+    transform: perspective(1000px) rotateX(2deg) rotateY(2deg) translateY(-8px);
+    @apply shadow-2xl shadow-blue-500/10;
   }
 
   @keyframes slideInRight {
