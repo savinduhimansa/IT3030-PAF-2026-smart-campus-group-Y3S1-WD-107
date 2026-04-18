@@ -37,6 +37,8 @@ public class Booking {
 
     private String specialReqs;
 
+    private Integer quantity; // for equipment-type bookings (cameras, projectors, etc.)
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -157,5 +159,13 @@ public class Booking {
 
     public void setSpecialReqs(String specialReqs) {
         this.specialReqs = specialReqs;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 }
