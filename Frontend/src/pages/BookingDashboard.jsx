@@ -28,9 +28,16 @@ export default function AdminDashboard({ user }) {
     try {
       setLoading(true);
       setError('');
-      const data = await getAllBookings(user?.role || 'USER', filterStatus === 'ALL' ? null : filterStatus);
+      // Check if user is logged in
+      if (!user || !user.id) {
+        setError('User not authenticated');
+        setBookings([]);
+        return;
+      }
+
+      const data = await getAllBookings(user.id, user?.role || 'USER', filterStatus === 'ALL' ? null : filterStatus);
       setBookings(Array.isArray(data) ? data : []);
-    } catch (err) {
+    } catch (_err) {
       setError('Failed to fetch bookings.');
       setBookings([]);
     } finally {

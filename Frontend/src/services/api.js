@@ -51,13 +51,13 @@ export const getMyBookings = (userId) => Historyapi.get('/my', { headers: { 'X-U
 export const createBooking = (userId, data) => Historyapi.post('', data, { headers: { 'X-User-Id': userId } }).then(res => res.data);
 export const cancelBooking = (userId, id) => Historyapi.post(`/${id}/cancel`, {}, { headers: { 'X-User-Id': userId } }).then(res => res.data);
 
-export const getAllBookings = (role, status) => {
+export const getAllBookings = (userId, role, status) => {
     let url = '';
     // Only send status if it is a valid backend status value
     if (status && ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].includes(status)) {
         url += `?status=${status}`;
     }
-    return Historyapi.get(url, { headers: { 'X-User-Role': role } }).then(res => res.data);
+    return Historyapi.get(url, { headers: { 'X-User-Role': role, 'X-User-Id': userId } }).then(res => res.data);
 };
 // Approve booking: requires both X-User-Role and X-User-Id headers, no body
 export const approveBooking = (role, userId, id) =>

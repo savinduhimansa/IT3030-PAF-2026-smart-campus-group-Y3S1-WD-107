@@ -26,9 +26,6 @@ export default function Navbar() {
         <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 no-underline flex items-center gap-1">
           Report Issue
         </Link>
-        <Link to="/bookingDetails" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
-          Booking
-        </Link>
         <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
           Signup
         </Link>
