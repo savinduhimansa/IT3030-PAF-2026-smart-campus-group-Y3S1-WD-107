@@ -26,9 +26,7 @@ export default function Footer() {
       <div className="footer-desc" style={{margin: '10px 0 2px 0', color: 'var(--text-muted, #a1a1aa)', fontSize: '14px'}}>
         SpaceLink is a modern campus resource management platform for booking, browsing, and managing facilities with ease.
       </div>
-      <div className="footer-madeby">
-        Made with <span style={{color: '#f43f5e'}}>♥</span> by Code Wizards
-      </div>
+
       <style>{`
         .footer-ui {
           width: 100%;
@@ -81,9 +79,7 @@ export default function Footer() {
         .footer-icon.instagram:hover { color: #e1306c; transform: scale(1.2); opacity: 1; }
         .footer-icon.twitter:hover { color: #1da1f2; transform: scale(1.2); opacity: 1; }
         .footer-icon.facebook:hover { color: #1877f3; transform: scale(1.2); opacity: 1; }
-        .footer-madeby {
-          margin-top: 8px;
-        }
+
       `}</style>
     </footer>
   )
