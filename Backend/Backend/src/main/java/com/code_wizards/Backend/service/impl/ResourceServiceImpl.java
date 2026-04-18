@@ -158,13 +158,22 @@ public class ResourceServiceImpl implements ResourceService {
         resource.setAvailableFrom(request.getAvailableFrom());
         resource.setAvailableTo(request.getAvailableTo());
         resource.setIsBookable(request.getIsBookable());
+        // Keep both legacy "department" and "faculty" DB columns in sync.
+        resource.setDepartment(request.getDepartment());
+        resource.setFaculty(request.getDepartment());
     }
 
     private ResourceResponse mapEntityToResponse(Resource resource) {
+        String resolvedDepartment = resource.getDepartment();
+        if (resolvedDepartment == null || resolvedDepartment.isBlank()) {
+            resolvedDepartment = resource.getFaculty();
+        }
+
         return new ResourceResponse(
                 resource.getResourceId(),
                 resource.getName(),
                 resource.getType(),
+                resolvedDepartment,
                 resource.getCapacity(),
                 resource.getLocation(),
                 resource.getDescription(),
