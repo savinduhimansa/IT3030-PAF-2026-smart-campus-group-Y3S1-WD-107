@@ -12,6 +12,7 @@ import {
   Clock,
 } from 'lucide-react'
 import { resourceApi } from '../services/api'
+import Footer from '../components/Footer'
 
 export default function HomePage() {
   const [scrolled, setScrolled] = useState(false)
@@ -42,7 +43,7 @@ export default function HomePage() {
     { icon: <Search size={28} />, title: 'Smart Search & Filters', desc: 'Find the perfect resource instantly with powerful search across name, location, and type with multi-criteria filtering.' },
     { icon: <BarChart3 size={28} />, title: 'Real-Time Dashboard', desc: "Get a bird's eye view of all campus assets with live stats, resource distribution, and availability at a glance." },
     { icon: <Shield size={28} />, title: 'Status Tracking', desc: "Track resource status in real-time — Active, Out of Service, or Maintenance — so you always know what's available." },
-    { icon: <Settings size={28} />, title: 'Admin Management', desc: 'Full CRUD operations for administrators to add, update, and remove resources with an intuitive management panel.' },
+    { icon: <Settings size={28} />, title: 'Resource Management', desc: 'Full CRUD operations for administrators to add, update, and remove resources with an intuitive management panel.' },
     { icon: <Clock size={28} />, title: 'Availability Windows', desc: 'Define precise availability hours for each resource to streamline scheduling and prevent booking conflicts.' },
   ]
 
@@ -50,11 +51,11 @@ export default function HomePage() {
     <div className="min-h-screen relative overflow-x-hidden light-theme">
       {/* Navbar */}
       <nav
-        className="fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 flex items-center justify-between transition-all duration-250 py-4 bg-surface-dark/85 backdrop-blur-2xl border-b border-border"
+        className="fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 flex items-center justify-between transition-all duration-300 py-4 bg-[#0a0e1a]/85 backdrop-blur-md border-b border-white/5"
         id="home-navbar"
       >
-        <Link to="/" className="flex items-center gap-3 no-underline text-text-primary">
-          <div className="w-[42px] h-[42px] rounded-xl gradient-primary flex items-center justify-center shadow-glow">
+        <Link to="/" className="flex items-center gap-3 no-underline text-white">
+          <div className="w-[42px] h-[42px] rounded-xl bg-blue-gradient flex items-center justify-center shadow-lg shadow-blue-500/20">
             <Zap size={22} color="white" />
           </div>
           <h1 className="text-[22px] font-extrabold gradient-text">SpaceLink</h1>
@@ -67,19 +68,19 @@ export default function HomePage() {
           <Link to="/about" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
             About
           </Link>
-          <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-bold text-[#cbd5e1] hover:text-white transition-all duration-150 no-underline">
             Catalogue
           </Link>
-          <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 no-underline flex items-center gap-1">
+          <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-bold text-[#cbd5e1] hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 no-underline flex items-center gap-1">
             Report Issue
           </Link>
           <Link to="/bookingDetails" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
             Booking
           </Link>
-          <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-bold text-[#cbd5e1] hover:text-white transition-all duration-150 no-underline">
             Signup
           </Link>
-          <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-bold text-[#cbd5e1] hover:text-white transition-all duration-150 no-underline">
             Login
           </Link>
         </div>
@@ -190,7 +191,7 @@ export default function HomePage() {
         <div className="max-w-[700px] mx-auto p-10 md:p-14 glass-card rounded-2xl relative z-[1] backdrop-blur-lg">
           <h3 className="text-2xl md:text-[32px] font-extrabold mb-3.5">Ready to get started?</h3>
           <p className="text-base text-text-secondary mb-8 leading-relaxed">
-            Explore the full catalogue of campus facilities and equipment, or jump into the admin panel to manage your resources.
+            Explore the full catalogue of campus facilities and equipment, or jump into the resources section to manage your resources.
           </p>
           <div className="flex items-center justify-center gap-3.5 flex-wrap">
             <Link to="/catalogue" className="btn-primary text-base px-8 py-3.5 font-bold no-underline">
@@ -203,21 +204,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="px-5 md:px-12 py-8 border-t border-border flex items-center justify-between flex-wrap gap-4" id="home-footer">
-        <div className="flex items-center gap-2 text-sm text-text-muted">
-          <div className="w-7 h-7 rounded-md gradient-primary flex items-center justify-center">
-            <Zap size={14} color="white" />
-          </div>
-          SpaceLink — Smart Campus Operations Hub
-        </div>
-        <div className="flex gap-6">
-          <Link to="/dashboard" className="text-[13px] text-text-muted hover:text-text-primary transition-colors no-underline">Dashboard</Link>
-          <Link to="/catalogue" className="text-[13px] text-text-muted hover:text-text-primary transition-colors no-underline">Catalogue</Link>
-          <Link to="/tickets/new" className="text-[13px] text-text-muted hover:text-red-400 transition-colors no-underline">Report Issue</Link>
-          <Link to="/admin" className="text-[13px] text-text-muted hover:text-text-primary transition-colors no-underline">Admin</Link>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }

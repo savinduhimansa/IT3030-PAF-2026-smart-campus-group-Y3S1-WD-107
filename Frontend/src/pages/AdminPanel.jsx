@@ -11,8 +11,10 @@ import {
   Loader2,
   AlertTriangle,
   RefreshCw,
+  Clock,
+  LayoutDashboard,
 } from 'lucide-react'
-import { RESOURCE_TYPES, STATUSES, getTypeInfo, getStatusInfo } from '../constants'
+import { RESOURCE_TYPES, STATUSES, FACULTIES, getTypeInfo, getStatusInfo } from '../constants'
 import { resourceApi } from '../services/api'
 
 const emptyForm = {
@@ -25,6 +27,7 @@ const emptyForm = {
   availableFrom: '08:00',
   availableTo: '18:00',
   isBookable: true,
+  department: 'Faculty of Computing',
 }
 
 export default function AdminPanel() {
@@ -50,7 +53,7 @@ export default function AdminPanel() {
       setResources(response.data)
     } catch (err) {
       console.error('Failed to fetch resources:', err)
-      setError(err.response?.data?.message || 'Failed to connect to the server.')
+      setError(err.response?.data?.message || 'Failed to connect to the server. Make sure the backend is running on port 8080.')
     } finally {
       setLoading(false)
     }
@@ -89,6 +92,7 @@ export default function AdminPanel() {
       availableFrom: form.availableFrom,
       availableTo: form.availableTo,
       isBookable: form.isBookable,
+      department: form.department,
     }
 
     try {
@@ -130,6 +134,7 @@ export default function AdminPanel() {
       availableFrom: resource.availableFrom || '08:00',
       availableTo: resource.availableTo || '18:00',
       isBookable: resource.isBookable ?? true,
+      department: resource.department || 'Faculty of Computing',
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -162,369 +167,408 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <>
-        <div className="page-header" id="admin-header">
-          <h1>Admin Panel</h1>
-          <p>Add, edit, and manage campus facilities and equipment</p>
-        </div>
-        <div className="page-body">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '80px 0', gap: '12px', color: 'var(--text-muted)' }}>
-            <Loader2 size={24} style={{ animation: 'spin 1s linear infinite' }} />
-            <span>Loading resources...</span>
+      <div className="light-theme min-h-screen bg-[#F8FAFC]">
+        <div className="pt-24 pb-8 border-b border-slate-100 bg-white/80 backdrop-blur-md px-8">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-3xl font-bold gradient-text">Resources</h1>
+            <p className="text-[#64748B] text-sm font-medium mt-1">Add, edit, and manage campus facilities and equipment</p>
           </div>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-      </>
+        <div className="max-w-7xl mx-auto px-8 py-20 flex flex-col items-center justify-center gap-4 text-[#64748B]">
+          <Loader2 size={32} className="animate-spin text-[#4F8CFF]" />
+          <span className="font-bold">Accessing secure database...</span>
+        </div>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <>
-        <div className="page-header" id="admin-header">
-          <h1>Admin Panel</h1>
-          <p>Add, edit, and manage campus facilities and equipment</p>
-        </div>
-        <div className="page-body">
-          <div style={{
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            padding: '60px 24px', textAlign: 'center', gap: '16px',
-          }}>
-            <AlertTriangle size={48} style={{ color: 'var(--accent-red)', opacity: 0.7 }} />
-            <h3 style={{ fontSize: '18px', color: 'var(--text-secondary)' }}>Connection Error</h3>
-            <p style={{ fontSize: '14px', color: 'var(--text-muted)', maxWidth: '500px' }}>{error}</p>
-            <button className="btn btn-primary" onClick={fetchResources}>Retry</button>
+      <div className="light-theme min-h-screen bg-[#F8FAFC]">
+        <div className="pt-24 pb-8 border-b border-slate-100 bg-white/80 backdrop-blur-md px-8">
+          <div className="max-w-7xl mx-auto">
+            <h1 className="text-3xl font-bold gradient-text">Resources</h1>
+            <p className="text-[#64748B] text-sm font-medium mt-1">Add, edit, and manage campus facilities and equipment</p>
           </div>
         </div>
-      </>
+        <div className="max-w-7xl mx-auto px-8 py-20 flex flex-col items-center justify-center text-center gap-6">
+          <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle size={32} className="text-red-500" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-[#1E293B]">Management Console Offline</h3>
+            <p className="text-[#64748B] max-w-[500px] mt-2 font-medium">{error}</p>
+          </div>
+          <button 
+            className="px-6 py-2.5 bg-blue-gradient text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all" 
+            onClick={fetchResources}
+          >
+            Reconnect to System
+          </button>
+        </div>
+      </div>
     )
   }
 
   return (
-    <>
-      <div className="page-header" id="admin-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div className="light-theme min-h-screen bg-[#F8FAFC]">
+      <div className="pt-8 pb-10 border-b border-slate-100 bg-white/80 backdrop-blur-md px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-6">
           <div>
-            <h1>Admin Panel</h1>
-            <p>Add, edit, and manage campus facilities and equipment</p>
+            <h1 className="text-3xl font-bold gradient-text">Resources</h1>
+            <p className="text-[#64748B] text-sm font-bold mt-1">Streamline your campus facility management</p>
           </div>
-          <button className="btn btn-secondary btn-sm" onClick={fetchResources} title="Refresh">
-            <RefreshCw size={14} /> Refresh
+          <button 
+            className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-[#1E293B] hover:bg-slate-100 text-sm font-bold rounded-xl border border-slate-200 transition-all font-sans"
+            onClick={fetchResources} 
+            title="Refresh"
+          >
+            <RefreshCw size={16} className={saving ? 'animate-spin' : ''} /> Refresh List
           </button>
         </div>
       </div>
 
-      <div className="page-body">
-        <div className="admin-grid">
-          {/* Form */}
-          <div className="admin-form-card" id="admin-form-card">
-            <h3>
-              {editingId ? (
-                <>
-                  <Pencil size={18} /> Edit Resource
-                </>
-              ) : (
-                <>
-                  <Plus size={18} /> Add New Resource
-                </>
-              )}
-            </h3>
-
-            <form onSubmit={handleSubmit} id="resource-form">
-              <div className="form-group">
-                <label htmlFor="form-name">Resource Name *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  id="form-name"
-                  name="name"
-                  value={form.name}
-                  onChange={handleChange}
-                  placeholder="e.g. Lecture Hall 201"
-                  required
-                />
+      <div className="max-w-7xl mx-auto px-8 py-10 pb-20">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          {/* Form Section */}
+          <div className="lg:col-span-4" id="admin-form-section">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sticky top-28">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#4F8CFF]">
+                  {editingId ? <Pencil size={20} /> : <Plus size={20} />}
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-[#1E293B]">
+                    {editingId ? 'Edit Resource' : 'Add New Resource'}
+                  </h3>
+                  <p className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest mt-0.5">
+                    {editingId ? 'Updating Entry' : 'New Database Entry'}
+                  </p>
+                </div>
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="form-type">Type *</label>
-                  <select
-                    className="form-select"
-                    id="form-type"
-                    name="type"
-                    value={form.type}
-                    onChange={handleChange}
-                  >
-                    {RESOURCE_TYPES.map((t) => (
-                      <option key={t.value} value={t.value}>
-                        {t.icon} {t.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="form-capacity">Capacity *</label>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="form-name" className="text-xs font-bold text-[#475569] px-1 italic">Resource Name *</label>
                   <input
-                    type="number"
-                    className="form-input"
-                    id="form-capacity"
-                    name="capacity"
-                    value={form.capacity}
+                    type="text"
+                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
+                    id="form-name"
+                    name="name"
+                    value={form.name}
                     onChange={handleChange}
-                    placeholder="e.g. 100"
-                    min="1"
+                    placeholder="e.g. Lecture Hall 201"
                     required
                   />
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label htmlFor="form-location">Location *</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  id="form-location"
-                  name="location"
-                  value={form.location}
-                  onChange={handleChange}
-                  placeholder="e.g. Building A – Floor 1"
-                  required
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="form-status">Status *</label>
-                  <select
-                    className="form-select"
-                    id="form-status"
-                    name="status"
-                    value={form.status}
-                    onChange={handleChange}
-                  >
-                    {STATUSES.map((s) => (
-                      <option key={s.value} value={s.value}>
-                        {s.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end', gap: '10px', paddingBottom: '2px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    <input
-                      type="checkbox"
-                      name="isBookable"
-                      checked={form.isBookable}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="form-type" className="text-xs font-bold text-[#475569] px-1 italic">Type *</label>
+                    <select
+                      className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none cursor-pointer"
+                      id="form-type"
+                      name="type"
+                      value={form.type}
                       onChange={handleChange}
-                      style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }}
+                    >
+                      {RESOURCE_TYPES.map((t) => (
+                        <option key={t.value} value={t.value}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="form-capacity" className="text-xs font-bold text-[#475569] px-1 italic">Capacity *</label>
+                    <input
+                      type="number"
+                      className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 outline-none font-sans"
+                      id="form-capacity"
+                      name="capacity"
+                      value={form.capacity}
+                      onChange={handleChange}
+                      placeholder="e.g. 100"
+                      min="1"
+                      required
                     />
-                    Bookable
-                  </label>
+                  </div>
                 </div>
-              </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="form-availableFrom">Available From *</label>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="form-location" className="text-xs font-bold text-[#475569] px-1 italic">Location *</label>
                   <input
-                    type="time"
-                    className="form-input"
-                    id="form-availableFrom"
-                    name="availableFrom"
-                    value={form.availableFrom}
+                    type="text"
+                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
+                    id="form-location"
+                    name="location"
+                    value={form.location}
                     onChange={handleChange}
+                    placeholder="e.g. Building A – Floor 1"
                     required
                   />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="form-availableTo">Available To *</label>
-                  <input
-                    type="time"
-                    className="form-input"
-                    id="form-availableTo"
-                    name="availableTo"
-                    value={form.availableTo}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="form-department" className="text-xs font-bold text-[#475569] px-1 italic">Department *</label>
+                  <select
+                    className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none cursor-pointer font-sans"
+                    id="form-department"
+                    name="department"
+                    value={form.department}
                     onChange={handleChange}
                     required
+                  >
+                    {FACULTIES.map((f) => (
+                      <option key={f.value} value={f.value}>
+                        {f.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="form-status" className="text-xs font-bold text-[#475569] px-1 italic">Status *</label>
+                    <select
+                      className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none cursor-pointer"
+                      id="form-status"
+                      name="status"
+                      value={form.status}
+                      onChange={handleChange}
+                    >
+                      {STATUSES.map((s) => (
+                        <option key={s.value} value={s.value}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex flex-col justify-end pb-1.5">
+                    <label className="flex items-center gap-3 cursor-pointer select-none group">
+                      <div className="relative flex items-center">
+                        <input
+                          type="checkbox"
+                          className="peer appearance-none w-10 h-6 bg-slate-100 rounded-full checked:bg-[#4F8CFF] transition-all cursor-pointer"
+                          name="isBookable"
+                          checked={form.isBookable}
+                          onChange={handleChange}
+                        />
+                        <div className="absolute left-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:left-5 shadow-sm" />
+                      </div>
+                      <span className="text-xs font-bold text-[#475569] italic">Bookable</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="form-availableFrom" className="text-xs font-bold text-[#475569] px-1 italic">From *</label>
+                    <input
+                      type="time"
+                      className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 outline-none font-sans"
+                      id="form-availableFrom"
+                      name="availableFrom"
+                      value={form.availableFrom}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="form-availableTo" className="text-xs font-bold text-[#475569] px-1 italic">To *</label>
+                    <input
+                      type="time"
+                      className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 outline-none font-sans"
+                      id="form-availableTo"
+                      name="availableTo"
+                      value={form.availableTo}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="form-description" className="text-xs font-bold text-[#475569] px-1 italic">Description</label>
+                  <textarea
+                    className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none resize-none"
+                    id="form-description"
+                    name="description"
+                    value={form.description}
+                    onChange={handleChange}
+                    placeholder="Special features, equipment, or access notes..."
+                    rows={3}
                   />
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label htmlFor="form-description">Description</label>
-                <textarea
-                  className="form-textarea"
-                  id="form-description"
-                  name="description"
-                  value={form.description}
-                  onChange={handleChange}
-                  placeholder="Describe the resource, its features, and purpose..."
-                  rows={3}
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                <button type="submit" className="btn btn-primary" id="form-submit-btn" disabled={saving}>
-                  {saving ? (
-                    <>
-                      <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Saving...
-                    </>
-                  ) : editingId ? (
-                    <>
-                      <Check size={16} /> Update Resource
-                    </>
-                  ) : (
-                    <>
-                      <Plus size={16} /> Add Resource
-                    </>
-                  )}
-                </button>
-                {editingId && (
-                  <button type="button" className="btn btn-secondary" onClick={handleCancel}>
-                    <X size={16} /> Cancel
+                <div className="flex gap-3 mt-2">
+                  <button 
+                    type="submit" 
+                    className="flex-1 bg-blue-gradient text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-70" 
+                    disabled={saving}
+                  >
+                    {saving ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : editingId ? (
+                      <><Check size={18} /> Update</>
+                    ) : (
+                      <><Plus size={18} /> Add Resource</>
+                    )}
                   </button>
-                )}
-              </div>
-            </form>
+                  {editingId && (
+                    <button 
+                      type="button" 
+                      className="px-5 bg-slate-100 text-[#64748B] font-bold rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center" 
+                      onClick={handleCancel}
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div>
+              </form>
+            </div>
           </div>
 
-          {/* Table */}
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <h3 style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ListFilter size={18} /> All Resources ({filteredList.length})
-              </h3>
-              <select
-                className="filter-select"
-                value={tableFilter}
-                onChange={(e) => setTableFilter(e.target.value)}
-                style={{ minWidth: '140px' }}
-                id="table-type-filter"
-              >
-                <option value="">All Types</option>
-                {RESOURCE_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.icon} {t.label}
-                  </option>
-                ))}
-              </select>
+          {/* Table Section */}
+          <div className="lg:col-span-8">
+            <div className="flex items-center justify-between mb-6 gap-4">
+              <div className="flex items-center gap-2">
+                <ListFilter size={20} className="text-[#4F8CFF]" />
+                <h3 className="text-base font-bold text-[#1E293B] uppercase tracking-wide">System Resources ({filteredList.length})</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-[11px] font-bold text-[#94A3B8] uppercase tracking-wider hidden sm:inline">Filter By:</span>
+                <select
+                  className="bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold text-[#334155] focus:ring-2 focus:ring-blue-500/10 outline-none cursor-pointer"
+                  value={tableFilter}
+                  onChange={(e) => setTableFilter(e.target.value)}
+                >
+                  <option value="">All Categories</option>
+                  {RESOURCE_TYPES.map((t) => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            <div className="resource-table-wrapper" id="resource-table">
-              {filteredList.length === 0 ? (
-                <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '14px' }}>
-                  {resources.length === 0
-                    ? 'No resources yet. Use the form to add your first resource.'
-                    : 'No resources match the current filter.'}
-                </div>
-              ) : (
-                <table className="resource-table">
-                  <thead>
-                    <tr>
-                      <th>Name</th>
-                      <th>Type</th>
-                      <th>Location</th>
-                      <th>Capacity</th>
-                      <th>Status</th>
-                      <th>Hours</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredList.map((r) => {
-                      const typeInfo = getTypeInfo(r.type)
-                      const statusInfo = getStatusInfo(r.status)
-                      return (
-                        <tr key={r.resourceId}>
-                          <td className="resource-name-cell">{r.name}</td>
-                          <td>
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                padding: '3px 10px',
-                                borderRadius: 'var(--radius-full)',
-                                fontSize: '12px',
-                                fontWeight: 600,
-                                background: `${typeInfo.color}18`,
-                                color: typeInfo.color,
-                                border: `1px solid ${typeInfo.color}33`,
-                              }}
-                            >
-                              {typeInfo.icon} {typeInfo.label}
-                            </span>
-                          </td>
-                          <td>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <MapPin size={12} style={{ color: 'var(--accent-primary-light)' }} />
-                              {r.location}
-                            </span>
-                          </td>
-                          <td>
-                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                              <Users size={12} style={{ color: 'var(--accent-primary-light)' }} />
-                              {r.capacity}
-                            </span>
-                          </td>
-                          <td>
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
-                                padding: '3px 10px',
-                                borderRadius: 'var(--radius-full)',
-                                fontSize: '11px',
-                                fontWeight: 600,
-                                background: `${statusInfo.color}18`,
-                                color: statusInfo.color,
-                                border: `1px solid ${statusInfo.color}33`,
-                              }}
-                            >
-                              ● {statusInfo.label}
-                            </span>
-                          </td>
-                          <td style={{ fontSize: '12px', whiteSpace: 'nowrap', fontFamily: "'Space Grotesk', monospace" }}>
-                            {r.availableFrom} – {r.availableTo}
-                          </td>
-                          <td>
-                            <div className="table-actions">
-                              <button
-                                className="btn btn-secondary btn-sm"
-                                onClick={() => handleEdit(r)}
-                                title="Edit"
-                                id={`edit-${r.resourceId}`}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                {filteredList.length === 0 ? (
+                  <div className="py-24 text-center">
+                    <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-4">
+                      <LayoutDashboard size={32} className="text-[#94A3B8]" />
+                    </div>
+                    <p className="text-[#94A3B8] font-bold italic">
+                      {resources.length === 0
+                        ? 'System is currently empty. Add your first resource.'
+                        : 'No results found for this category.'}
+                    </p>
+                  </div>
+                ) : (
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-slate-50/50 border-b border-slate-100">
+                        <th className="px-6 py-4 text-[11px] font-extrabold text-[#64748B] uppercase tracking-widest">Resource Name</th>
+                        <th className="px-6 py-4 text-[11px] font-extrabold text-[#64748B] uppercase tracking-widest">Properties</th>
+                        <th className="px-6 py-4 text-[11px] font-extrabold text-[#64748B] uppercase tracking-widest">Department</th>
+                        <th className="px-6 py-4 text-[11px] font-extrabold text-[#64748B] uppercase tracking-widest">Status</th>
+                        <th className="px-6 py-4 text-[11px] font-extrabold text-[#64748B] uppercase tracking-widest">Hours</th>
+                        <th className="px-6 py-4 text-[11px] font-extrabold text-[#64748B] uppercase tracking-widest text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {filteredList.map((r, i) => {
+                        const typeInfo = getTypeInfo(r.type)
+                        const statusInfo = getStatusInfo(r.status)
+                        return (
+                          <tr key={r.resourceId} className="hover:bg-slate-50/40 transition-colors animate-in" style={{ animationDelay: `${i * 30}ms` }}>
+                            <td className="px-6 py-4">
+                              <div className="text-sm font-bold text-[#1E293B]">{r.name}</div>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-md" style={{ background: `${typeInfo.color}10`, color: typeInfo.color }}>
+                                  {typeInfo.label}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex flex-col gap-1 text-[#64748B]">
+                                <div className="text-[11px] font-bold flex items-center gap-1.5">
+                                  <MapPin size={12} className="text-[#4F8CFF]" /> {r.location}
+                                </div>
+                                <div className="text-[11px] font-bold flex items-center gap-1.5">
+                                  <Users size={12} className="text-[#4F8CFF]" /> {r.capacity} Seats
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span className="text-[11px] font-bold text-[#4F8CFF] bg-blue-50 px-2.5 py-1 rounded-lg">
+                                {FACULTIES.find(f => f.value === r.department || f.value === r.faculty)?.label || r.department || r.faculty || 'General'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                                  r.status === 'ACTIVE' 
+                                    ? 'bg-green-100 text-green-600' 
+                                    : r.status === 'OUT_OF_SERVICE' 
+                                      ? 'bg-red-100 text-red-600' 
+                                      : 'bg-amber-100 text-amber-600'
+                                }`}
                               >
-                                <Pencil size={14} />
-                              </button>
-                              <button
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleDelete(r.resourceId)}
-                                title="Delete"
-                                id={`delete-${r.resourceId}`}
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              )}
+                                ● {statusInfo.label}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#1E293B] font-mono">
+                                <Clock size={12} className="text-[#4F8CFF]" />
+                                {r.availableFrom} - {r.availableTo}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button
+                                  className="p-2 text-[#64748B] hover:text-[#4F8CFF] hover:bg-blue-50 rounded-lg transition-all"
+                                  onClick={() => handleEdit(r)}
+                                  title="Edit Entry"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  className="p-2 text-[#64748B] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                  onClick={() => handleDelete(r.resourceId)}
+                                  title="Delete Entry"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Toast */}
-      {toast && <div className="toast" id="toast">{toast}</div>}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-    </>
+      {/* Toast System */}
+      {toast && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-bottom-4 duration-300">
+          <div className="px-6 py-3 bg-[#1E293B] text-white text-sm font-bold rounded-2xl shadow-2xl flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-[#4F8CFF] animate-pulse" />
+            {toast}
+          </div>
+        </div>
+      )}
+    </div>
   )
 }

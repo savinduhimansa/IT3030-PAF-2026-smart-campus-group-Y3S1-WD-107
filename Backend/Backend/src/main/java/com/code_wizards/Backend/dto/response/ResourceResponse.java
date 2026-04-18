@@ -24,12 +24,13 @@ public class ResourceResponse {
     }
 
     // Constructor to set all fields
-    public ResourceResponse(Long resourceId, String name, ResourceType type, Integer capacity, String location,
+    public ResourceResponse(Long resourceId, String name, ResourceType type, String department, Integer capacity, String location,
             String description, ResourceStatus status, LocalTime availableFrom,
             LocalTime availableTo, Boolean isBookable) {
         this.resourceId = resourceId;
         this.name = name;
         this.type = type;
+        this.department = department;
         this.capacity = capacity;
         this.location = location;
         this.description = description;

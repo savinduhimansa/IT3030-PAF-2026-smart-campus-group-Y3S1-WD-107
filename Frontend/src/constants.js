@@ -16,6 +16,13 @@ export const STATUSES = [
   { value: 'MAINTENANCE', label: 'Maintenance', color: '#f59e0b' },
 ]
 
+export const FACULTIES = [
+  { value: 'Faculty of Computing', label: 'Faculty of Computing' },
+  { value: 'Faculty of Engineering', label: 'Faculty of Engineering' },
+  { value: 'Faculty of Business', label: 'Faculty of Business' },
+  { value: 'Faculty of Humanities and Science', label: 'Humanities & Sciences' },
+]
+
 export const getTypeInfo = (type) =>
   RESOURCE_TYPES.find((t) => t.value === type) || {
     value: type,

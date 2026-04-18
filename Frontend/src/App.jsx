@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route, NavLink, useLocation, Link } from 'react-router-dom'
+import { Routes, Route, NavLink, useLocation, Link, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   BookOpen,
@@ -8,6 +8,7 @@ import {
   X,
   Zap,
   Ticket,
+  LogOut,
 } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import Dashboard from './pages/Dashboard'
@@ -27,7 +28,7 @@ import Navbar from './components/Navbar'
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/admin', label: 'Admin Panel', icon: Settings, adminOnly: true },
+  { path: '/admin', label: 'Resources', icon: Settings, adminOnly: true },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
   { path: '/bookingDetails', label: 'Bookings', icon: BookOpen, adminOnly: true },
 ]
@@ -35,6 +36,7 @@ const navItems = [
 function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const closeSidebar = () => setSidebarOpen(false);
   const hideSidebar =
     location.pathname.startsWith('/feedbacks/') ||
@@ -42,6 +44,13 @@ function AppLayout() {
     location.pathname === '/register' ||
     location.pathname === '/login' ||
     location.pathname === '/bookingDetails';
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+    localStorage.setItem('userId', ''); // Clear userId if it exists
+    navigate('/');
+  };
 
   const userRole = localStorage.getItem('role');
 
@@ -105,7 +114,15 @@ function AppLayout() {
                 ))}
               </nav>
 
-              <div className="p-4 border-t border-border">
+              <div className="p-4 border-t border-border flex flex-col gap-3">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/10 border border-transparent hover:border-red-400/20 transition-all duration-150 w-full"
+                    id="logout-button"
+                >
+                  <LogOut size={20} />
+                  <span>Logout</span>
+                </button>
                 <div className="flex items-center gap-2 px-3.5 py-2.5 bg-surface-glass border border-border rounded-xl text-xs text-text-secondary">
                   <span className="w-2 h-2 rounded-full bg-accent-green animate-pulse-dot" />
                   <span>System Online</span>
