@@ -30,6 +30,9 @@ const emptyForm = {
   availableTo: '18:00',
   isBookable: true,
   department: 'Faculty of Computing',
+  brand: '',
+  model: '',
+  serialNumber: '',
 }
 
 export default function AdminPanel() {
@@ -115,6 +118,7 @@ export default function AdminPanel() {
     }
 
     // Build the request body matching ResourceRequest DTO
+    // Build the request body matching ResourceRequest DTO
     const requestBody = {
       name: form.name.trim(),
       type: form.type,
@@ -126,6 +130,9 @@ export default function AdminPanel() {
       availableTo: form.availableTo,
       isBookable: form.isBookable,
       department: form.department,
+      brand: form.brand.trim() || null,
+      model: form.model.trim() || null,
+      serialNumber: form.serialNumber.trim() || null,
     }
 
     try {
@@ -168,6 +175,9 @@ export default function AdminPanel() {
       availableTo: resource.availableTo || '18:00',
       isBookable: resource.isBookable ?? true,
       department: resource.department || 'Faculty of Computing',
+      brand: resource.brand || '',
+      model: resource.model || '',
+      serialNumber: resource.serialNumber || '',
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -321,7 +331,9 @@ export default function AdminPanel() {
                   </div>
 
                   <div className="flex flex-col gap-2">
-                    <label htmlFor="form-capacity" className="text-xs font-bold text-[#475569] px-1 italic">Capacity *</label>
+                    <label htmlFor="form-capacity" className="text-xs font-bold text-[#475569] px-1 italic">
+                      {['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(form.type) ? 'Quantity *' : 'Capacity *'}
+                    </label>
                     <input
                       type="number"
                       className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 outline-none font-sans"
@@ -329,10 +341,53 @@ export default function AdminPanel() {
                       name="capacity"
                       value={form.capacity}
                       onChange={handleChange}
-                      placeholder="e.g. 100"
+                      placeholder={['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(form.type) ? "e.g. 5" : "e.g. 100"}
                     />
                   </div>
                 </div>
+
+                {['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(form.type) && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="form-brand" className="text-xs font-bold text-[#475569] px-1 italic">Brand</label>
+                        <input
+                          type="text"
+                          className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
+                          id="form-brand"
+                          name="brand"
+                          value={form.brand}
+                          onChange={handleChange}
+                          placeholder="e.g. Sony, Epson"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <label htmlFor="form-model" className="text-xs font-bold text-[#475569] px-1 italic">Model</label>
+                        <input
+                          type="text"
+                          className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
+                          id="form-model"
+                          name="model"
+                          value={form.model}
+                          onChange={handleChange}
+                          placeholder="e.g. VPL-EX435"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <label htmlFor="form-serial" className="text-xs font-bold text-[#475569] px-1 italic">Serial Number / Asset ID</label>
+                      <input
+                        type="text"
+                        className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
+                        id="form-serial"
+                        name="serialNumber"
+                        value={form.serialNumber}
+                        onChange={handleChange}
+                        placeholder="e.g. SN-12345678"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="flex flex-col gap-2">
                   <label htmlFor="form-location" className="text-xs font-bold text-[#475569] px-1 italic">Location *</label>
@@ -535,8 +590,14 @@ export default function AdminPanel() {
                                   <MapPin size={12} className="text-[#4F8CFF]" /> {r.location}
                                 </div>
                                 <div className="text-[11px] font-bold flex items-center gap-1.5">
-                                  <Users size={12} className="text-[#4F8CFF]" /> {r.capacity} Seats
+                                  <Users size={12} className="text-[#4F8CFF]" /> 
+                                  {r.capacity} {['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(r.type) ? 'Units' : 'Seats'}
                                 </div>
+                                {(r.brand || r.model) && (
+                                  <div className="text-[10px] font-extrabold text-[#1E293B] bg-slate-100 px-2 py-0.5 rounded mt-1 inline-block w-fit">
+                                    {r.brand} {r.model}
+                                  </div>
+                                )}
                               </div>
                             </td>
                             <td className="px-6 py-4">
