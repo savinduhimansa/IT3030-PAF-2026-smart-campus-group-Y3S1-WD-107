@@ -418,8 +418,8 @@ export default function Catalogue() {
                             className="px-4 py-1.5 bg-blue-gradient text-white text-xs font-bold rounded-lg shadow-blue-500/20 shadow-lg hover:shadow-xl transition-all"
                             onClick={(e) => {
                               e.stopPropagation();
-                              const token = localStorage.getItem('token');
-                              if (!token) {
+                              const storedUserId = localStorage.getItem('userId');
+                              if (!storedUserId) {
                                 // Not logged in: save intended resource and redirect to login
                                 localStorage.setItem('pendingResourceId', resource.resourceId);
                                 navigate('/login');

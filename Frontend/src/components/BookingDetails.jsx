@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon } from 'lucide-react';
@@ -62,6 +62,7 @@ function BookingDashboard({ user }) {
     const [editingBooking, setEditingBooking] = useState(null); 
     const [historyModalOpen, setHistoryModalOpen] = useState(false);
     const [historyData, setHistoryData] = useState([]);
+    const [resourceNameById, setResourceNameById] = useState({});
 
     const [searchParams] = useSearchParams();
     const resourceIdFromUrl = searchParams.get('resourceId');
@@ -89,26 +90,71 @@ function BookingDashboard({ user }) {
             const data = await getBookingHistory(bookingId);
             setHistoryData(data);
             setHistoryModalOpen(true);
-        } catch (err) {
+        } catch {
             setError('Failed to fetch booking history.');
         }
     };
 
-    const fetchBookings = async () => {
+    const fetchBookings = useCallback(async () => {
         try {
             setLoading(true);
             const data = await getMyBookings(user.id);
             setBookings(data);
-        } catch (err) {
+        } catch {
             setError('Failed to fetch bookings.');
         } finally {
             setLoading(false);
         }
-    };
+    }, [user.id]);
 
     useEffect(() => {
         fetchBookings();
-    }, [user.id]);
+    }, [fetchBookings]);
+
+    useEffect(() => {
+        const uniqueIds = Array.from(
+            new Set(
+                (bookings || [])
+                    .map((b) => b?.resourceId)
+                    .filter((id) => id !== null && id !== undefined)
+                    .map((id) => String(id))
+            )
+        );
+
+        const missingIds = uniqueIds.filter((id) => resourceNameById[id] === undefined);
+        if (missingIds.length === 0) return;
+
+        let cancelled = false;
+
+        Promise.all(
+            missingIds.map((id) =>
+                resourceApi
+                    .getById(id)
+                    .then((res) => ({ id, name: res?.data?.name || null }))
+                    .catch(() => ({ id, name: null }))
+            )
+        ).then((results) => {
+            if (cancelled) return;
+            setResourceNameById((prev) => {
+                const next = { ...prev };
+                results.forEach(({ id, name }) => {
+                    next[id] = name;
+                });
+                return next;
+            });
+        });
+
+        return () => {
+            cancelled = true;
+        };
+    }, [bookings, resourceNameById]);
+
+    const getResourceLabel = (booking) => {
+        const id = booking?.resourceId;
+        if (id === null || id === undefined) return '—';
+        const key = String(id);
+        return resourceNameById[key] || id;
+    };
 
     // Handles both create and update
     const handleSubmitBooking = async (formData) => {
@@ -205,7 +251,8 @@ function BookingDashboard({ user }) {
                                 <div className="flex justify-between items-start p-5 pb-2">
                                     <div className="flex flex-col gap-1">
                                         <span className="inline-block px-3 py-1 rounded-full font-bold uppercase tracking-widest text-[11px]" style={{background: statusColors[b.status]?.bg, color: statusColors[b.status]?.text, borderRadius: 20, fontWeight: 600}}>{b.status}</span>
-                                        <span className="text-[16px] font-bold text-[#0F172A] mt-2">{b.resourceId}</span>
+                                        <span className="text-[16px] font-bold text-[#0F172A] mt-2">{getResourceLabel(b)}</span>
+                                        <span className="text-[11px] text-[#64748B] font-medium">Resource ID: <span className="font-semibold">{b.resourceId ?? '—'}</span></span>
                                         <span className="text-[13px] text-[#64748B] font-medium mt-1">{b.purpose}</span>
                                         <span className="text-xs text-[#64748B] mt-1">{b.department && <>Dept: <span className="font-semibold">{b.department}</span></>}</span>
                                         <span className="text-xs text-[#64748B] mt-1">{b.contactEmail && <>Email: <span className="font-semibold">{b.contactEmail}</span></>}</span>

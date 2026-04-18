@@ -13,6 +13,8 @@ export default function Navbar() {
     const role = localStorage.getItem('role') || 'USER';
     const isLoggedIn = localStorage.getItem('role') !== null;
 
+    const bookingPath = role === 'ADMIN' ? '/booking' : '/bookingDetails';
+
     const storedUser = JSON.parse(localStorage.getItem('user')) || {};
     const userName = storedUser.name || storedUser.email?.split('@')[0] || "Guest User";
     const userEmail = storedUser.email || "No email";
@@ -99,7 +101,7 @@ export default function Navbar() {
                         <>
                             <Link to="/dashboard" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Dashboard</Link>
                             <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Catalogue</Link>
-                            <Link to="/booking" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Booking</Link>
+                            <Link to={bookingPath} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Booking</Link>
 
                             {/* YOUR PROFILE DROPDOWN AREA */}
                             <div className="relative ml-4" ref={dropdownRef}>

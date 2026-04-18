@@ -201,7 +201,7 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
 
 
     return (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] z-50 transition-opacity overflow-y-auto">
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] z-[200] transition-opacity overflow-y-auto">
             <div className="min-h-full flex items-start justify-center p-4 py-8">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[calc(100vh-4rem)] overflow-hidden transform transition-all flex flex-col">
                     <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
