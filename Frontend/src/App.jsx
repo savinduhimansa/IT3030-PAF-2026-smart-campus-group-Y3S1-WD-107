@@ -33,7 +33,6 @@ const baseNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Resources', icon: Settings, adminOnly: true },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
-  { path: '/bookingDetails', label: 'Booking', icon: BookOpen },
 ]
 
 function AppLayout() {
@@ -133,7 +132,10 @@ function AppLayout() {
           <div className="pt-20"> {/* Add padding for the fixed navbar */}
             <Routes>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/admin" element={<AdminPanel />} />
+              <Route
+                path="/admin"
+                element={<ProtectedRoute element={<AdminPanel />} user={user} allowedRoles={['ADMIN']} />}
+              />
               <Route path="/catalogue" element={<Catalogue />} />
               <Route path="/add-feedback" element={<AddFeedback />} />
               <Route path="/feedback/:resourceId" element={<AddFeedback />} />
@@ -147,7 +149,10 @@ function AppLayout() {
               <Route path="/change-password" element={<ChangePassword />} /> {/* Change Password Route */}
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/booking" element={<ProtectedRoute element={<BookingDashboard user={user} />} user={user} />} />
+              <Route
+                path="/booking"
+                element={<ProtectedRoute element={<BookingDashboard user={user} />} user={user} allowedRoles={['ADMIN']} />}
+              />
               <Route path="/bookingDetails" element={<ProtectedRoute element={<BookingDetails user={user} />} user={user} />} />
             </Routes>
           </div>
