@@ -25,7 +25,7 @@ public class ResourceRequest {
     @NotBlank(message = "Location is required")
     private String location;
 
-        @NotBlank(message = "Department is required")
+    @NotBlank(message = "Department is required")
     @JsonAlias("faculty")
     @Pattern(
             regexp = "Faculty of Computing|Faculty of Humanities and Science|Faculty of Business|Faculty of Engineering",
@@ -33,6 +33,12 @@ public class ResourceRequest {
     private String department;
 
     private String description;
+
+    private String brand;
+
+    private String model;
+
+    private String serialNumber;
 
     @NotNull(message = "Status is required")
     private ResourceStatus status;
@@ -95,6 +101,30 @@ public class ResourceRequest {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
     public ResourceStatus getStatus() {

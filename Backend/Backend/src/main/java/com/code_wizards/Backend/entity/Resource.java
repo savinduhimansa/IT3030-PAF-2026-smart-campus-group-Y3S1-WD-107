@@ -38,6 +38,15 @@ public class Resource {
     @Column(length = 1000)
     private String description;
 
+    @Column
+    private String brand;
+
+    @Column
+    private String model;
+
+    @Column
+    private String serialNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ResourceStatus status;
@@ -135,6 +144,30 @@ public class Resource {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
     public ResourceStatus getStatus() {
