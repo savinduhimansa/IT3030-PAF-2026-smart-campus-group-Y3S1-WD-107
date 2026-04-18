@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { resourceApi } from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { MapPin, Users, Clock, Sparkles, Search, ChevronRight } from 'lucide-react';
+import { MapPin, Users, Clock, Sparkles, Search, ChevronRight, AlertCircle } from 'lucide-react';
 
 const RESOURCE_TYPE_OPTIONS = [
   { label: 'Any Type', value: '' },
@@ -21,6 +21,39 @@ export default function FindBestLab() {
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [error, setError] = useState('');
+  const [toast, setToast] = useState({ visible: false, message: '' });
+
+  useEffect(() => {
+    if (toast.visible) {
+      const timer = setTimeout(() => {
+        setToast(prev => ({ ...prev, visible: false }));
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.visible]);
+
+  const validateForm = () => {
+    if (!minCapacity) return 'Minimum capacity is required';
+    const cap = Number(minCapacity);
+    if (isNaN(cap) || cap < 1 || !Number.isInteger(cap)) return 'Capacity must be a positive whole number';
+    if (!requiredTime) return 'Selection of time is required';
+    
+    // Time range validation (08:00 - 18:00)
+    const [hours, minutes] = requiredTime.split(':').map(Number);
+    const timeInMinutes = hours * 60 + minutes;
+    const minTime = 8 * 60; // 08:00
+    const maxTime = 18 * 60; // 18:00
+
+    if (timeInMinutes < minTime || timeInMinutes > maxTime) {
+      return 'Resources are only available between 08:00 and 18:00';
+    }
+
+    return null;
+  };
+
+  const handleInputChange = (setter, value) => {
+    setter(value);
+  };
 
   const rankResources = (resources, requestedType, requestedCapacity) => {
     const capacityNeed = Number(requestedCapacity);
@@ -42,16 +75,18 @@ export default function FindBestLab() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    const errorMsg = validateForm();
+    if (errorMsg) {
+      setToast({ visible: true, message: errorMsg });
+      return;
+    }
+
     setLoading(true);
     setError('');
     setRecommendations([]);
 
     const capacityValue = Number(minCapacity);
-    if (!Number.isInteger(capacityValue) || capacityValue < 1) {
-      setError('Minimum capacity must be a positive whole number.');
-      setLoading(false);
-      return;
-    }
 
     try {
       const params = {
@@ -100,10 +135,8 @@ export default function FindBestLab() {
                   <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B] group-focus-within:text-[#4F8CFF] transition-colors" size={18} />
                   <input
                     type="number"
-                    min={1}
-                    required
                     value={minCapacity}
-                    onChange={e => setMinCapacity(e.target.value)}
+                    onChange={e => handleInputChange(setMinCapacity, e.target.value)}
                     placeholder="e.g. 50"
                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-[#4F8CFF] outline-none transition-all placeholder:text-[#94A3B8]"
                   />
@@ -116,9 +149,8 @@ export default function FindBestLab() {
                   <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B] group-focus-within:text-[#4F8CFF] transition-colors" size={18} />
                   <input
                     type="time"
-                    required
                     value={requiredTime}
-                    onChange={e => setRequiredTime(e.target.value)}
+                    onChange={e => handleInputChange(setRequiredTime, e.target.value)}
                     className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-[#4F8CFF] outline-none transition-all"
                   />
                 </div>
@@ -232,6 +264,17 @@ export default function FindBestLab() {
         </div>
       </div>
       <Footer />
+
+      {toast.visible && (
+        <div className="toast-notification">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-red-500">
+              <AlertCircle size={18} />
+            </div>
+            <span className="pr-2">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

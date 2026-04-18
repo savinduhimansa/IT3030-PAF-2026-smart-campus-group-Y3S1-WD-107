@@ -13,6 +13,8 @@ import {
   RefreshCw,
   Clock,
   LayoutDashboard,
+  AlertCircle,
+  CheckCircle,
 } from 'lucide-react'
 import { RESOURCE_TYPES, STATUSES, FACULTIES, getTypeInfo, getStatusInfo } from '../constants'
 import { resourceApi } from '../services/api'
@@ -38,7 +40,8 @@ export default function AdminPanel() {
 
   const [form, setForm] = useState({ ...emptyForm })
   const [editingId, setEditingId] = useState(null)
-  const [toast, setToast] = useState(null)
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'success' })
+  const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null, name: '' })
   const [tableFilter, setTableFilter] = useState('')
 
   useEffect(() => {
@@ -59,10 +62,39 @@ export default function AdminPanel() {
     }
   }
 
-  const showToast = (message) => {
-    setToast(message)
-    setTimeout(() => setToast(null), 3000)
+  const showToast = (message, type = 'success') => {
+    setToast({ visible: true, message, type })
+    setTimeout(() => setToast({ visible: false, message: '', type: 'success' }), 3000)
   }
+
+  const validateForm = () => {
+    if (!form.name.trim()) return 'Resource name is required';
+    if (/^\d+$/.test(form.name.trim())) return 'Resource name cannot be only numbers';
+    if (!form.capacity) return 'Capacity is required';
+    
+    const cap = Number(form.capacity);
+    if (isNaN(cap) || cap < 1 || !Number.isInteger(cap)) return 'Capacity must be a positive whole number';
+    if (!form.location.trim()) return 'Location is required';
+
+    // Time range validation
+    const [fromH, fromM] = form.availableFrom.split(':').map(Number);
+    const [toH, toM] = form.availableTo.split(':').map(Number);
+    const fromVal = fromH * 60 + fromM;
+    const toVal = toH * 60 + toM;
+    
+    if (fromVal >= toVal) {
+      return 'Opening time must be earlier than closing time';
+    }
+
+    const minTime = 8 * 60; // 08:00
+    const maxTime = 18 * 60; // 18:00
+
+    if (fromVal < minTime || fromVal > maxTime || toVal < minTime || toVal > maxTime) {
+      return 'Operating hours must be between 08:00 and 18:00';
+    }
+
+    return null;
+  };
 
   const handleChange = (e) => {
     const { name, value, type: inputType } = e.target
@@ -76,8 +108,9 @@ export default function AdminPanel() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!form.name.trim() || !form.capacity || !form.location.trim()) {
-      showToast('⚠️ Please fill in all required fields')
+    const errorMsg = validateForm();
+    if (errorMsg) {
+      showToast(errorMsg, 'error')
       return
     }
 
@@ -100,11 +133,11 @@ export default function AdminPanel() {
 
       if (editingId) {
         await resourceApi.update(editingId, requestBody)
-        showToast('✅ Resource updated successfully!')
+        showToast('Resource updated successfully!', 'success')
         setEditingId(null)
       } else {
         await resourceApi.create(requestBody)
-        showToast('✅ Resource added successfully!')
+        showToast('Resource added successfully!', 'success')
       }
 
       setForm({ ...emptyForm })
@@ -116,7 +149,7 @@ export default function AdminPanel() {
         || (err.response?.data && typeof err.response.data === 'object'
           ? Object.values(err.response.data).join(', ')
           : 'Failed to save resource. Check the console for details.')
-      showToast(`❌ ${errorMsg}`)
+      showToast(errorMsg, 'error')
     } finally {
       setSaving(false)
     }
@@ -139,20 +172,27 @@ export default function AdminPanel() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this resource?')) return
+  const handleDelete = (resource) => {
+    setDeleteConfirm({ visible: true, id: resource.resourceId, name: resource.name })
+  }
 
+  const confirmDelete = async () => {
+    const { id } = deleteConfirm
     try {
+      setSaving(true)
       await resourceApi.delete(id)
-      showToast('🗑️ Resource removed')
+      showToast('Resource removed successfully', 'success')
       if (editingId === id) {
         setEditingId(null)
         setForm({ ...emptyForm })
       }
+      setDeleteConfirm({ visible: false, id: null, name: '' })
       await fetchResources()
     } catch (err) {
       console.error('Failed to delete resource:', err)
-      showToast('❌ Failed to delete the resource')
+      showToast('Failed to delete the resource', 'error')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -259,7 +299,6 @@ export default function AdminPanel() {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="e.g. Lecture Hall 201"
-                    required
                   />
                 </div>
 
@@ -291,8 +330,6 @@ export default function AdminPanel() {
                       value={form.capacity}
                       onChange={handleChange}
                       placeholder="e.g. 100"
-                      min="1"
-                      required
                     />
                   </div>
                 </div>
@@ -307,7 +344,6 @@ export default function AdminPanel() {
                     value={form.location}
                     onChange={handleChange}
                     placeholder="e.g. Building A – Floor 1"
-                    required
                   />
                 </div>
 
@@ -319,7 +355,6 @@ export default function AdminPanel() {
                     name="department"
                     value={form.department}
                     onChange={handleChange}
-                    required
                   >
                     {FACULTIES.map((f) => (
                       <option key={f.value} value={f.value}>
@@ -374,7 +409,6 @@ export default function AdminPanel() {
                       name="availableFrom"
                       value={form.availableFrom}
                       onChange={handleChange}
-                      required
                     />
                   </div>
 
@@ -387,7 +421,6 @@ export default function AdminPanel() {
                       name="availableTo"
                       value={form.availableTo}
                       onChange={handleChange}
-                      required
                     />
                   </div>
                 </div>
@@ -541,7 +574,7 @@ export default function AdminPanel() {
                                 </button>
                                 <button
                                   className="p-2 text-[#64748B] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                  onClick={() => handleDelete(r.resourceId)}
+                                  onClick={() => handleDelete(r)}
                                   title="Delete Entry"
                                 >
                                   <Trash2 size={16} />
@@ -560,13 +593,46 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      {/* Toast System */}
-      {toast && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-bottom-4 duration-300">
-          <div className="px-6 py-3 bg-[#1E293B] text-white text-sm font-bold rounded-2xl shadow-2xl flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-[#4F8CFF] animate-pulse" />
-            {toast}
+      {/* Custom Confirmation Modal */}
+      {deleteConfirm.visible && (
+        <div className="fixed inset-0 z-[400] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setDeleteConfirm({ visible: false, id: null, name: '' })} />
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full p-8 relative z-10 animate-in zoom-in-95 duration-300">
+            <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500 mb-6 mx-auto">
+              <AlertTriangle size={32} />
+            </div>
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-bold text-[#1E293B] mb-2">Confirm Removal</h3>
+              <p className="text-[#64748B] text-sm font-medium leading-relaxed">
+                Are you sure you want to delete <span className="text-[#1E293B] font-bold">"{deleteConfirm.name}"</span>? This action is permanent and cannot be reversed.
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <button 
+                className="flex-1 px-6 py-3 bg-slate-100 text-[#64748B] font-bold rounded-2xl hover:bg-slate-200 transition-all"
+                onClick={() => setDeleteConfirm({ visible: false, id: null, name: '' })}
+              >
+                Cancel
+              </button>
+              <button 
+                className="flex-1 px-6 py-3 bg-red-500 text-white font-bold rounded-2xl shadow-lg shadow-red-500/20 hover:bg-red-600 hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
+                onClick={confirmDelete}
+                disabled={saving}
+              >
+                {saving ? <Loader2 size={18} className="animate-spin" /> : 'Delete Now'}
+              </button>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* Toast System */}
+      {toast.visible && (
+        <div className={`toast-notification !left-1/2 !-translate-x-1/2 !right-auto flex items-center gap-3 ${toast.type === 'error' ? 'border-red-500' : 'border-green-500'}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${toast.type === 'error' ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
+            {toast.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
+          </div>
+          <span className="pr-2">{toast.message}</span>
         </div>
       )}
     </div>
