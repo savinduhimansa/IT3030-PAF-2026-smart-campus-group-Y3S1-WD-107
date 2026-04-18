@@ -158,6 +158,9 @@ public class ResourceServiceImpl implements ResourceService {
         resource.setAvailableFrom(request.getAvailableFrom());
         resource.setAvailableTo(request.getAvailableTo());
         resource.setIsBookable(request.getIsBookable());
+        resource.setBrand(request.getBrand());
+        resource.setModel(request.getModel());
+        resource.setSerialNumber(request.getSerialNumber());
         // Keep both legacy "department" and "faculty" DB columns in sync.
         resource.setDepartment(request.getDepartment());
         resource.setFaculty(request.getDepartment());
@@ -177,6 +180,9 @@ public class ResourceServiceImpl implements ResourceService {
                 resource.getCapacity(),
                 resource.getLocation(),
                 resource.getDescription(),
+                resource.getBrand(),
+                resource.getModel(),
+                resource.getSerialNumber(),
                 resource.getStatus(),
                 resource.getAvailableFrom(),
                 resource.getAvailableTo(),

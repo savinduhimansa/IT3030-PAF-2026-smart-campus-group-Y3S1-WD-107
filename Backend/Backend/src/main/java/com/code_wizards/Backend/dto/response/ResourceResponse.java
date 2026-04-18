@@ -15,6 +15,9 @@ public class ResourceResponse {
     private Integer capacity;
     private String location;
     private String description;
+    private String brand;
+    private String model;
+    private String serialNumber;
     private ResourceStatus status;
     private LocalTime availableFrom;
     private LocalTime availableTo;
@@ -25,7 +28,7 @@ public class ResourceResponse {
 
     // Constructor to set all fields
     public ResourceResponse(Long resourceId, String name, ResourceType type, String department, Integer capacity, String location,
-            String description, ResourceStatus status, LocalTime availableFrom,
+            String description, String brand, String model, String serialNumber, ResourceStatus status, LocalTime availableFrom,
             LocalTime availableTo, Boolean isBookable) {
         this.resourceId = resourceId;
         this.name = name;
@@ -34,6 +37,9 @@ public class ResourceResponse {
         this.capacity = capacity;
         this.location = location;
         this.description = description;
+        this.brand = brand;
+        this.model = model;
+        this.serialNumber = serialNumber;
         this.status = status;
         this.availableFrom = availableFrom;
         this.availableTo = availableTo;
@@ -95,6 +101,30 @@ public class ResourceResponse {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public String getSerialNumber() {
+        return serialNumber;
+    }
+
+    public void setSerialNumber(String serialNumber) {
+        this.serialNumber = serialNumber;
     }
 
     public ResourceStatus getStatus() {
