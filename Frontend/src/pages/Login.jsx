@@ -49,7 +49,7 @@ const Login = () => {
                     navigate(`/bookingDetails?resourceId=${pendingResourceId}`);
                 } else if (userRole === 'ADMIN') {
                     // Normal admin login → unchanged
-                    navigate('/booking');
+                    navigate('/dashboard');
                 } else {
                     // Normal user login → unchanged
                     navigate('/');
