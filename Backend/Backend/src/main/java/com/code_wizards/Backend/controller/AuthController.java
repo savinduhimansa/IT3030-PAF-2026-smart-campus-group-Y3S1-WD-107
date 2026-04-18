@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/auth")
 @CrossOrigin("*") // Allow requests from React frontend
@@ -21,11 +24,23 @@ public class AuthController {
         return ResponseEntity.ok(savedUser);
     }
 
-    // 2. Login Endpoint (Authenticate user)
+    // 2. Login Endpoint (Authenticate user and return formatted data for React frontend)
     @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestBody User user) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody User user) {
         User loggedInUser = userService.loginUser(user.getEmail(), user.getPassword());
-        return ResponseEntity.ok(loggedInUser);
+
+        // Create a response map to match the exact JSON structure expected by the frontend
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("id", loggedInUser.getId());
+        responseData.put("email", loggedInUser.getEmail());
+        responseData.put("role", loggedInUser.getRole());
+
+        // This is the fixed line: Using getUsername() based on the User entity
+        responseData.put("name", loggedInUser.getUsername());
+
+        responseData.put("token", "auth-token-success"); // Dummy token for frontend validation
+
+        return ResponseEntity.ok(responseData);
     }
 
     // 3. Get User by ID Endpoint (Retrieve user details)
@@ -45,5 +60,27 @@ public class AuthController {
     public ResponseEntity<String> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok("User deleted successfully!");
+    }
+
+    // ==========================================
+    // 6. Change Password Endpoint
+    // ==========================================
+    @PutMapping("/{id}/change-password")
+    public ResponseEntity<Map<String, String>> changePassword(@PathVariable Long id, @RequestBody Map<String, String> passwords) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            System.out.println("Attempting password change for User ID: " + id);
+            // Call the service method to change the password
+            userService.changePassword(id, passwords.get("currentPassword"), passwords.get("newPassword"));
+
+            response.put("message", "Password changed successfully!");
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            System.out.println("Password Change Failed: " + e.getMessage());
+            // Send the exact error message back to React
+            response.put("error", e.getMessage());
+            return ResponseEntity.status(400).body(response);
+        }
     }
 }

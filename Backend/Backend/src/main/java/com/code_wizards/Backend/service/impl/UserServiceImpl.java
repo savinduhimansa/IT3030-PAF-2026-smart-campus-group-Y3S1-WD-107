@@ -83,4 +83,22 @@ public class UserServiceImpl implements UserService {
         // Delete the user from the database
         userRepository.delete(existingUser);
     }
+
+    // ==========================================
+    // NEW: Change Password Logic
+    // ==========================================
+    @Override
+    public void changePassword(Long userId, String currentPassword, String newPassword) {
+        // Find the user from database
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found!"));
+
+        // Check if the provided current password matches the one in DB
+        if (user.getPassword().equals(currentPassword)) {
+            user.setPassword(newPassword);
+            userRepository.save(user);
+        } else {
+            throw new RuntimeException("Current password is incorrect!");
+        }
+    }
 }
