@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../services/api';
 import { Zap } from 'lucide-react';
+import SpaceLoader from '../components/SpaceLoader'; // Import Loader
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -12,6 +13,7 @@ const Register = () => {
     });
 
     const [errorMsg, setErrorMsg] = useState('');
+    const [isLoading, setIsLoading] = useState(false); // Add Loading State
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -43,22 +45,34 @@ const Register = () => {
             return;
         }
 
+        setIsLoading(true); // Start Loading
+
         try {
             const { confirmPassword, ...dataToSend } = formData;
             const response = await authApi.register(dataToSend);
             console.log("Response:", response);
-            navigate('/login');
+
+            // Add a small delay for a smooth transition
+            setTimeout(() => {
+                navigate('/login');
+            }, 800);
+
         } catch (error) {
             setErrorMsg("Registration failed: " + (error.response?.data?.message || error.message));
             console.error(error);
+            setIsLoading(false); // Stop loading on error
         }
     };
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B1120] px-4 py-12 relative overflow-hidden">
+
+            {/* Show loader when submitting */}
+            {isLoading && <SpaceLoader message="Creating SpaceLink Account..." fullScreen={true} />}
+
             {/* Background Glow Effect */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none"
-                style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)' }}
+                 style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)' }}
             />
 
             {/* Logo Area */}
@@ -89,7 +103,8 @@ const Register = () => {
                             value={formData.username}
                             onChange={handleChange}
                             required
-                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            disabled={isLoading}
+                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
                             placeholder="John Doe"
                         />
                     </div>
@@ -102,7 +117,8 @@ const Register = () => {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            disabled={isLoading}
+                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
                             placeholder="john@campus.edu"
                         />
                     </div>
@@ -115,7 +131,8 @@ const Register = () => {
                             value={formData.password}
                             onChange={handleChange}
                             required
-                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            disabled={isLoading}
+                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
                             placeholder="••••••••"
                         />
                     </div>
@@ -128,16 +145,18 @@ const Register = () => {
                             value={formData.confirmPassword}
                             onChange={handleChange}
                             required
-                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                            disabled={isLoading}
+                            className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
                             placeholder="••••••••"
                         />
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] mt-6"
+                        disabled={isLoading}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:shadow-[0_0_20px_rgba(37,99,235,0.5)] mt-6 disabled:opacity-70"
                     >
-                        Create Account
+                        {isLoading ? 'Creating Account...' : 'Create Account'}
                     </button>
                 </form>
 
