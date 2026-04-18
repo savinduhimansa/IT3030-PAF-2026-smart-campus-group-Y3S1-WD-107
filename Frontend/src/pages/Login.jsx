@@ -36,7 +36,14 @@ const Login = () => {
             if (userRole === 'ADMIN') {
                 navigate('/admin');
             } else {
-                navigate('/dashboard');
+                // Check if user was trying to book a resource before login
+                const pendingResourceId = localStorage.getItem('pendingResourceId');
+                if (pendingResourceId) {
+                    localStorage.removeItem('pendingResourceId'); // Clear it after use
+                    navigate(`/bookingDetails?resourceId=${pendingResourceId}`);
+                } else {
+                    navigate('/dashboard');
+                }
             }
 
         } catch (error) {

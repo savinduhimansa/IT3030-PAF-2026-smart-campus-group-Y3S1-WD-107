@@ -27,11 +27,10 @@ import BookingDetails from './components/BookingDetails'
 import Navbar from './components/Navbar'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
-const navItems = [
+const baseNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Resources', icon: Settings, adminOnly: true },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
-  { path: '/bookingDetails', label: 'Booking', icon: BookOpen },
 ]
 
 function AppLayout() {
@@ -56,6 +55,15 @@ function AppLayout() {
   const userIdRaw = localStorage.getItem('userId');
   const userId = userIdRaw ? Number(userIdRaw) : null;
   const user = userId ? { id: userId, role: userRole || 'USER' } : null;
+
+  const navItems = [
+    ...baseNavItems,
+    {
+      path: userRole === 'ADMIN' ? '/booking' : '/bookingDetails',
+      label: 'Booking',
+      icon: BookOpen,
+    },
+  ];
 
   const visibleNavItems = navItems.filter(item => !item.adminOnly || userRole === 'ADMIN');
 
@@ -184,8 +192,6 @@ function App() {
   const location = useLocation();
   const isHomepage = location.pathname === '/';
   const isCatalogue = location.pathname === '/catalogue';
-
-  const userRole = localStorage.getItem('role');
 
   if (isHomepage) {
     return <HomePage />;

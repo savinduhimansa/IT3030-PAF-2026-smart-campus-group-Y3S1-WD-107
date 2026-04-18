@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon } from 'lucide-react';
 import { getMyBookings, createBooking, cancelBooking, updateBooking, getBookingHistory } from '../services/api';
@@ -61,6 +62,15 @@ function BookingDashboard({ user }) {
     const [editingBooking, setEditingBooking] = useState(null); 
     const [historyModalOpen, setHistoryModalOpen] = useState(false);
     const [historyData, setHistoryData] = useState([]);
+
+    const [searchParams] = useSearchParams();
+    const resourceIdFromUrl = searchParams.get('resourceId');
+
+    useEffect(() => {
+        if (resourceIdFromUrl) {
+            setIsModalOpen(true); // Auto-open the booking form
+        }
+    }, [resourceIdFromUrl]);
     // Show booking history modal
     const handleShowHistory = async (bookingId) => {
         try {
@@ -238,6 +248,7 @@ function BookingDashboard({ user }) {
                     onClose={() => { setIsModalOpen(false); setEditingBooking(null); }}
                     onSubmit={handleSubmitBooking}
                     initialData={editingBooking}
+                    prefillResourceId={resourceIdFromUrl || ''}
                 />
 
                 <BookingHistoryModal
