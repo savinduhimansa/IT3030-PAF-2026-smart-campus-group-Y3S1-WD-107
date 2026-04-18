@@ -1,17 +1,21 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Zap } from 'lucide-react'
 
 export default function Navbar() {
-  const location = useLocation();
+  const location = useLocation()
+  const navigate = useNavigate()
 
-  const navLinks = [
-    { path: '/', label: 'Home' },
-    { path: '/about', label: 'About' },
-    { path: '/catalogue', label: 'Catalogue' },
-    { path: '/booking', label: 'Booking' },
-    { path: '/register', label: 'Signup' },
-    { path: '/login', label: 'Login' },
-  ];
+  const handleAboutClick = () => {
+    if (location.pathname === '/') {
+      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+
+    navigate('/')
+    setTimeout(() => {
+      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+    }, 300)
+  }
 
   return (
     <nav
@@ -28,9 +32,13 @@ export default function Navbar() {
         <Link to="/" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
           Home
         </Link>
-        <Link to="/about" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
+        <button
+          type="button"
+          onClick={handleAboutClick}
+          className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 bg-transparent border-none cursor-pointer"
+        >
           About
-        </Link>
+        </button>
         <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
           Catalogue
         </Link>
