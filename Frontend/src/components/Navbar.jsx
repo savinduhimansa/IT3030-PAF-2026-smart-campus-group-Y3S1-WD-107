@@ -25,22 +25,22 @@ export default function Navbar() {
         <h1 className="text-[22px] font-extrabold gradient-text">SpaceLink</h1>
       </Link>
       <div className="flex items-center gap-2">
-        <Link to="/" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+        <Link to="/" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
           Home
         </Link>
-        <Link to="/about" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+        <Link to="/about" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
           About
         </Link>
-        <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+        <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
           Catalogue
         </Link>
-        <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 no-underline flex items-center gap-1">
+        <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 no-underline flex items-center gap-1">
           Report Issue
         </Link>
-        <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+        <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
           Signup
         </Link>
-        <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+        <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 transition-all duration-150 no-underline">
           Login
         </Link>
 

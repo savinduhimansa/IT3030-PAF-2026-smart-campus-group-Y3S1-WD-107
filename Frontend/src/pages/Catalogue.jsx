@@ -174,23 +174,23 @@ export default function Catalogue() {
               Facilities Catalogue <span className="text-2xl">✨</span>
             </h1>
             <p className="text-[#334155] mt-2 max-w-[600px] leading-relaxed">
-              Browse and search all campus resources — 
-              <span className="text-[#4F8CFF] font-semibold mx-1">lecture halls</span>, 
-              <span className="text-[#10B981] font-semibold mx-1">labs</span>, 
-              <span className="text-[#F59E0B] font-semibold mx-1">meeting rooms</span>, and 
+              Browse and search all campus resources —
+              <span className="text-[#4F8CFF] font-semibold mx-1">lecture halls</span>,
+              <span className="text-[#10B981] font-semibold mx-1">labs</span>,
+              <span className="text-[#F59E0B] font-semibold mx-1">meeting rooms</span>, and
               <span className="text-[#EC4899] font-semibold mx-1">equipment</span>
             </p>
           </div>
           <div className="flex flex-col gap-3 items-end">
-            <button 
-              className="px-6 py-2.5 bg-blue-gradient text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all duration-300 active:scale-95" 
+            <button
+              className="px-6 py-2.5 bg-blue-gradient text-white font-semibold rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all duration-300 active:scale-95"
               onClick={() => navigate('/find-best-lab')}
             >
               Find Best Lab
             </button>
-            <button 
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#334155] hover:text-[#1E293B] bg-slate-50 border border-slate-200 rounded-xl transition-all duration-300" 
-              onClick={fetchResources} 
+            <button
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#334155] hover:text-[#1E293B] bg-slate-50 border border-slate-200 rounded-xl transition-all duration-300"
+              onClick={fetchResources}
               title="Refresh"
             >
               <RefreshCw size={14} /> Refresh
@@ -284,11 +284,10 @@ export default function Catalogue() {
         {/* Type Chips */}
         <div className="flex gap-2 mb-8 flex-wrap">
           <button
-            className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
-              !typeFilter 
-                ? 'bg-blue-gradient text-white shadow-md shadow-blue-200 active:scale-95' 
-                : 'bg-slate-100 text-[#475569] hover:bg-slate-200 hover:text-[#1E293B] active:scale-95'
-            }`}
+            className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 ${!typeFilter
+              ? 'bg-blue-gradient text-white shadow-md shadow-blue-200 active:scale-95'
+              : 'bg-slate-100 text-[#475569] hover:bg-slate-200 hover:text-[#1E293B] active:scale-95'
+              }`}
             onClick={() => setTypeFilter('')}
           >
             All
@@ -296,11 +295,10 @@ export default function Catalogue() {
           {RESOURCE_TYPES.map((t) => (
             <button
               key={t.value}
-              className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${
-                typeFilter === t.value 
-                  ? 'bg-blue-gradient text-white shadow-md shadow-blue-200 active:scale-95' 
-                  : 'bg-slate-100 text-[#64748B] hover:bg-slate-200 hover:text-[#1E293B] active:scale-95'
-              }`}
+              className={`px-5 py-2 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-2 ${typeFilter === t.value
+                ? 'bg-blue-gradient text-white shadow-md shadow-blue-200 active:scale-95'
+                : 'bg-slate-100 text-[#64748B] hover:bg-slate-200 hover:text-[#1E293B] active:scale-95'
+                }`}
               onClick={() => setTypeFilter(typeFilter === t.value ? '' : t.value)}
             >
               {t.icon} {t.label}
@@ -332,9 +330,8 @@ export default function Catalogue() {
               return (
                 <div
                   key={resource.resourceId}
-                  className={`relative group bg-white rounded-2xl border border-slate-100 p-1 flex flex-col transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 ${
-                    !resource.isBookable ? 'opacity-80' : ''
-                  }`}
+                  className={`relative group bg-white rounded-2xl border border-slate-100 p-1 flex flex-col transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 ${!resource.isBookable ? 'opacity-80' : ''
+                    }`}
                   id={`resource-card-${resource.resourceId}`}
                   style={{ animationDelay: `${i * 50}ms` }}
                   onClick={() => setSelectedResource(resource)}
@@ -351,7 +348,7 @@ export default function Catalogue() {
                     className="h-2 w-full rounded-t-xl"
                     style={{ background: `linear-gradient(90deg, ${typeInfo.color} 0%, ${typeInfo.color}44 100%)` }}
                   />
-                  
+
                   <div className="p-5 flex-1 flex flex-col">
                     <div className="flex items-center justify-between mb-4">
                       <span
@@ -361,17 +358,15 @@ export default function Catalogue() {
                         {typeInfo.label}
                       </span>
                       <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 ${
-                          resource.status === 'ACTIVE' 
-                            ? 'bg-green-100 text-green-600' 
-                            : resource.status === 'OUT_OF_SERVICE' 
-                              ? 'bg-red-100 text-red-600' 
-                              : 'bg-amber-100 text-amber-600'
-                        }`}
+                        className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 ${resource.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-600'
+                          : resource.status === 'OUT_OF_SERVICE'
+                            ? 'bg-red-100 text-red-600'
+                            : 'bg-amber-100 text-amber-600'
+                          }`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${
-                          resource.status === 'ACTIVE' ? 'bg-green-500' : resource.status === 'OUT_OF_SERVICE' ? 'bg-red-500' : 'bg-amber-500'
-                        }`} />
+                        <span className={`w-1.5 h-1.5 rounded-full ${resource.status === 'ACTIVE' ? 'bg-green-500' : resource.status === 'OUT_OF_SERVICE' ? 'bg-red-500' : 'bg-amber-500'
+                          }`} />
                         {statusInfo.label}
                       </span>
                     </div>
@@ -406,20 +401,20 @@ export default function Catalogue() {
                   </div>
 
                   <div className="px-5 py-4 border-t border-slate-50 flex items-center justify-between bg-slate-50/30 rounded-b-2xl">
-                    <button 
+                    <button
                       className="text-sm font-bold text-[#334155] hover:text-[#4F8CFF] flex items-center gap-1 transition-colors"
                       onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); }}
                     >
                       View <ChevronRight size={16} />
                     </button>
-                    
+
                     <div className="flex items-center gap-3">
                       {resource.isBookable ? (
                         <>
                           <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-md">
                             Bookable
                           </span>
-                          <button 
+                          <button
                             className="px-4 py-1.5 bg-blue-gradient text-white text-xs font-bold rounded-lg shadow-blue-500/20 shadow-lg hover:shadow-xl transition-all"
                             onClick={(e) => { e.stopPropagation(); navigate(`/booking?resource=${resource.resourceId}`); }}
                           >
@@ -427,8 +422,8 @@ export default function Catalogue() {
                           </button>
                         </>
                       ) : (
-                        <span 
-                          className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-1 rounded-md cursor-help" 
+                        <span
+                          className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-1 rounded-md cursor-help"
                           title="Already booked"
                         >
                           Not Bookable
