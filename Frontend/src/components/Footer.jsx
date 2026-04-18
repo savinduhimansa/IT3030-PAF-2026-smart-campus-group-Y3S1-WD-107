@@ -1,14 +1,31 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 
 export default function Footer() {
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleAboutClick = (e) => {
+    e.preventDefault()
+
+    if (location.pathname === '/') {
+      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+      return
+    }
+
+    navigate('/')
+    setTimeout(() => {
+      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
+    }, 300)
+  }
+
   return (
     <footer className="footer-ui">
       <div className="footer-main">
         <span className="footer-brand">SpaceLink</span> &copy; {new Date().getFullYear()} &mdash; All rights reserved.
       </div>
       <div className="footer-links">
-        <Link to="/about">About</Link>
+        <Link to="/" onClick={handleAboutClick}>About</Link>
         <Link to="/privacy">Privacy Policy</Link>
         <Link to="/terms">Terms &amp; Conditions</Link>
       </div>

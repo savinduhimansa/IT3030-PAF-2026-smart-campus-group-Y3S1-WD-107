@@ -416,7 +416,18 @@ export default function Catalogue() {
                           </span>
                           <button
                             className="px-4 py-1.5 bg-blue-gradient text-white text-xs font-bold rounded-lg shadow-blue-500/20 shadow-lg hover:shadow-xl transition-all"
-                            onClick={(e) => { e.stopPropagation(); navigate(`/booking?resource=${resource.resourceId}`); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const token = localStorage.getItem('token');
+                              if (!token) {
+                                // Not logged in: save intended resource and redirect to login
+                                localStorage.setItem('pendingResourceId', resource.resourceId);
+                                navigate('/login');
+                              } else {
+                                // Already logged in: go directly to bookingDetails with resource pre-filled
+                                navigate(`/bookingDetails?resourceId=${resource.resourceId}`);
+                              }
+                            }}
                           >
                             Book Now
                           </button>

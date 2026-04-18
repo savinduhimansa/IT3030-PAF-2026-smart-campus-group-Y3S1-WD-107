@@ -540,17 +540,36 @@
   }
 
   .toast-notification {
-    @apply fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-semibold z-[300] shadow-lg border border-border;
-    background: rgba(17, 24, 39, 0.95);
-    backdrop-filter: blur(12px);
-    animation: slideInRight 300ms ease-out, fadeOut 300ms ease-in 2.7s forwards;
+    @apply fixed bottom-8 right-8 px-6 py-4 rounded-2xl text-sm font-bold z-[300] flex items-center gap-4 transition-all duration-300;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #ef4444;
+    color: #ffffff !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.1);
+    animation: toastSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1), fadeOut 300ms ease-in 2.7s forwards;
   }
 
   .toast {
-    @apply fixed bottom-6 right-6 px-5 py-3 rounded-xl text-sm font-semibold z-[300] shadow-lg border border-border;
-    background: rgba(17, 24, 39, 0.95);
-    backdrop-filter: blur(12px);
-    animation: slideInRight 300ms ease-out, fadeOut 300ms ease-in 2.7s forwards;
+    @apply fixed bottom-8 right-8 px-6 py-4 rounded-2xl text-sm font-bold z-[300] flex items-center gap-4 transition-all duration-300;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid #ef4444;
+    color: #ffffff !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(59, 130, 246, 0.1);
+    animation: toastSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1), fadeOut 300ms ease-in 2.7s forwards;
+  }
+
+  @keyframes toastSlideIn {
+    from {
+      transform: translateX(120%) scale(0.9);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0) scale(1);
+      opacity: 1;
+    }
   }
 
   @keyframes slideInRight {

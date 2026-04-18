@@ -10,20 +10,17 @@ import {
   Building2,
   Settings,
   Clock,
+  Target,
+  Layers,
+  Users,
+  CalendarCheck,
 } from 'lucide-react'
 import { resourceApi } from '../services/api'
 import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
 
 export default function HomePage() {
-  const [scrolled, setScrolled] = useState(false)
   const [stats, setStats] = useState({ total: 0, active: 0, capacity: 0 })
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll)
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [])
 
   useEffect(() => {
     resourceApi
@@ -93,7 +90,7 @@ export default function HomePage() {
           </h2>
 
           <p className="text-base md:text-lg text-text-secondary leading-relaxed max-w-[600px] mx-auto mb-10 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-            A unified platform to catalogue, search, and manage all campus resources —
+            A unified platform to catalogue, search, and manage all campus resources
             from lecture halls and laboratories to meeting rooms and equipment.
           </p>
 
@@ -148,6 +145,120 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+      </section>
+
+      {/* About Us Section */}
+      <section className="px-5 md:px-12 py-16 md:py-24 max-w-[1200px] mx-auto relative" id="about">
+        
+        {/* Background glow */}
+        <div
+          className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full pointer-events-none opacity-30"
+          style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%)' }}
+        />
+
+        {/* Section Label */}
+        <div className="inline-flex items-center gap-2 text-[13px] font-bold uppercase tracking-widest text-primary-light mb-3.5">
+          <Zap size={14} /> About Us
+        </div>
+
+        <h2 className="text-3xl md:text-[38px] font-extrabold mb-4 tracking-tight">
+          What is <span className="gradient-text">SpaceLink?</span>
+        </h2>
+        <p className="text-base text-text-secondary w-full leading-relaxed mb-14 text-justify">
+          SpaceLink is a smart campus resource management platform built to modernize the way universities 
+          handle their physical assets and spaces. Designed with both students and administrators in mind, 
+          SpaceLink centralizes everything from discovering available lecture halls and computer labs to 
+          submitting booking requests, tracking approval status, and managing resource availability in real time.
+           Whether you're a student looking for a free meeting room between lectures, a lecturer reserving a lab 
+           for a practical session, or a facilities manager overseeing the entire campus inventory, SpaceLink gives 
+           everyone the visibility and control they need. No more manual spreadsheets, no more double-bookings, no more 
+           uncertainty, just a clean, reliable system that keeps your campus running smoothly.
+        </p>
+
+        {/* Main Two-Column Block */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+          {/* What is SpaceLink */}
+          <div className="p-8 glass-card rounded-2xl relative overflow-hidden group hover:border-border-hover hover:-translate-y-1 hover:shadow-glow transition-all duration-250">
+            <div className="absolute top-0 left-0 right-0 h-[3px] gradient-primary opacity-0 group-hover:opacity-100 transition-opacity duration-250" />
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-primary-light mb-5 bg-primary/10 border border-primary/15">
+              <Layers size={28} />
+            </div>
+            <h3 className="text-xl font-bold mb-3">The Platform</h3>
+            <p className="text-sm text-text-secondary leading-relaxed mb-3">
+              SpaceLink is a unified smart campus operations hub that enables students, 
+              staff, and administrators to discover, manage, and book campus resources 
+              with ease.
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              From lecture halls and computer labs to projectors and meeting rooms 
+              every resource is catalogued, searchable, and bookable through a single 
+              intuitive interface.
+            </p>
+          </div>
+
+          {/* Our Mission */}
+          <div className="p-8 glass-card rounded-2xl relative overflow-hidden group hover:border-border-hover hover:-translate-y-1 hover:shadow-glow transition-all duration-250">
+            <div className="absolute top-0 left-0 right-0 h-[3px] gradient-primary opacity-0 group-hover:opacity-100 transition-opacity duration-250" />
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-primary-light mb-5 bg-primary/10 border border-primary/15">
+              <Target size={28} />
+            </div>
+            <h3 className="text-xl font-bold mb-3">Our Mission</h3>
+            <p className="text-sm text-text-secondary leading-relaxed mb-5">
+              To eliminate the friction of campus resource management by providing a 
+              transparent, conflict-free booking experience that works for everyone — 
+              from first-year students to facility administrators.
+            </p>
+            <ul className="flex flex-col gap-3">
+              {[
+                'Seamless resource discovery and booking',
+                'Real-time availability and status tracking',
+                'Transparent admin controls and approvals',
+                'Smart conflict detection and prevention',
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-2.5 text-sm text-text-secondary">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent-green shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom Three Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              icon: <Building2 size={24} />,
+              title: 'Resource Management',
+              desc: 'Full catalogue of campus assets with real-time status tracking — active, maintenance, or out of service.',
+            },
+            {
+              icon: <CalendarCheck size={24} />,
+              title: 'Smart Booking',
+              desc: 'Request, approve, and manage bookings with built-in conflict detection to prevent double-bookings.',
+            },
+            {
+              icon: <Users size={24} />,
+              title: 'Role-Based Access',
+              desc: 'Students browse and request. Admins manage and approve. Everyone gets exactly what they need.',
+            },
+          ].map((card, i) => (
+            <div
+              key={i}
+              className="p-6 glass-card rounded-2xl relative overflow-hidden group hover:border-border-hover hover:-translate-y-1 hover:shadow-glow transition-all duration-250 animate-fade-in-up"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              <div className="absolute top-0 left-0 right-0 h-[3px] gradient-primary opacity-0 group-hover:opacity-100 transition-opacity duration-250" />
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center text-primary-light mb-4 bg-primary/10 border border-primary/15">
+                {card.icon}
+              </div>
+              <h4 className="text-base font-bold mb-2">{card.title}</h4>
+              <p className="text-sm text-text-secondary leading-relaxed">{card.desc}</p>
+            </div>
+          ))}
+        </div>
+
       </section>
 
       {/* CTA */}

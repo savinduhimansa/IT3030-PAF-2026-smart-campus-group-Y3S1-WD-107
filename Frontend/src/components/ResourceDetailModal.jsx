@@ -236,7 +236,7 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
         <BookingModal
           isOpen={isBookingModalOpen}
           onClose={() => setIsBookingModalOpen(false)}
-          prefillResourceId={resource.resourceId}
+          prefillResource={resource}
           onSubmit={async (payload) => {
             const resolvedUserId = user?.id ?? Number(localStorage.getItem('userId'))
             if (!resolvedUserId) {

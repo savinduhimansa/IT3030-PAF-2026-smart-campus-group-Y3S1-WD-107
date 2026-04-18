@@ -29,7 +29,7 @@ import Profile from './pages/Profile' // New Import
 import ChangePassword from './pages/ChangePassword' // New Import
 import { ProtectedRoute } from './components/ProtectedRoute'
 
-const navItems = [
+const baseNavItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Resources', icon: Settings, adminOnly: true },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
@@ -59,6 +59,15 @@ function AppLayout() {
   const userIdRaw = localStorage.getItem('userId');
   const userId = userIdRaw ? Number(userIdRaw) : null;
   const user = userId ? { id: userId, role: userRole || 'USER' } : null;
+
+  const navItems = [
+    ...baseNavItems,
+    {
+      path: userRole === 'ADMIN' ? '/booking' : '/bookingDetails',
+      label: 'Booking',
+      icon: BookOpen,
+    },
+  ];
 
   const visibleNavItems = navItems.filter(item => !item.adminOnly || userRole === 'ADMIN');
 
@@ -150,10 +159,13 @@ function AppLayout() {
 function App() {
   const location = useLocation();
   const isHomepage = location.pathname === '/';
+  const isCatalogue = location.pathname === '/catalogue';
 
-  // Note: Catalogue is now part of the AppLayout logic
   if (isHomepage) {
     return <HomePage />;
+  }
+  if (isCatalogue) {
+    return <Catalogue />;
   }
   return <AppLayout />;
 }

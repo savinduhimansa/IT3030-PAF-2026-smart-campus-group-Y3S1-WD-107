@@ -21,7 +21,7 @@ const checkAvailability = async (resourceId, bookingDate, startTime, endTime) =>
     return response.data.available;
 };
 
-export default function BookingModal({ isOpen, onClose, onSubmit, initialData, prefillResourceId }) {
+export default function BookingModal({ isOpen, onClose, onSubmit, initialData, prefillResource }) {
     const todayISODate = getTodayLocalISODate();
 
     const [formData, setFormData] = useState({
@@ -33,7 +33,8 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
         expectedAttendees: '',
         contactEmail: '',
         department: '',
-        specialRequirements: ''
+        specialRequirements: '',
+        quantity: 1,
     });
 
         // Availability state
@@ -57,11 +58,12 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
                 expectedAttendees: initialData.expectedAttendees || '',
                 contactEmail: initialData.contactEmail || '',
                 department: initialData.department || '',
-                specialRequirements: initialData.specialRequirements || ''
+                specialRequirements: initialData.specialRequirements || '',
+                quantity: initialData.quantity || 1,
             });
         } else {
             setFormData({
-                resourceId: prefillResourceId ?? '',
+                resourceId: prefillResource?.resourceId ?? '',
                 bookingDate: '',
                 startTime: '',
                 endTime: '',
@@ -69,14 +71,15 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
                 expectedAttendees: '',
                 contactEmail: '',
                 department: '',
-                specialRequirements: ''
+                specialRequirements: '',
+                quantity: 1,
             });
         }
 
         // Reset availability and error when modal opens
         setAvailability(null);
         setError('');
-    }, [isOpen, initialData, prefillResourceId]);
+    }, [isOpen, initialData, prefillResource]);
 
     useEffect(() => {
         const { resourceId, bookingDate, startTime, endTime } = formData;
@@ -110,6 +113,26 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
 
     if (!isOpen) return null;
 
+    // Determine resource category for dynamic fields
+    const resourceType = prefillResource?.type || null;
+
+    // Space-type: needs attendees
+    const isSpaceType = ['LECTURE_HALL', 'LAB', 'MEETING_ROOM'].includes(resourceType);
+
+    // Equipment-type: needs quantity, no attendees
+    const isEquipmentType = ['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(resourceType);
+
+    // Session type options per resource type
+    const sessionTypeOptions = {
+        LECTURE_HALL: ['Lecture', 'Exam', 'Workshop', 'Presentation', 'Other'],
+        LAB: ['Practical', 'Exam', 'Training', 'Research', 'Other'],
+        MEETING_ROOM: ['Team Meeting', 'Interview', 'External Meeting', 'Presentation', 'Other'],
+        PROJECTOR: ['Lecture', 'Presentation', 'Event', 'Screening', 'Other'],
+        CAMERA: ['Project', 'Event', 'Research', 'Media Production', 'Other'],
+        EQUIPMENT: ['Project', 'Event', 'Research', 'Other'],
+    };
+    const sessionOptions = sessionTypeOptions[resourceType] || [];
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -126,7 +149,8 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
                 expectedAttendees,
                 contactEmail,
                 department,
-                specialRequirements
+                specialRequirements,
+                quantity,
             } = formData;
 
             if (bookingDate && bookingDate < todayISODate) {
@@ -138,15 +162,18 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
             const startDateTime = bookingDate && startTime ? `${bookingDate}T${startTime}` : null;
             const endDateTime = bookingDate && endTime ? `${bookingDate}T${endTime}` : null;
 
+            const shouldCollectAttendees = isSpaceType || !resourceType;
+
             const submitData = {
                 resourceId: resourceId ? Number(resourceId) : null,
                 startTime: startDateTime,
                 endTime: endDateTime,
                 purpose,
-                expectedAttendees: expectedAttendees ? Number(expectedAttendees) : 0,
+                expectedAttendees: shouldCollectAttendees ? (expectedAttendees ? Number(expectedAttendees) : 0) : 0,
                 contactEmail,
                 department,
-                specialReqs: specialRequirements
+                specialReqs: specialRequirements,
+                quantity: isEquipmentType ? Number(quantity) : null,
             };
 
             await onSubmit(submitData);
@@ -174,108 +201,222 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
 
 
     return (
-        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] flex items-center justify-center p-4 z-50 transition-opacity">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform transition-all">
-                <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-900 to-indigo-600">New Booking</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors bg-white hover:bg-red-50 rounded-full p-1.5 shadow-sm border border-transparent hover:border-red-100">
-                        <X size={22} />
-                    </button>
-                </div>
-                <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Resource / Room</label>
-                            <div className="relative">
-                                <input required type="text" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none text-gray-900" placeholder="e.g. Conference Room A" value={formData.resourceId} onChange={e => setFormData({ ...formData, resourceId: e.target.value })} />
-                                <FileText className="absolute left-3.5 top-3 text-gray-400" size={18} />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Email</label>
-                            <div className="relative">
-                                <input required type="email" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none text-gray-900" placeholder="e.g. user@university.edu" value={formData.contactEmail} onChange={e => setFormData({ ...formData, contactEmail: e.target.value })} />
-                                <svg className="absolute left-3.5 top-3 text-gray-400" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="16" height="12" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
-                            </div>
-                        </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-[2px] z-50 transition-opacity overflow-y-auto">
+            <div className="min-h-full flex items-start justify-center p-4 py-8">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[calc(100vh-4rem)] overflow-hidden transform transition-all flex flex-col">
+                    <div className="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                        <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-900 to-indigo-600">
+                            {prefillResource ? `Book: ${prefillResource.name}` : 'New Booking'}
+                        </h3>
+                        <button onClick={onClose} className="text-gray-400 hover:text-red-500 transition-colors bg-white hover:bg-red-50 rounded-full p-1.5 shadow-sm border border-transparent hover:border-red-100">
+                            <X size={22} />
+                        </button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Department</label>
-                            <select required className="w-full pl-4 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none text-gray-900" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
-                                <option value="">Select department</option>
-                                <option value="Engineering">Engineering</option>
-                                <option value="Business">Business</option>
-                                <option value="Sciences">Sciences</option>
-                                <option value="Arts">Arts</option>
-                                <option value="Law">Law</option>
-                                <option value="Other">Other</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Date</label>
-                            <div className="relative">
-                                <input required type="date" min={todayISODate} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none text-gray-900" value={formData.bookingDate} onChange={e => setFormData({ ...formData, bookingDate: e.target.value })} />
-                                <Calendar className="absolute left-3.5 top-3 text-gray-400" size={18} />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Start Time</label>
-                            <div className="relative">
-                                <input required type="time" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} />
-                                <Clock className="absolute left-3.5 top-3 text-gray-400" size={18} />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">End Time</label>
-                            <div className="relative">
-                                <input required type="time" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} />
-                                <Clock className="absolute left-3.5 top-3 text-gray-400" size={18} />
-                            </div>
-                        </div>
-                    </div>
+                    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-6">
 
-                    {!initialData && (
-                        <div className="flex items-center gap-2 -mt-2 min-h-[24px]">
-                            {checkingAvailability && (
-                                <span className="text-xs text-gray-400 flex items-center gap-1.5">
-                                    <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" /></svg>
-                                    Checking availability...
-                                </span>
-                            )}
-                            {!checkingAvailability && availability === true && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="2 7 5 10 11 4"/></svg>
-                                    Slot available
-                                </span>
-                            )}
-                            {!checkingAvailability && availability === false && (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-500 border border-red-200">
-                                    <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
-                                    Slot taken — choose another time
-                                </span>
-                            )}
-                        </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Attendees</label>
-                            <div className="relative">
-                                <input required type="number" min="1" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" placeholder="e.g. 10" value={formData.expectedAttendees} onChange={e => setFormData({ ...formData, expectedAttendees: e.target.value })} />
-                                <Users className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                        {/* Row 1: Resource ID (read-only if pre-filled) + Contact Email */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                    Resource / Room
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        required
+                                        type="text"
+                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900"
+                                        placeholder="e.g. Conference Room A"
+                                        value={formData.resourceId}
+                                        readOnly={!!prefillResource}
+                                        onChange={e => setFormData({ ...formData, resourceId: e.target.value })}
+                                    />
+                                    <FileText className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                                </div>
+                                {prefillResource && (
+                                    <span className="inline-block mt-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                        {prefillResource.type?.replace('_', ' ')}
+                                    </span>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Contact Email</label>
+                                <div className="relative">
+                                    <input required type="email" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" placeholder="e.g. user@university.edu" value={formData.contactEmail} onChange={e => setFormData({ ...formData, contactEmail: e.target.value })} />
+                                    <svg className="absolute left-3.5 top-3 text-gray-400" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="16" height="12" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>
+                                </div>
                             </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Purpose</label>
-                            <input required type="text" className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" placeholder="Meeting purpose" value={formData.purpose} onChange={e => setFormData({ ...formData, purpose: e.target.value })} />
+
+                        {/* Row 2: Department + Date */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Department</label>
+                                <select required className="w-full pl-4 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}>
+                                    <option value="">Select department</option>
+                                    <option value="Engineering">Engineering</option>
+                                    <option value="Business">Business</option>
+                                    <option value="Sciences">Sciences</option>
+                                    <option value="Arts">Arts</option>
+                                    <option value="Law">Law</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Date</label>
+                                <div className="relative">
+                                    <input required type="date" min={todayISODate} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" value={formData.bookingDate} onChange={e => setFormData({ ...formData, bookingDate: e.target.value })} />
+                                    <Calendar className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Special Requirements</label>
-                        <textarea className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none min-h-[48px] resize-y text-gray-900" placeholder="e.g. Projector, wheelchair access, etc." value={formData.specialRequirements} onChange={e => setFormData({ ...formData, specialRequirements: e.target.value })} />
-                    </div>
+
+                        {/* Row 3: Start Time + End Time */}
+                        <div className="grid grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Start Time</label>
+                                <div className="relative">
+                                    <input required type="time" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" value={formData.startTime} onChange={e => setFormData({ ...formData, startTime: e.target.value })} />
+                                    <Clock className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">End Time</label>
+                                <div className="relative">
+                                    <input required type="time" className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900" value={formData.endTime} onChange={e => setFormData({ ...formData, endTime: e.target.value })} />
+                                    <Clock className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Availability checker — keep exactly as is */}
+                        {!initialData && (
+                            <div className="flex items-center gap-2 -mt-2 min-h-[24px]">
+                                {checkingAvailability && (
+                                    <span className="text-xs text-gray-400 flex items-center gap-1.5">
+                                        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" /></svg>
+                                        Checking availability...
+                                    </span>
+                                )}
+                                {!checkingAvailability && availability === true && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="2 7 5 10 11 4"/></svg>
+                                        Slot available
+                                    </span>
+                                )}
+                                {!checkingAvailability && availability === false && (
+                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-500 border border-red-200">
+                                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+                                        Slot taken — choose another time
+                                    </span>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Row 4: DYNAMIC FIELDS based on resource type */}
+
+                        {/* SPACE TYPES: Lecture Hall, Lab, Meeting Room → show Attendees + Session Type */}
+                        {(isSpaceType || !resourceType) && (
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Expected Attendees
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            required={isSpaceType || !resourceType}
+                                            type="number"
+                                            min="1"
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900"
+                                            placeholder="e.g. 30"
+                                            value={formData.expectedAttendees}
+                                            onChange={e => setFormData({ ...formData, expectedAttendees: e.target.value })}
+                                        />
+                                        <Users className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Session Type
+                                    </label>
+                                    <select
+                                        required={isSpaceType || !resourceType}
+                                        className="w-full pl-4 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900"
+                                        value={formData.purpose}
+                                        onChange={e => setFormData({ ...formData, purpose: e.target.value })}
+                                    >
+                                        <option value="">Select session type</option>
+                                        {sessionOptions.map(opt => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                        {!resourceType && (
+                                            <>
+                                                <option value="Lecture">Lecture</option>
+                                                <option value="Meeting">Meeting</option>
+                                                <option value="Exam">Exam</option>
+                                                <option value="Workshop">Workshop</option>
+                                                <option value="Other">Other</option>
+                                            </>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* EQUIPMENT TYPES: Projector, Camera, Equipment → show Quantity + Purpose */}
+                        {isEquipmentType && (
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Quantity Needed
+                                    </label>
+                                    <div className="relative">
+                                        <input
+                                            required
+                                            type="number"
+                                            min="1"
+                                            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900"
+                                            placeholder="e.g. 2"
+                                            value={formData.quantity}
+                                            onChange={e => setFormData({ ...formData, quantity: e.target.value })}
+                                        />
+                                        <Users className="absolute left-3.5 top-3 text-gray-400" size={18} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Purpose
+                                    </label>
+                                    <select
+                                        required
+                                        className="w-full pl-4 pr-8 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-gray-900"
+                                        value={formData.purpose}
+                                        onChange={e => setFormData({ ...formData, purpose: e.target.value })}
+                                    >
+                                        <option value="">Select purpose</option>
+                                        {sessionOptions.map(opt => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Special Requirements — shown for ALL types, always optional */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                                Special Requirements <span className="text-gray-400 font-normal">(optional)</span>
+                            </label>
+                            <textarea
+                                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all outline-none min-h-[48px] resize-y text-gray-900"
+                                placeholder={
+                                    isEquipmentType
+                                        ? 'e.g. Needs carrying case, specific lens required...'
+                                        : 'e.g. Wheelchair access, whiteboard markers, specific seating layout...'
+                                }
+                                value={formData.specialRequirements}
+                                onChange={e => setFormData({ ...formData, specialRequirements: e.target.value })}
+                            />
+                        </div>
 
                     {error && (
                         <div className="mb-2 px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-red-600 text-sm font-medium">
@@ -298,7 +439,8 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
                             Cancel
                         </button>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     );
