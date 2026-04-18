@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { resourceApi } from '../services/api';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import { MapPin, Users, Clock, Sparkles, Search, ChevronRight } from 'lucide-react';
 
 const RESOURCE_TYPE_OPTIONS = [
-  { label: 'Any', value: '' },
+  { label: 'Any Type', value: '' },
   { label: 'Lecture Hall', value: 'LECTURE_HALL' },
   { label: 'Lab', value: 'LAB' },
   { label: 'Meeting Room', value: 'MEETING_ROOM' },
@@ -62,153 +65,164 @@ export default function FindBestLab() {
       const res = await resourceApi.getAll(params);
       const ranked = rankResources(res.data || [], type, capacityValue);
       setRecommendations(ranked);
-      if (ranked.length === 0) setError('No matching resource found.');
+      if (ranked.length === 0) setError('No matching resources found for those criteria.');
     } catch (err) {
-      setError('Failed to fetch recommendations.');
+      setError('Failed to fetch recommendations. Please check your connection.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'radial-gradient(1200px 500px at 20% -10%, #1b2a52 0%, rgba(27,42,82,0.2) 50%, transparent 70%), linear-gradient(180deg, #0b1220 0%, #0f172a 100%)',
-        color: '#e5e7eb',
-        padding: '48px 20px 80px',
-      }}
-    >
-      <div style={{ maxWidth: 980, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 14, letterSpacing: 2, textTransform: 'uppercase', color: '#93c5fd', marginBottom: 10 }}>
-            Smart Recommendation
+    <div className="light-theme min-h-screen pb-20 bg-[#F8FAFC]">
+      <Navbar />
+      <div style={{ height: '72px' }} />
+
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[#4F8CFF] text-[11px] font-bold uppercase tracking-widest mb-4">
+            <Sparkles size={12} /> Smart Recommendation
           </div>
-          <h1 style={{ fontSize: 36, fontWeight: 800, margin: 0 }}>
+          <h1 className="text-4xl font-bold mb-4 gradient-text">
             Find the Best Lab for Your Session
           </h1>
-          <p style={{ marginTop: 10, color: '#cbd5f5', maxWidth: 640, marginLeft: 'auto', marginRight: 'auto' }}>
-            Tell us your capacity and time window. We will score and recommend the most suitable resource.
+          <p className="text-[#334155] max-w-2xl mx-auto text-lg leading-relaxed font-medium">
+            Tell us your capacity and time window. Our AI-driven system will score and recommend the most suitable campus resource for you.
           </p>
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr)',
-            gap: 22,
-          }}
-        >
-          <div
-            style={{
-              background: 'rgba(15, 23, 42, 0.8)',
-              border: '1px solid rgba(148, 163, 184, 0.2)',
-              borderRadius: 16,
-              padding: 24,
-              boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
-            }}
-          >
-            <form onSubmit={handleSubmit} style={{ display: 'grid', gap: 16 }}>
-              <div style={{ display: 'grid', gap: 6 }}>
-                <label style={{ fontSize: 13, color: '#cbd5f5' }}>Minimum Capacity</label>
-                <input
-                  type="number"
-                  min={1}
-                  required
-                  value={minCapacity}
-                  onChange={e => setMinCapacity(e.target.value)}
-                  className="input"
-                  style={{ width: '100%', background: '#0b1220', color: '#e5e7eb', border: '1px solid #1e293b' }}
-                />
+        <div className="grid grid-cols-1 gap-10">
+          <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 max-w-2xl mx-auto w-full">
+            <form onSubmit={handleSubmit} className="grid gap-6">
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-[#334155] uppercase tracking-wider">Minimum Capacity</label>
+                <div className="relative group">
+                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B] group-focus-within:text-[#4F8CFF] transition-colors" size={18} />
+                  <input
+                    type="number"
+                    min={1}
+                    required
+                    value={minCapacity}
+                    onChange={e => setMinCapacity(e.target.value)}
+                    placeholder="e.g. 50"
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-[#4F8CFF] outline-none transition-all placeholder:text-[#94A3B8]"
+                  />
+                </div>
               </div>
 
-              <div style={{ display: 'grid', gap: 6 }}>
-                <label style={{ fontSize: 13, color: '#cbd5f5' }}>Time</label>
-                <input
-                  type="time"
-                  required
-                  value={requiredTime}
-                  onChange={e => setRequiredTime(e.target.value)}
-                  className="input"
-                  style={{ width: '100%', background: '#0b1220', color: '#e5e7eb', border: '1px solid #1e293b' }}
-                />
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-[#334155] uppercase tracking-wider">Required Time</label>
+                <div className="relative group">
+                  <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B] group-focus-within:text-[#4F8CFF] transition-colors" size={18} />
+                  <input
+                    type="time"
+                    required
+                    value={requiredTime}
+                    onChange={e => setRequiredTime(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-[#4F8CFF] outline-none transition-all"
+                  />
+                </div>
               </div>
 
-              <div style={{ display: 'grid', gap: 6 }}>
-                <label style={{ fontSize: 13, color: '#cbd5f5' }}>Resource Type (optional)</label>
-                <select
-                  value={type}
-                  onChange={e => setType(e.target.value)}
-                  className="input"
-                  style={{ width: '100%', background: '#0b1220', color: '#e5e7eb', border: '1px solid #1e293b' }}
-                >
-                  {RESOURCE_TYPE_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
+              <div className="grid gap-2">
+                <label className="text-xs font-bold text-[#334155] uppercase tracking-wider">Resource Type (optional)</label>
+                <div className="relative group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#64748B] group-focus-within:text-[#4F8CFF] transition-colors" size={18} />
+                  <select
+                    value={type}
+                    onChange={e => setType(e.target.value)}
+                    className="w-full pl-12 pr-10 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-[#4F8CFF] outline-none transition-all appearance-none cursor-pointer"
+                    style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'16\' height=\'16\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 16px center' }}
+                  >
+                    {RESOURCE_TYPE_OPTIONS.map(opt => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <button type="submit" className="btn btn-primary" disabled={loading} style={{ marginTop: 8 }}>
-                {loading ? 'Finding...' : 'Find Best Resource'}
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="mt-4 px-6 py-4 bg-blue-gradient text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:-translate-y-0.5 transition-all duration-300 disabled:opacity-50 disabled:translate-y-0"
+              >
+                {loading ? 'Analyzing Resources...' : 'Find Best Resource'}
               </button>
             </form>
           </div>
 
           {error && (
-            <div
-              style={{
-                background: 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.3)',
-                borderRadius: 12,
-                padding: 14,
-                color: '#fecaca',
-                textAlign: 'center',
-              }}
-            >
+            <div className="max-w-2xl mx-auto w-full bg-red-50 border border-red-100 rounded-xl p-4 text-red-600 font-medium text-center">
               {error}
             </div>
           )}
 
           {recommendations.length > 0 && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-                <h2 style={{ margin: 0, fontSize: 20 }}>Recommended Resources</h2>
-                <span style={{ color: '#93c5fd', fontSize: 13 }}>Top match highlighted</span>
+            <div className="mt-8 animate-in">
+              <div className="flex justify-between items-baseline mb-6">
+                <h2 className="text-2xl font-bold text-[#1E293B]">Recommended Resources</h2>
+                <span className="text-[#4F8CFF] text-sm font-bold flex items-center gap-1.5">
+                   <Sparkles size={14} /> Top match highlighted
+                </span>
               </div>
-              <div style={{ display: 'grid', gap: 16 }}>
+              <div className="grid gap-6">
                 {recommendations.map((r, idx) => (
                   <div
                     key={r.resourceId}
-                    style={{
-                      border: idx === 0 ? '2px solid #10b981' : '1px solid rgba(148, 163, 184, 0.2)',
-                      borderRadius: 16,
-                      padding: 18,
-                      background: idx === 0 ? 'rgba(16,185,129,0.08)' : 'rgba(15, 23, 42, 0.7)',
-                      boxShadow: idx === 0 ? '0 8px 24px rgba(16,185,129,0.12)' : '0 6px 16px rgba(0,0,0,0.18)',
-                      position: 'relative',
-                    }}
+                    className={`relative rounded-2xl p-8 border transition-all duration-300 ${
+                      idx === 0 
+                        ? 'bg-green-50/50 border-green-200 shadow-xl shadow-green-500/5 hover:-translate-y-1' 
+                        : 'bg-white border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-1'
+                    }`}
                   >
                     {idx === 0 && (
-                      <span style={{
-                        position: 'absolute',
-                        top: 14,
-                        right: 18,
-                        background: '#10b981',
-                        color: '#0b1220',
-                        borderRadius: 999,
-                        padding: '2px 10px',
-                        fontWeight: 700,
-                        fontSize: 12,
-                        letterSpacing: 0.6,
-                      }}>Recommended</span>
+                      <span className="absolute top-6 right-8 bg-[#10B981] text-white rounded-full px-4 py-1 font-bold text-[10px] uppercase tracking-widest shadow-lg shadow-green-500/20">
+                        Top Recommendation
+                      </span>
                     )}
-                    <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 6 }}>{r.name}</div>
-                    <div style={{ color: '#94a3b8', marginBottom: 10 }}>Type: {r.type}</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 8 }}>
-                      <div>Capacity: <b>{r.capacity}</b></div>
-                      <div>Location: <b>{r.location}</b></div>
-                      <div>Available: <b>{r.availableFrom} - {r.availableTo}</b></div>
-                      <div>Status: <b>{r.status}</b></div>
+                    
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                      <div className="flex-1">
+                        <div className="text-2xl font-bold text-[#1E293B] mb-2">{r.name}</div>
+                        <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#64748B] bg-slate-100 rounded-full px-3 py-1 mb-6">
+                          {r.type.replace('_', ' ')}
+                        </div>
+                        
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Capacity</span>
+                            <span className="text-[#334155] font-bold flex items-center gap-2">
+                              <Users size={14} className="text-[#4F8CFF]" /> {r.capacity} seats
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Location</span>
+                            <span className="text-[#334155] font-bold flex items-center gap-2">
+                              <MapPin size={14} className="text-[#4F8CFF]" /> {r.location}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Availability</span>
+                            <span className="text-[#334155] font-bold flex items-center gap-2">
+                              <Clock size={14} className="text-[#4F8CFF]" /> {r.availableFrom} - {r.availableTo}
+                            </span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Status</span>
+                            <span className={`font-bold flex items-center gap-2 ${r.status === 'ACTIVE' ? 'text-green-600' : 'text-amber-600'}`}>
+                              <span className={`w-2 h-2 rounded-full ${r.status === 'ACTIVE' ? 'bg-green-500 animate-pulse' : 'bg-amber-500'}`} />
+                              {r.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="px-6 py-3 bg-white border border-slate-200 rounded-xl text-[#334155] font-bold text-sm hover:bg-slate-50 hover:border-[#4F8CFF] hover:text-[#4F8CFF] transition-all flex items-center justify-center gap-2 group"
+                        onClick={() => window.location.href = `/catalogue?id=${r.resourceId}`}
+                      >
+                        View Details <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -217,6 +231,7 @@ export default function FindBestLab() {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

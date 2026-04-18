@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, BarChart3, Loader2, AlertTriangle } from 'lucide-react'
+import { Activity, BarChart3, Loader2, AlertTriangle, Users, MapPin, Clock, Plus, Zap } from 'lucide-react'
 import { RESOURCE_TYPES, getTypeInfo, getStatusInfo } from '../constants'
 import { resourceApi } from '../services/api'
 
@@ -35,113 +35,138 @@ export default function Dashboard() {
   }))
 
   const statCards = [
-    { label: 'Total Resources', value: stats.totalResources, icon: '📦', sub: 'Across all categories' },
-    { label: 'Active', value: stats.activeResources, icon: '✅', sub: 'Ready for booking' },
-    { label: 'Out of Service', value: stats.outOfService, icon: '🔧', sub: 'Unavailable' },
-    { label: 'Total Capacity', value: stats.totalCapacity.toLocaleString(), icon: '👥', sub: 'Combined seating' },
+    { label: 'Total Resources', value: stats.totalResources, icon: '📦', sub: 'Across all categories', color: 'blue' },
+    { label: 'Active', value: stats.activeResources, icon: '✅', sub: 'Ready for booking', color: 'green' },
+    { label: 'Out of Service', value: stats.outOfService, icon: '🔧', sub: 'Currently unavailable', color: 'red' },
+    { label: 'Total Capacity', value: stats.totalCapacity.toLocaleString(), icon: '👥', sub: 'Combined seating', color: 'purple' },
   ]
 
   const recentResources = [...resources].sort((a, b) => b.resourceId - a.resourceId).slice(0, 6)
 
   if (loading) {
     return (
-      <>
-        <div className="px-8 py-7 border-b border-border bg-surface-dark/60 backdrop-blur-xl sticky top-0 z-50">
-          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-          <p className="text-text-secondary text-sm">Welcome back — here's an overview of your campus facilities</p>
+      <div className="light-theme min-h-screen bg-[#F8FAFC]">
+        <div className="px-8 py-7 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+          <h1 className="text-2xl font-bold mb-1 gradient-text">Dashboard</h1>
+          <p className="text-[#64748B] text-sm md">Welcome back — here's an overview of your campus facilities</p>
         </div>
-        <div className="flex items-center justify-center py-20 gap-3 text-text-muted">
-          <Loader2 size={24} className="animate-spin" /><span>Loading resources...</span>
+        <div className="flex flex-col items-center justify-center py-32 gap-4 text-[#64748B]">
+          <Loader2 size={32} className="animate-spin text-[#4F8CFF]" />
+          <span className="font-medium">Curating your dashboard...</span>
         </div>
-      </>
+      </div>
     )
   }
 
   if (error) {
     return (
-      <>
-        <div className="px-8 py-7 border-b border-border bg-surface-dark/60 backdrop-blur-xl sticky top-0 z-50">
-          <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-          <p className="text-text-secondary text-sm">Welcome back — here's an overview of your campus facilities</p>
+      <div className="light-theme min-h-screen bg-[#F8FAFC]">
+        <div className="px-8 py-7 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50">
+          <h1 className="text-2xl font-bold mb-1 gradient-text">Dashboard</h1>
+          <p className="text-[#64748B] text-sm">Welcome back — here's an overview of your campus facilities</p>
         </div>
-        <div className="flex flex-col items-center justify-center py-16 px-6 text-center gap-4">
-          <AlertTriangle size={48} className="text-accent-red opacity-70" />
-          <h3 className="text-lg text-text-secondary">Connection Error</h3>
-          <p className="text-sm text-text-muted max-w-[500px]">{error}</p>
-          <button className="btn-primary" onClick={fetchResources}>Retry</button>
+        <div className="flex flex-col items-center justify-center py-24 px-6 text-center gap-6">
+          <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center">
+            <AlertTriangle size={32} className="text-red-500" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-[#1E293B] mb-2">Connection Error</h3>
+            <p className="text-[#64748B] max-w-[500px] mb-8 leading-relaxed font-medium">{error}</p>
+          </div>
+          <button 
+            className="px-6 py-2.5 bg-blue-gradient text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all" 
+            onClick={fetchResources}
+          >
+            Retry Connection
+          </button>
         </div>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
+    <div className="light-theme min-h-screen bg-[#F8FAFC]">
       {/* Header */}
-      <div className="px-8 py-7 border-b border-border bg-surface-dark/60 backdrop-blur-xl sticky top-0 z-50">
-        <h1 className="text-2xl font-bold mb-1">Dashboard</h1>
-        <p className="text-text-secondary text-sm">Welcome back — here's an overview of your campus facilities</p>
+      <div className="px-8 py-7 border-b border-slate-100 bg-white/80 backdrop-blur-md sticky top-0 z-50 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold mb-1 gradient-text">Dashboard</h1>
+          <p className="text-[#64748B] text-sm font-medium">Welcome back — your campus at a glance</p>
+        </div>
+        <button 
+          className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-gradient text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/10 hover:shadow-xl transition-all"
+          onClick={() => navigate('/admin')}
+        >
+          <Plus size={18} /> Add Resource
+        </button>
       </div>
 
-      <div className="px-8 py-7 pb-12">
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8" id="stats-grid">
+      <div className="px-8 py-8 pb-16 max-w-[1600px] mx-auto">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {statCards.map((card, i) => (
             <div
               key={i}
-              className="glass-card rounded-2xl p-6 relative overflow-hidden group hover:border-border-hover hover:-translate-y-0.5 hover:shadow-glow transition-all duration-250 animate-fade-in-up"
+              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-50 relative overflow-hidden group hover:border-[#4F8CFF]/30 hover:shadow-md transition-all duration-300 animate-in"
               style={{ animationDelay: `${i * 60}ms` }}
             >
-              <div className="absolute top-0 left-0 right-0 h-[3px] gradient-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[13px] text-text-muted font-medium uppercase tracking-wider">{card.label}</span>
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-[22px]">{card.icon}</div>
+                <span className="text-[11px] text-[#64748B] font-bold uppercase tracking-widest">{card.label}</span>
+                <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-xl group-hover:bg-[#4F8CFF]/10 transition-colors">
+                  {card.icon}
+                </div>
               </div>
-              <div className="text-4xl font-extrabold font-mono gradient-text leading-none mb-1.5">{card.value}</div>
-              <div className="text-xs text-text-muted">{card.sub}</div>
+              <div className="text-3xl font-extrabold text-[#1E293B] mb-1">{card.value}</div>
+              <div className="text-xs text-[#94A3B8] font-medium">{card.sub}</div>
             </div>
           ))}
         </div>
 
-        {/* Browse by Type */}
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-          <h3 className="text-xl font-bold">Browse by Type</h3>
+        {/* Section Title */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-1 bg-blue-gradient rounded-full" />
+          <h3 className="text-lg font-bold text-[#1E293B]">Quick Assets Overview</h3>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8" id="type-cards-grid">
-          {typeCards.map((tc) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-5 mb-12">
+          {typeCards.map((tc, i) => (
             <div
               key={tc.value}
-              className="glass-card rounded-2xl p-5 group animate-fade-in-up"
+              className="bg-white rounded-2xl p-5 border border-slate-50 group hover:border-[#4F8CFF]/20 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-300 animate-in"
+              style={{ animationDelay: `${i * 50}ms` }}
+              onClick={() => navigate(`/catalogue?type=${tc.value}`)}
             >
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-3" style={{ background: `${tc.color}18`, color: tc.color }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 shadow-inner" style={{ background: `${tc.color}10`, color: tc.color }}>
                 {tc.icon}
               </div>
-              <h4 className="text-sm font-bold mb-0.5">{tc.label}</h4>
-              <p className="text-xs text-text-muted">{tc.count} resource{tc.count !== 1 ? 's' : ''}</p>
+              <h4 className="text-sm font-bold text-[#1E293B] mb-0.5">{tc.label}</h4>
+              <p className="text-xs text-[#94A3B8] font-bold">{tc.count} items</p>
             </div>
           ))}
         </div>
 
         {/* Distribution & Recent */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Distribution */}
-          <div>
-            <div className="flex items-center gap-2 mb-5">
-              <BarChart3 size={20} />
-              <h3 className="text-xl font-bold">Distribution</h3>
+          <div className="lg:col-span-4">
+            <div className="flex items-center gap-2 mb-6 text-[#1E293B]">
+              <BarChart3 size={20} className="text-[#4F8CFF]" />
+              <h3 className="text-lg font-bold">Asset Distribution</h3>
             </div>
-            <div className="flex flex-col gap-3.5">
+            <div className="bg-white rounded-2xl p-6 border border-slate-50 shadow-sm flex flex-col gap-4">
               {typeCards.map((tc) => {
                 const pct = stats.totalResources > 0 ? Math.round((tc.count / stats.totalResources) * 100) : 0
                 return (
-                  <div key={tc.value} className="glass-card rounded-xl p-4 animate-fade-in-up">
-                    <div className="flex justify-between mb-2">
-                      <span className="text-[13px] font-semibold text-text-primary">{tc.icon} {tc.label}</span>
-                      <span className="text-[13px] text-text-muted">{tc.count} ({pct}%)</span>
+                  <div key={tc.value} className="animate-in">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-[13px] font-bold text-[#334155] flex items-center gap-2">
+                         <span className="w-2 h-2 rounded-full" style={{ background: tc.color }} />
+                         {tc.label}
+                      </span>
+                      <span className="text-[11px] text-[#64748B] font-bold">{tc.count} ({pct}%)</span>
                     </div>
                     <div className="w-full">
-                      <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, background: tc.color }} />
+                      <div className="h-2 bg-slate-50 rounded-full overflow-hidden border border-slate-100">
+                        <div className="h-full rounded-full transition-all duration-1000 shadow-sm" style={{ width: `${pct}%`, background: tc.color }} />
                       </div>
                     </div>
                   </div>
@@ -150,41 +175,62 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Recent */}
-          <div>
-            <div className="flex items-center gap-2 mb-5">
-              <Activity size={20} />
-              <h3 className="text-xl font-bold">Recent Resources</h3>
+          {/* Recent Activity */}
+          <div className="lg:col-span-8">
+            <div className="flex items-center gap-2 mb-6 text-[#1E293B]">
+              <Activity size={20} className="text-[#4F8CFF]" />
+              <h3 className="text-lg font-bold">Recent Resources</h3>
             </div>
-            <div className="glass-card rounded-2xl overflow-hidden">
+            <div className="bg-white rounded-2xl overflow-hidden border border-slate-50 shadow-sm">
               {recentResources.length === 0 ? (
-                <div className="p-8 text-center text-text-muted text-sm">
-                  No resources yet. Add one from the Admin Panel.
+                <div className="p-12 text-center text-[#94A3B8] font-medium italic">
+                  No resources tracked yet.
                 </div>
               ) : (
-                recentResources.map((r) => {
-                  const typeInfo = getTypeInfo(r.type)
-                  const statusInfo = getStatusInfo(r.status)
-                  return (
-                    <div key={r.resourceId} className="flex items-center gap-3 px-5 py-3.5 border-b border-border last:border-b-0 animate-fade-in-up">
-                      <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: typeInfo.color }} />
-                      <span className="text-sm text-text-secondary flex-1 min-w-0 truncate">
-                        <strong className="text-text-primary">{r.name}</strong> — {typeInfo.label} · {r.location}
-                      </span>
-                      <span
-                        className="text-[11px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
-                        style={{ background: `${statusInfo.color}18`, color: statusInfo.color, border: `1px solid ${statusInfo.color}33` }}
+                <div className="divide-y divide-slate-50">
+                  {recentResources.map((r, i) => {
+                    const typeInfo = getTypeInfo(r.type)
+                    const statusInfo = getStatusInfo(r.status)
+                    return (
+                      <div 
+                        key={r.resourceId} 
+                        className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50/50 transition-colors animate-in"
+                        style={{ animationDelay: `${i * 40}ms` }}
                       >
-                        {statusInfo.label}
-                      </span>
-                    </div>
-                  )
-                })
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm" style={{ background: `${typeInfo.color}10`, color: typeInfo.color }}>
+                          {typeInfo.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-bold text-[#1E293B] truncate">{r.name}</div>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="text-[11px] font-medium text-[#64748B] flex items-center gap-1">
+                              <MapPin size={10} /> {r.location}
+                            </span>
+                            <span className="text-[11px] font-medium text-[#64748B] flex items-center gap-1">
+                              <Users size={10} /> {r.capacity} seats
+                            </span>
+                          </div>
+                        </div>
+                        <span
+                          className={`text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap uppercase tracking-wider ${
+                            r.status === 'ACTIVE' 
+                              ? 'bg-green-100 text-green-600' 
+                              : r.status === 'OUT_OF_SERVICE' 
+                                ? 'bg-red-100 text-red-600' 
+                                : 'bg-amber-100 text-amber-600'
+                          }`}
+                        >
+                          {statusInfo.label}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }
