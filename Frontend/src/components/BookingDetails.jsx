@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
 import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon } from 'lucide-react';
-import { getMyBookings, createBooking, cancelBooking, updateBooking, getBookingHistory } from '../services/api';
+import { resourceApi, getMyBookings, createBooking, cancelBooking, updateBooking, getBookingHistory } from '../services/api';
 
 import BookingModal from './BookingModal';
 
@@ -66,10 +66,21 @@ function BookingDashboard({ user }) {
     const [searchParams] = useSearchParams();
     const resourceIdFromUrl = searchParams.get('resourceId');
 
+    const [prefillResource, setPrefillResource] = useState(null);
+
     useEffect(() => {
-        if (resourceIdFromUrl) {
-            setIsModalOpen(true); // Auto-open the booking form
-        }
+        if (!resourceIdFromUrl) return;
+
+        // Fetch full resource object so BookingModal knows the type
+        resourceApi.getById(resourceIdFromUrl)
+            .then((res) => {
+                setPrefillResource(res.data);
+                setIsModalOpen(true); // Auto-open modal
+            })
+            .catch(() => {
+                setPrefillResource(null);
+                setIsModalOpen(true); // Open anyway even if fetch fails
+            });
     }, [resourceIdFromUrl]);
     // Show booking history modal
     const handleShowHistory = async (bookingId) => {
@@ -110,6 +121,7 @@ function BookingDashboard({ user }) {
             }
             setIsModalOpen(false);
             setEditingBooking(null);
+            setPrefillResource(null);
             fetchBookings();
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to save booking.');
@@ -158,7 +170,7 @@ function BookingDashboard({ user }) {
                 <div className="flex justify-between items-center mb-6">
                     <div />
                     <button
-                        onClick={() => { setIsModalOpen(true); setEditingBooking(null); }}
+                        onClick={() => { setIsModalOpen(true); setEditingBooking(null); setPrefillResource(null); }}
                         className="flex items-center gap-2 bg-[#4F46E5] text-white px-5 py-2.5 rounded-lg font-semibold shadow hover:bg-[#4338CA] transition-colors"
                         style={{borderRadius: 8, fontFamily: 'Inter, sans-serif'}}
                     >
@@ -198,11 +210,12 @@ function BookingDashboard({ user }) {
                                         <span className="text-xs text-[#64748B] mt-1">{b.department && <>Dept: <span className="font-semibold">{b.department}</span></>}</span>
                                         <span className="text-xs text-[#64748B] mt-1">{b.contactEmail && <>Email: <span className="font-semibold">{b.contactEmail}</span></>}</span>
                                         <span className="text-xs text-[#64748B] mt-1">{b.expectedAttendees && <>Attendees: <span className="font-semibold">{b.expectedAttendees}</span></>}</span>
+                                        <span className="text-xs text-[#64748B] mt-1">{b.quantity != null && b.quantity > 0 && <>Quantity: <span className="font-semibold">{b.quantity}</span></>}</span>
                                     </div>
                                     <div className="flex gap-2 items-center">
                                         {b.status === 'PENDING' && (
                                             <button
-                                                onClick={() => { setEditingBooking(b); setIsModalOpen(true); }}
+                                                onClick={() => { setEditingBooking(b); setIsModalOpen(true); setPrefillResource(null); }}
                                                 className="text-[#4F46E5] hover:bg-[#EEF2FF] p-2 rounded-full transition-colors"
                                                 title="Edit Booking"
                                             >
@@ -245,10 +258,10 @@ function BookingDashboard({ user }) {
 
                 <BookingModal
                     isOpen={isModalOpen}
-                    onClose={() => { setIsModalOpen(false); setEditingBooking(null); }}
+                    onClose={() => { setIsModalOpen(false); setEditingBooking(null); setPrefillResource(null); }}
                     onSubmit={handleSubmitBooking}
                     initialData={editingBooking}
-                    prefillResourceId={resourceIdFromUrl || ''}
+                    prefillResource={prefillResource}
                 />
 
                 <BookingHistoryModal
