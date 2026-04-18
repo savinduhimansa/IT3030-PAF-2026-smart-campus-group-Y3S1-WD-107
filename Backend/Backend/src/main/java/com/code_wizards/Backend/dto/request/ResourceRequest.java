@@ -25,6 +25,7 @@ public class ResourceRequest {
     @NotBlank(message = "Location is required")
     private String location;
 
+        @NotBlank(message = "Department is required")
     @JsonAlias("faculty")
     @Pattern(
             regexp = "Faculty of Computing|Faculty of Humanities and Science|Faculty of Business|Faculty of Engineering",

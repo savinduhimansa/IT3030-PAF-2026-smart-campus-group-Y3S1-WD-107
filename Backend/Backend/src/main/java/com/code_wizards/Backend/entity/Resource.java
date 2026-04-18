@@ -1,6 +1,5 @@
 package com.code_wizards.Backend.entity;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalTime;
@@ -28,9 +27,13 @@ public class Resource {
     @Column(nullable = false)
     private String location;
 
-    @JsonAlias("faculty")
-    @Column(name = "faculty")
+    // Historically this field has been referred to as either "department" or "faculty".
+    // We map BOTH columns to ensure older DB schemas/data keep working.
+    @Column(name = "department")
     private String department;
+
+    @Column(name = "faculty")
+    private String faculty;
 
     @Column(length = 1000)
     private String description;
@@ -116,6 +119,14 @@ public class Resource {
 
     public void setDepartment(String department) {
         this.department = department;
+    }
+
+    public String getFaculty() {
+        return faculty;
+    }
+
+    public void setFaculty(String faculty) {
+        this.faculty = faculty;
     }
 
     public String getDescription() {

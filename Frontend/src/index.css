@@ -23,24 +23,24 @@
   }
 
   .light-theme {
-    --text-primary: #0f172a;
-    --text-secondary: #334155; /* Darker slate for better clarity */
-    --text-muted: #64748b;
-    --primary: #2563eb;
-    --primary-light: #3b82f6;
+    --text-primary: #1E293B;
+    --text-secondary: #334155;
+    --text-muted: #64748B;
+    --primary: #4F8CFF;
+    --primary-light: #6FC3FF;
     --secondary: #0ea5e9;
     --surface: #ffffff;
-    --surface-dark: #f0f7ff; /* Light Blue instead of Ash */
-    --surface-card: rgba(255, 255, 255, 0.95);
-    --surface-glass: rgba(14, 165, 233, 0.04);
-    --surface-glass-hover: rgba(14, 165, 233, 0.08);
+    --surface-dark: #F8FAFC;
+    --surface-card: #ffffff;
+    --surface-glass: rgba(79, 140, 255, 0.05);
+    --surface-glass-hover: rgba(79, 140, 255, 0.1);
     --surface-input: #ffffff;
-    --border: rgba(14, 165, 233, 0.12);
-    --border-hover: rgba(37, 99, 235, 0.3);
-    --border-active: rgba(37, 99, 235, 0.5);
-    --accent-blue: #2563eb;
-    --accent-orange: #d97706;
-    --accent-pink: #db2777;
+    --border: rgba(148, 163, 184, 0.1);
+    --border-hover: rgba(79, 140, 255, 0.2);
+    --border-active: rgba(79, 140, 255, 0.4);
+    --accent-blue: #4F8CFF;
+    --accent-orange: #f59e0b;
+    --accent-pink: #ec4899;
 
     background-color: var(--surface-dark) !important;
     color: var(--text-primary) !important;
@@ -49,12 +49,9 @@
   /* REVERT NAVBAR AND FOOTER TO DARK: 
      We ensure that even inside .home-light-theme, nav and footer stay dark */
   .light-theme nav,
-  .light-theme footer,
-  .light-theme #home-navbar,
-  .light-theme #home-footer,
-  .light-theme .footer-ui {
-    background-color: #0a0e1a !important; /* Force dark background */
-    color: #f1f5f9 !important; /* Force light text */
+  .light-theme footer {
+    background-color: #0a0e1a !important;
+    color: #f1f5f9 !important;
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
     --text-muted: #64748b;
@@ -102,6 +99,20 @@
   .light-theme .resource-card:hover {
     box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.1), 0 4px 6px -4px rgba(14, 165, 233, 0.1) !important;
     border-color: rgba(37, 99, 235, 0.3) !important;
+  }
+
+  .light-theme .modal-info-item span,
+  .light-theme .time-badge {
+    color: #1E293B !important;
+  }
+
+  .light-theme .modal-info-item label {
+    color: #475569 !important;
+  }
+
+  .light-theme .time-badge {
+    background-color: #f1f5f9 !important;
+    border-color: #e2e8f0 !important;
   }
 
   /* HERO TEXT FIX: Hero section has a dark image overlay, so text must stay white */
@@ -465,7 +476,11 @@
 /* ---------- Utilities ---------- */
 @layer utilities {
   .gradient-primary {
-    @apply bg-gradient-to-r from-primary-dark via-primary to-secondary;
+    @apply bg-gradient-to-r from-[#4F8CFF] to-[#6FC3FF];
+  }
+
+  .bg-blue-gradient {
+    background: linear-gradient(90deg, #4F8CFF 0%, #6FC3FF 100%);
   }
 
   .gradient-text {
