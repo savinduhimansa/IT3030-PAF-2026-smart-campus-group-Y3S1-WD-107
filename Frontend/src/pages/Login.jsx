@@ -34,16 +34,26 @@ const Login = () => {
 
             if (token) localStorage.setItem('token', token);
             localStorage.setItem('role', userRole);
-            if (userId) localStorage.setItem('userId', userId);
+            if (userId !== undefined && userId !== null) localStorage.setItem('userId', String(userId));
 
             localStorage.setItem('user', JSON.stringify({
                 name: response.data?.name || credentials.email.split('@')[0],
                 email: response.data?.email || credentials.email
             }));
 
-            // Navigate EVERYONE to the HomePage ('/')
             setTimeout(() => {
-                navigate('/');
+                const pendingResourceId = localStorage.getItem('pendingResourceId');
+                if (pendingResourceId) {
+                    // User came from "Book Now" → go to booking form with resource pre-filled
+                    localStorage.removeItem('pendingResourceId');
+                    navigate(`/bookingDetails?resourceId=${pendingResourceId}`);
+                } else if (userRole === 'ADMIN') {
+                    // Normal admin login → unchanged
+                    navigate('/booking');
+                } else {
+                    // Normal user login → unchanged
+                    navigate('/');
+                }
             }, 800);
 
         } catch (error) {

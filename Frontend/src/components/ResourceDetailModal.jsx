@@ -219,6 +219,8 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
               onClick={() => {
                 const storedUserId = localStorage.getItem('userId')
                 if (!storedUserId && !user?.id) {
+                  // Not logged in: save intended resource and redirect to login
+                  localStorage.setItem('pendingResourceId', resource.resourceId)
                   onClose()
                   navigate('/login')
                   return
