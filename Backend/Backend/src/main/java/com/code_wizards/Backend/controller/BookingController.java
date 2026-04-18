@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bookings")
@@ -62,15 +63,34 @@ public class BookingController {
 
     @GetMapping
     public ResponseEntity<List<Booking>> getAllBookings(
-            @RequestHeader("X-User-Role") String role,
-            @RequestParam(required = false) BookingStatus status) {
-        if (!"ADMIN".equals(role)) {
-            return ResponseEntity.status(403).build();
+            @RequestParam(required = false) BookingStatus status,
+            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader(value = "X-User-Role", required = false) String userRole) {
+
+        // Check if user is authenticated
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
         }
-        if (status != null) {
-            return ResponseEntity.ok(bookingService.getAllBookingsByStatus(status));
+
+        List<Booking> bookings;
+
+        // ADMIN sees all bookings
+        if ("ADMIN".equalsIgnoreCase(userRole)) {
+            bookings = (status != null)
+                    ? bookingService.getAllBookingsByStatus(status)
+                    : bookingService.getAllBookings();
         }
-        return ResponseEntity.ok(bookingService.getAllBookings());
+        // Regular users see only their bookings
+        else {
+            bookings = bookingService.getBookingsByUserId(userId);
+            if (status != null) {
+                bookings = bookings.stream()
+                        .filter(b -> b.getStatus() == status)
+                        .collect(Collectors.toList());
+            }
+        }
+
+        return ResponseEntity.ok(bookings);
     }
 
     @PostMapping("/{id}/approve")

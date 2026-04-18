@@ -25,12 +25,13 @@ import Login from './pages/Login'
 import BookingDashboard from './pages/BookingDashboard'
 import BookingDetails from './components/BookingDetails'
 import Navbar from './components/Navbar'
+import { ProtectedRoute } from './components/ProtectedRoute'
 
 const navItems = [
   { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/admin', label: 'Resources', icon: Settings, adminOnly: true },
   { path: '/tickets', label: 'Tickets', icon: Ticket },
-  { path: '/bookingDetails', label: 'Bookings', icon: BookOpen, adminOnly: true },
+  { path: '/bookingDetails', label: 'Booking', icon: BookOpen },
 ]
 
 function AppLayout() {
@@ -42,8 +43,7 @@ function AppLayout() {
     location.pathname.startsWith('/feedbacks/') ||
     location.pathname === '/find-best-lab' ||
     location.pathname === '/register' ||
-    location.pathname === '/login' ||
-    location.pathname === '/bookingDetails';
+    location.pathname === '/login';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -53,6 +53,9 @@ function AppLayout() {
   };
 
   const userRole = localStorage.getItem('role');
+  const userIdRaw = localStorage.getItem('userId');
+  const userId = userIdRaw ? Number(userIdRaw) : null;
+  const user = userId ? { id: userId, role: userRole || 'USER' } : null;
 
   const visibleNavItems = navItems.filter(item => !item.adminOnly || userRole === 'ADMIN');
 
@@ -155,8 +158,24 @@ function AppLayout() {
             <Route path="/tickets/:id" element={<TicketDetail />} />
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/booking" element={<BookingDashboard user={{ id: 1, role: userRole || 'USER' }} />} />
-            <Route path="/bookingDetails" element={<BookingDetails user={{ id: 1, role: userRole || 'USER' }} />} />
+            <Route 
+              path="/booking" 
+              element={
+                <ProtectedRoute 
+                  element={<BookingDashboard user={user} />}
+                  user={user}
+                />
+              } 
+            />
+            <Route 
+              path="/bookingDetails" 
+              element={
+                <ProtectedRoute 
+                  element={<BookingDetails user={user} />}
+                  user={user}
+                />
+              } 
+            />
           </Routes>
         </main>
       </div>
@@ -167,7 +186,6 @@ function App() {
   const location = useLocation();
   const isHomepage = location.pathname === '/';
   const isCatalogue = location.pathname === '/catalogue';
-  const isBookingDetails = location.pathname === '/bookingDetails';
 
   const userRole = localStorage.getItem('role');
 
@@ -176,14 +194,6 @@ function App() {
   }
   if (isCatalogue) {
     return <Catalogue />;
-  }
-  if (isBookingDetails) {
-    return (
-      <>
-        <Navbar />
-        <BookingDetails user={{ id: 1, role: userRole || 'USER' }} />
-      </>
-    );
   }
   return <AppLayout />;
 }
