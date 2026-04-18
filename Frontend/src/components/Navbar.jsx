@@ -25,25 +25,28 @@ export default function Navbar() {
         <h1 className="text-[22px] font-extrabold gradient-text">SpaceLink</h1>
       </Link>
       <div className="flex items-center gap-2">
-        {navLinks.map((link) => {
-          const isActive = location.pathname === link.path;
-          return (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 no-underline relative group ${
-                isActive ? 'text-[#4F8CFF]' : 'text-[#cbd5e1] hover:text-white'
-              }`}
-            >
-              {link.label}
-              <span 
-                className={`absolute bottom-1 left-4 right-4 h-0.5 bg-[#4F8CFF] transform transition-transform duration-300 ${
-                  isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
-                }`} 
-              />
-            </Link>
-          );
-        })}
+        <Link to="/" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          Home
+        </Link>
+        <Link to="/about" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          About
+        </Link>
+        <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          Catalogue
+        </Link>
+        <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-red-400 hover:bg-red-400/10 transition-all duration-150 no-underline flex items-center gap-1">
+          Report Issue
+        </Link>
+        <Link to="/bookingDetails" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          Booking
+        </Link>
+        <Link to="/register" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          Signup
+        </Link>
+        <Link to="/login" className="px-4 py-2 rounded-xl text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-surface-glass-hover transition-all duration-150 no-underline">
+          Login
+        </Link>
+
       </div>
     </nav>
   )
