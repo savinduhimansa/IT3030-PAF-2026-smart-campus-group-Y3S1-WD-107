@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../services/api';
-import { Zap } from 'lucide-react';
+import spacelinkLogo from '../assets/spacelink-logo.png';
 import SpaceLoader from '../components/SpaceLoader';
 
 const Login = () => {
@@ -72,11 +72,15 @@ const Login = () => {
                  style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)' }}
             />
 
-            <div className="flex items-center gap-3 mb-8 relative z-10">
-                <div className="w-[42px] h-[42px] rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.5)]">
-                    <Zap size={22} color="white" />
-                </div>
-                <h1 className="text-3xl font-extrabold text-white tracking-tight">SpaceLink</h1>
+            {/* 🔥 NEW SPACELINK IMAGE LOGO AREA */}
+            <div className="mb-8 relative z-10">
+                <Link to="/">
+                    <img
+                        src={spacelinkLogo}
+                        alt="SpaceLink Logo"
+                        className="h-[45px] md:h-[55px] w-auto object-contain drop-shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-transform hover:scale-105"
+                    />
+                </Link>
             </div>
 
             <div className="w-full max-w-[420px] bg-[#1E293B]/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl relative z-10">

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Zap, ChevronDown, User, Key, Calendar, LogOut, UserPlus, AlertCircle } from 'lucide-react';
+import { ChevronDown, User, Key, Calendar, LogOut, UserPlus, AlertCircle } from 'lucide-react';
+import spacelinkLogo from '../assets/spacelink-logo.png';
 import SpaceLoader from './SpaceLoader';
 
 export default function Navbar() {
@@ -78,15 +79,13 @@ export default function Navbar() {
 
             <nav className="fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 flex items-center justify-between transition-all duration-300 py-4 bg-[#0a0e1a]/85 backdrop-blur-md border-b border-white/5" id="home-navbar">
 
-                {/* 🔥 YOUR 100% BULLETPROOF WHITE LOGO AREA */}
+                {/* 🔥 SPACELINK NEW IMAGE LOGO AREA (REVERTED TO ORIGINAL SIZE) */}
                 <Link to="/" className="flex items-center gap-3" style={{ textDecoration: 'none' }}>
-                    <div className="w-[42px] h-[42px] rounded-xl flex items-center justify-center shadow-lg"
-                         style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)', boxShadow: '0 0 15px rgba(37,99,235,0.4)' }}>
-                        <Zap size={22} color="#ffffff" />
-                    </div>
-                    <span style={{ color: '#ffffff', fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px', textShadow: '0px 0px 10px rgba(255, 255, 255, 0.5)', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-            SpaceLink
-          </span>
+                    <img
+                        src={spacelinkLogo}
+                        alt="SpaceLink Logo"
+                        className="h-[42px] w-auto object-contain drop-shadow-[0_0_15px_rgba(37,99,235,0.4)]"
+                    />
                 </Link>
 
                 <div className="flex items-center gap-2">
