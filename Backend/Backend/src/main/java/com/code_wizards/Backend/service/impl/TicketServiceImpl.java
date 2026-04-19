@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.code_wizards.Backend.exception.TicketNotFoundException;
 import com.code_wizards.Backend.exception.UnauthorizedCommentEditException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -72,6 +73,12 @@ public class TicketServiceImpl implements TicketService {
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new TicketNotFoundException("Ticket not found with id: " + ticketId));
 
+        // SLA: Capture time-to-first-response on the FIRST comment ever posted
+        if (ticket.getFirstResponseAt() == null) {
+            ticket.setFirstResponseAt(LocalDateTime.now());
+            ticketRepository.save(ticket);
+        }
+
         Comment comment = Comment.builder()
                 .ticket(ticket)
                 .authorId(authorId)
@@ -89,6 +96,16 @@ public class TicketServiceImpl implements TicketService {
 
         if (status != null) {
             ticket.setStatus(status);
+
+            // SLA: Capture time-to-resolution when status changes to RESOLVED
+            if (status == TicketStatus.RESOLVED && ticket.getResolvedAt() == null) {
+                ticket.setResolvedAt(LocalDateTime.now());
+            }
+
+            // SLA: Clear resolvedAt if ticket is reopened (status changed back from RESOLVED)
+            if (status != TicketStatus.RESOLVED && status != TicketStatus.CLOSED) {
+                ticket.setResolvedAt(null);
+            }
         }
         if (resolutionNotes != null) {
             ticket.setResolutionNotes(resolutionNotes);

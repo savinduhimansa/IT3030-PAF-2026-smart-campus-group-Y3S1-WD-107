@@ -1,9 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Trash2, Edit2, MessageSquare, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Edit2, MessageSquare, Image as ImageIcon, Clock, Timer, CheckCircle2 } from 'lucide-react';
 
 const API_URL = 'http://localhost:8090/api/tickets';
+
+// Helper: calculate elapsed time between two dates
+const getElapsedTime = (startStr, endStr = null) => {
+  if (!startStr) return null;
+  const start = new Date(startStr);
+  const end = endStr ? new Date(endStr) : new Date();
+  const diffMs = end - start;
+  if (diffMs < 0) return null;
+
+  const mins = Math.floor(diffMs / 60000);
+  const hrs = Math.floor(mins / 60);
+  const days = Math.floor(hrs / 24);
+
+  if (days > 0) return `${days}d ${hrs % 24}h ${mins % 60}m`;
+  if (hrs > 0) return `${hrs}h ${mins % 60}m`;
+  return `${mins}m`;
+};
 
 export default function TicketDetail() {
   const { id } = useParams();
@@ -24,9 +41,18 @@ export default function TicketDetail() {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editCommentText, setEditCommentText] = useState('');
 
+  // Live timer state
+  const [now, setNow] = useState(new Date());
+
   useEffect(() => {
     fetchTicket();
   }, [id]);
+
+  // Update "now" every 60 seconds for live timer
+  useEffect(() => {
+    const interval = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   const fetchTicket = async () => {
     try {
@@ -107,6 +133,8 @@ export default function TicketDetail() {
       );
       setComments([...comments, response.data]);
       setNewComment('');
+      // Refresh ticket to get updated SLA timestamps
+      fetchTicket();
     } catch (error) {
       console.error(error);
       alert("Failed to post comment.");
@@ -145,6 +173,77 @@ export default function TicketDetail() {
                 </>
               )}
            </div>
+        </div>
+
+        {/* SLA Timer Panel */}
+        <div className="bg-gradient-to-r from-slate-900 to-slate-800 p-6 rounded-2xl shadow-lg border border-slate-700">
+          <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Timer size={16} className="text-indigo-400" /> Service Level Timer (SLA)
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Ticket Age */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+              <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Ticket Age</p>
+              <p className="text-white text-2xl font-bold">
+                {getElapsedTime(ticket.createdAt) || '—'}
+              </p>
+              <p className="text-slate-500 text-xs mt-1">
+                Created: {ticket.createdAt ? new Date(ticket.createdAt).toLocaleString() : 'N/A'}
+              </p>
+            </div>
+
+            {/* Time to First Response */}
+            <div className={`rounded-xl p-4 border ${
+              ticket.firstResponseAt 
+                ? 'bg-emerald-500/10 border-emerald-500/20' 
+                : 'bg-orange-500/10 border-orange-500/20'
+            }`}>
+              <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">First Response</p>
+              {ticket.firstResponseAt ? (
+                <>
+                  <p className="text-emerald-400 text-2xl font-bold flex items-center gap-2">
+                    <CheckCircle2 size={20} /> {getElapsedTime(ticket.createdAt, ticket.firstResponseAt)}
+                  </p>
+                  <p className="text-slate-500 text-xs mt-1">
+                    Responded: {new Date(ticket.firstResponseAt).toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-orange-400 text-2xl font-bold flex items-center gap-2">
+                    <Clock size={20} className="animate-pulse" /> {getElapsedTime(ticket.createdAt)}
+                  </p>
+                  <p className="text-orange-400/60 text-xs mt-1">Awaiting first response...</p>
+                </>
+              )}
+            </div>
+
+            {/* Time to Resolution */}
+            <div className={`rounded-xl p-4 border ${
+              ticket.resolvedAt 
+                ? 'bg-emerald-500/10 border-emerald-500/20' 
+                : 'bg-white/5 border-white/10'
+            }`}>
+              <p className="text-slate-400 text-xs uppercase tracking-wider mb-1">Resolution Time</p>
+              {ticket.resolvedAt ? (
+                <>
+                  <p className="text-emerald-400 text-2xl font-bold flex items-center gap-2">
+                    <CheckCircle2 size={20} /> {getElapsedTime(ticket.createdAt, ticket.resolvedAt)}
+                  </p>
+                  <p className="text-slate-500 text-xs mt-1">
+                    Resolved: {new Date(ticket.resolvedAt).toLocaleString()}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-slate-400 text-2xl font-bold flex items-center gap-2">
+                    <Timer size={20} /> {getElapsedTime(ticket.createdAt)}
+                  </p>
+                  <p className="text-slate-500 text-xs mt-1">Not yet resolved</p>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Content & Technician Control Grid */}
