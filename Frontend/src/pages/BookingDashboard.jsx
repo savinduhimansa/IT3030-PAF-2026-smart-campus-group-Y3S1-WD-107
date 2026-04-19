@@ -189,7 +189,7 @@ export default function AdminDashboard({ user }) {
                         <MapPin size={16} className="text-[#4F46E5]" /> {b.resourceId}
                       </div>
                       <div className="text-xs text-[#64748B] max-w-[200px] truncate mt-1" title={b.purpose}>{b.purpose}</div>
-                      {b.department && <div className="text-xs text-[#6366F1] mt-1">Dept: <span className="font-semibold">{b.department}</span></div>}
+                      {b.department && <div className="text-xs text-[#6366F1] mt-1">Department: <span className="font-semibold">{b.department}</span></div>}
                       {b.contactEmail && <div className="text-xs text-[#6366F1] mt-1">Email: <span className="font-semibold">{b.contactEmail}</span></div>}
                       {b.specialRequirements && <div className="text-xs text-[#6366F1] mt-1">Special: <span className="font-semibold">{b.specialRequirements}</span></div>}
                     </td>
