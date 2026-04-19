@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -222,4 +223,46 @@ public class BookingService {
                 resourceId, startDateTime, endDateTime, activeStatuses);
         return overlapping.isEmpty();
     }
+
+    public List<Map<String, String>> getFreeSlots(Long resourceId, LocalDate date) {
+        Resource resource = resourceRepository.findById(resourceId)
+                .orElseThrow(() -> new IllegalArgumentException("Resource not found"));
+
+        LocalTime from = resource.getAvailableFrom();
+        LocalTime to = resource.getAvailableTo();
+
+        // Get approved bookings for the day
+        java.time.LocalDateTime startOfDay = date.atStartOfDay();
+        java.time.LocalDateTime endOfDay = date.atTime(23, 59, 59);
+        List<BookingStatus> approvedStatus = Arrays.asList(BookingStatus.APPROVED);
+        List<Booking> bookings = bookingRepository.findOverlappingBookings(
+                resourceId, startOfDay, endOfDay, approvedStatus);
+
+        // Sort by start time
+        bookings.sort(java.util.Comparator.comparing(Booking::getStartTime));
+
+        List<Map<String, String>> freeSlots = new java.util.ArrayList<>();
+        LocalTime current = from;
+
+        for (Booking b : bookings) {
+            LocalTime bStart = b.getStartTime().toLocalTime();
+            LocalTime bEnd = b.getEndTime().toLocalTime();
+
+            // If there's a gap between current and booking start
+            if (bStart.isAfter(current)) {
+                freeSlots.add(Map.of("startTime", current.toString(), "endTime", bStart.toString()));
+            }
+            if (bEnd.isAfter(current)) {
+                current = bEnd;
+            }
+        }
+
+        // Final gap
+        if (to.isAfter(current)) {
+            freeSlots.add(Map.of("startTime", current.toString(), "endTime", to.toString()));
+        }
+
+        return freeSlots;
+    }
 }
+
