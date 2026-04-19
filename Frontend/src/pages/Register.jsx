@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../services/api';
-import { Zap } from 'lucide-react';
-import SpaceLoader from '../components/SpaceLoader'; // Import Loader
+import spacelinkLogo from '../assets/spacelink-logo.png';
+import SpaceLoader from '../components/SpaceLoader';
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -13,7 +13,7 @@ const Register = () => {
     });
 
     const [errorMsg, setErrorMsg] = useState('');
-    const [isLoading, setIsLoading] = useState(false); // Add Loading State
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -48,6 +48,7 @@ const Register = () => {
         setIsLoading(true); // Start Loading
 
         try {
+            // eslint-disable-next-line no-unused-vars
             const { confirmPassword, ...dataToSend } = formData;
             const response = await authApi.register(dataToSend);
             console.log("Response:", response);
@@ -75,12 +76,15 @@ const Register = () => {
                  style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.08) 0%, transparent 70%)' }}
             />
 
-            {/* Logo Area */}
-            <div className="flex items-center gap-3 mb-8 relative z-10">
-                <div className="w-[42px] h-[42px] rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_15px_rgba(37,99,235,0.5)]">
-                    <Zap size={22} color="white" />
-                </div>
-                <h1 className="text-3xl font-extrabold text-white tracking-tight">SpaceLink</h1>
+            {/* 🔥 NEW SPACELINK IMAGE LOGO AREA */}
+            <div className="mb-8 relative z-10">
+                <Link to="/">
+                    <img
+                        src={spacelinkLogo}
+                        alt="SpaceLink Logo"
+                        className="h-[45px] md:h-[55px] w-auto object-contain drop-shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-transform hover:scale-105"
+                    />
+                </Link>
             </div>
 
             {/* Register Card */}
