@@ -1,6 +1,7 @@
 package com.code_wizards.Backend.controller;
 
 import com.code_wizards.Backend.dto.request.FeedbackRequest;
+import com.code_wizards.Backend.dto.response.FeedbackResponse;
 import com.code_wizards.Backend.entity.Feedback;
 import com.code_wizards.Backend.service.FeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,15 +20,21 @@ public class FeedbackController {
 
     // Add feedback
     @PostMapping
-    public ResponseEntity<Feedback> addFeedback(@Validated @RequestBody FeedbackRequest request) {
-        Feedback feedback = feedbackService.addFeedback(request);
+    public ResponseEntity<FeedbackResponse> addFeedback(@Validated @RequestBody FeedbackRequest request) {
+        FeedbackResponse feedback = feedbackService.addFeedback(request);
         return ResponseEntity.ok(feedback);
+    }
+
+    // Get all feedback (for admin)
+    @GetMapping("/all")
+    public ResponseEntity<List<FeedbackResponse>> getAllFeedbacks() {
+        return ResponseEntity.ok(feedbackService.getAllFeedback());
     }
 
     // Get all feedback for a resource
     @GetMapping("/{resourceId}")
     public ResponseEntity<Map<String, Object>> getFeedbackByResource(@PathVariable Long resourceId) {
-        List<Feedback> feedbackList = feedbackService.getFeedbackByResource(resourceId);
+        List<FeedbackResponse> feedbackList = feedbackService.getFeedbackByResource(resourceId);
         Double avgRating = feedbackService.getAverageRating(resourceId);
 
         Map<String, Object> response = new HashMap<>();
@@ -35,5 +42,12 @@ public class FeedbackController {
         response.put("averageRating", avgRating);
 
         return ResponseEntity.ok(response);
+    }
+
+    // Delete feedback
+    @DeleteMapping("/{feedbackId}")
+    public ResponseEntity<Void> deleteFeedback(@PathVariable Long feedbackId) {
+        feedbackService.deleteFeedback(feedbackId);
+        return ResponseEntity.ok().build();
     }
 }
