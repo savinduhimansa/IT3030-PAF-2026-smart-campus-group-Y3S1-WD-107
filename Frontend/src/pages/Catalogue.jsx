@@ -101,7 +101,16 @@ export default function Catalogue() {
 
       return true
     })
-  }, [resources, searchQuery, typeFilter, locationFilter, statusFilter, capacityFilter])
+  }, [resources, searchQuery, typeFilter, locationFilter, statusFilter, capacityFilter, departmentFilter])
+
+  // Split resources into logical groups
+  const functionalResources = useMemo(() => 
+    filteredResources.filter(r => r.status === 'ACTIVE'),
+  [filteredResources]);
+
+  const unavailableResources = useMemo(() => 
+    filteredResources.filter(r => r.status === 'OUT_OF_SERVICE' || r.status === 'MAINTENANCE'),
+  [filteredResources]);
 
   const clearFilters = () => {
     setSearchQuery('')
@@ -159,6 +168,144 @@ export default function Catalogue() {
           </div>
         </div>
         <Footer />
+      </div>
+    )
+  }
+
+  const renderResourceCard = (resource, i) => {
+    const typeInfo = getTypeInfo(resource.type)
+    const statusInfo = getStatusInfo(resource.status)
+    const isUnavailable = resource.status === 'OUT_OF_SERVICE' || resource.status === 'MAINTENANCE'
+
+    return (
+      <div
+        key={resource.resourceId}
+        className={`relative group ${!resource.isBookable ? 'bg-slate-100' : 'bg-white'} rounded-2xl border border-slate-100 p-1 flex flex-col transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2`}
+        id={`resource-card-${resource.resourceId}`}
+        style={{ animationDelay: `${i * 50}ms` }}
+        onClick={() => setSelectedResource(resource)}
+      >
+        {isUnavailable && (
+          <>
+            {/* Decorative Mesh Overlay */}
+            <div 
+              className="absolute inset-0 z-0 pointer-events-none rounded-2xl opacity-[0.05]" 
+              style={{ 
+                backgroundImage: 'repeating-linear-gradient(45deg, #64748b, #64748b 1px, transparent 1px, transparent 12px), repeating-linear-gradient(-45deg, #64748b, #64748b 1px, transparent 1px, transparent 12px)',
+              }} 
+            />
+            <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-10 flex justify-center pointer-events-none">
+              <span className="px-4 py-1.5 bg-amber-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-2xl">
+                Unavailable
+              </span>
+            </div>
+          </>
+        )}
+
+        <div
+          className="h-2 w-full rounded-t-xl"
+          style={{ background: `linear-gradient(90deg, ${typeInfo.color} 0%, ${typeInfo.color}44 100%)` }}
+        />
+
+        <div className="p-5 flex-1 flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <span
+              className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full"
+              style={{ backgroundColor: `${typeInfo.color}10`, color: typeInfo.color }}
+            >
+              {typeInfo.label}
+            </span>
+            <span
+              className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 ${resource.status === 'ACTIVE'
+                ? 'bg-green-100 text-green-600'
+                : resource.status === 'OUT_OF_SERVICE'
+                  ? 'bg-red-100 text-red-600'
+                  : 'bg-amber-100 text-amber-600'
+                }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${resource.status === 'ACTIVE' ? 'bg-green-500' : resource.status === 'OUT_OF_SERVICE' ? 'bg-red-500' : 'bg-amber-500'
+                }`} />
+              {statusInfo.label}
+            </span>
+          </div>
+
+          <h3 className="text-lg font-bold text-[#1E293B] mb-2 group-hover:text-[#4F8CFF] transition-colors line-clamp-1">
+            {resource.name}
+          </h3>
+          <p className="text-sm text-[#334155] line-clamp-2 leading-relaxed h-[40px] mb-6 font-medium">
+            {resource.description || 'No description available.'}
+          </p>
+
+          <div className="grid grid-cols-2 gap-y-3 mb-6">
+            <div className="flex items-center gap-2 text-xs text-[#334155]">
+              <MapPin size={14} className="text-[#64748B]" />
+              <span className="line-clamp-1 font-medium">{resource.location}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-[#334155]">
+              <LayoutDashboard size={14} className="text-[#64748B]" />
+              <span className="line-clamp-1 font-medium">{FACULTIES.find(f => f.value === resource.department || f.value === resource.faculty)?.label || resource.department || resource.faculty || 'General'}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-[#334155]">
+              <UsersIcon size={14} className="text-[#64748B]" />
+              <span className="font-medium">{resource.capacity} {getUnitLabel(resource.type, resource.capacity)}</span>
+            </div>
+            {resource.availableFrom && (
+              <div className="flex items-center gap-2 text-xs text-[#334155] col-span-2">
+                <Clock size={14} className="text-[#64748B]" />
+                <span className="font-medium">{resource.availableFrom} – {resource.availableTo}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={`px-5 py-4 border-t border-slate-100 flex items-center justify-between ${!resource.isBookable ? 'bg-slate-200/30' : 'bg-slate-50/30'} rounded-b-2xl`}>
+          <div className="flex items-center gap-4">
+            <button
+              className="text-sm font-bold text-[#334155] hover:text-[#4F8CFF] flex items-center gap-1 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); }}
+            >
+              View <ChevronRight size={16} />
+            </button>
+            <button
+              className="text-sm font-bold text-[#64748B] hover:text-blue-500 flex items-center gap-1 transition-colors"
+              onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); }}
+            >
+              <Clock size={16} /> Schedule
+            </button>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {resource.status === 'ACTIVE' ? (
+              <>
+                <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-md">
+                  Active
+                </span>
+                <button
+                  className="px-4 py-1.5 bg-blue-gradient text-white text-xs font-bold rounded-lg shadow-blue-500/20 shadow-lg hover:shadow-xl transition-all"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const storedUserId = localStorage.getItem('userId');
+                    if (!storedUserId) {
+                      localStorage.setItem('pendingResourceId', resource.resourceId);
+                      navigate('/login');
+                    } else {
+                      navigate(`/bookingDetails?resourceId=${resource.resourceId}`);
+                    }
+                  }}
+                >
+                  Book Now
+                </button>
+              </>
+            ) : (
+              <span
+                className="text-[10px] font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded-md cursor-help"
+                title="Only active resources can be booked"
+              >
+                Unavailable
+              </span>
+            )}
+          </div>
+        </div>
       </div>
     )
   }
@@ -306,7 +453,7 @@ export default function Catalogue() {
           ))}
         </div>
 
-        {/* Resource Grid */}
+        {/* Resource Sections */}
         {filteredResources.length === 0 ? (
           <div className="empty-state" id="empty-state">
             <div className="empty-state-icon">🔍</div>
@@ -323,136 +470,40 @@ export default function Catalogue() {
             )}
           </div>
         ) : (
-          <div className="resource-grid creative-grid" id="resource-grid">
-            {filteredResources.map((resource, i) => {
-              const typeInfo = getTypeInfo(resource.type)
-              const statusInfo = getStatusInfo(resource.status)
-              return (
-                <div
-                  key={resource.resourceId}
-                  className={`relative group ${!resource.isBookable ? 'bg-slate-100' : 'bg-white'} rounded-2xl border border-slate-100 p-1 flex flex-col transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2`}
-                  id={`resource-card-${resource.resourceId}`}
-                  style={{ animationDelay: `${i * 50}ms` }}
-                  onClick={() => setSelectedResource(resource)}
-                >
-                  {!resource.isBookable && (
-                    <>
-                      {/* Decorative Mesh Overlay */}
-                      <div 
-                        className="absolute inset-0 z-0 pointer-events-none rounded-2xl opacity-[0.05]" 
-                        style={{ 
-                          backgroundImage: 'repeating-linear-gradient(45deg, #64748b, #64748b 1px, transparent 1px, transparent 12px), repeating-linear-gradient(-45deg, #64748b, #64748b 1px, transparent 1px, transparent 12px)',
-                        }} 
-                      />
-                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-10 flex justify-center pointer-events-none">
-                        <span className="px-4 py-1.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-2xl">
-                          Unavailable
-                        </span>
-                      </div>
-                    </>
-                  )}
-
-                  <div
-                    className="h-2 w-full rounded-t-xl"
-                    style={{ background: `linear-gradient(90deg, ${typeInfo.color} 0%, ${typeInfo.color}44 100%)` }}
-                  />
-
-                  <div className="p-5 flex-1 flex flex-col">
-                    <div className="flex items-center justify-between mb-4">
-                      <span
-                        className="text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full"
-                        style={{ backgroundColor: `${typeInfo.color}10`, color: typeInfo.color }}
-                      >
-                        {typeInfo.label}
-                      </span>
-                      <span
-                        className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full flex items-center gap-1.5 ${resource.status === 'ACTIVE'
-                          ? 'bg-green-100 text-green-600'
-                          : resource.status === 'OUT_OF_SERVICE'
-                            ? 'bg-red-100 text-red-600'
-                            : 'bg-amber-100 text-amber-600'
-                          }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${resource.status === 'ACTIVE' ? 'bg-green-500' : resource.status === 'OUT_OF_SERVICE' ? 'bg-red-500' : 'bg-amber-500'
-                          }`} />
-                        {statusInfo.label}
-                      </span>
-                    </div>
-
-                    <h3 className="text-lg font-bold text-[#1E293B] mb-2 group-hover:text-[#4F8CFF] transition-colors line-clamp-1">
-                      {resource.name}
-                    </h3>
-                    <p className="text-sm text-[#334155] line-clamp-2 leading-relaxed h-[40px] mb-6 font-medium">
-                      {resource.description || 'No description available.'}
-                    </p>
-
-                    <div className="grid grid-cols-2 gap-y-3 mb-6">
-                      <div className="flex items-center gap-2 text-xs text-[#334155]">
-                        <MapPin size={14} className="text-[#64748B]" />
-                        <span className="line-clamp-1 font-medium">{resource.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-[#334155]">
-                        <LayoutDashboard size={14} className="text-[#64748B]" />
-                        <span className="line-clamp-1 font-medium">{FACULTIES.find(f => f.value === resource.department || f.value === resource.faculty)?.label || resource.department || resource.faculty || 'General'}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-[#334155]">
-                        <UsersIcon size={14} className="text-[#64748B]" />
-                        <span className="font-medium">{resource.capacity} {getUnitLabel(resource.type, resource.capacity)}</span>
-                      </div>
-                      {resource.availableFrom && (
-                        <div className="flex items-center gap-2 text-xs text-[#334155] col-span-2">
-                          <Clock size={14} className="text-[#64748B]" />
-                          <span className="font-medium">{resource.availableFrom} – {resource.availableTo}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className={`px-5 py-4 border-t border-slate-100 flex items-center justify-between ${!resource.isBookable ? 'bg-slate-200/30' : 'bg-slate-50/30'} rounded-b-2xl`}>
-                    <button
-                      className="text-sm font-bold text-[#334155] hover:text-[#4F8CFF] flex items-center gap-1 transition-colors"
-                      onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); }}
-                    >
-                      View <ChevronRight size={16} />
-                    </button>
-
-                    <div className="flex items-center gap-3">
-                      {resource.isBookable ? (
-                        <>
-                          <span className="text-[10px] font-bold text-green-600 bg-green-100 px-2 py-1 rounded-md">
-                            Bookable
-                          </span>
-                          <button
-                            className="px-4 py-1.5 bg-blue-gradient text-white text-xs font-bold rounded-lg shadow-blue-500/20 shadow-lg hover:shadow-xl transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              const storedUserId = localStorage.getItem('userId');
-                              if (!storedUserId) {
-                                // Not logged in: save intended resource and redirect to login
-                                localStorage.setItem('pendingResourceId', resource.resourceId);
-                                navigate('/login');
-                              } else {
-                                // Already logged in: go directly to bookingDetails with resource pre-filled
-                                navigate(`/bookingDetails?resourceId=${resource.resourceId}`);
-                              }
-                            }}
-                          >
-                            Book Now
-                          </button>
-                        </>
-                      ) : (
-                        <span
-                          className="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-1 rounded-md cursor-help"
-                          title="Already booked"
-                        >
-                          Not Bookable
-                        </span>
-                      )}
-                    </div>
-                  </div>
+          <div className="flex flex-col gap-16">
+            {/* Available Section */}
+            {functionalResources.length > 0 && (
+              <div id="available-section">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-px flex-1 bg-slate-100" />
+                  <h2 className="text-xs font-black text-[#64748B] uppercase tracking-[0.3em] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                    Available Facilities
+                  </h2>
+                  <div className="h-px flex-1 bg-slate-100" />
                 </div>
-              )
-            })}
+                <div className="resource-grid creative-grid">
+                  {functionalResources.map((resource, i) => renderResourceCard(resource, i))}
+                </div>
+              </div>
+            )}
+
+            {/* Unavailable Section (Requested for Maintenance/Out of Service) */}
+            {unavailableResources.length > 0 && (
+              <div id="unavailable-section">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="h-px flex-1 bg-slate-100" />
+                  <h2 className="text-xs font-black text-[#64748B] uppercase tracking-[0.3em] flex items-center gap-2">
+                    <AlertTriangle size={14} className="text-amber-500" />
+                    Currently Unavailable
+                  </h2>
+                  <div className="h-px flex-1 bg-slate-100" />
+                </div>
+                <div className="resource-grid creative-grid opacity-80">
+                  {unavailableResources.map((resource, i) => renderResourceCard(resource, i))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

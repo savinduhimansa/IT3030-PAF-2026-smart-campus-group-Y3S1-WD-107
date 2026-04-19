@@ -176,8 +176,18 @@ public class BookingController {
             .collect(Collectors.toList());
 
         return ResponseEntity.ok(result);
-        }
+    }
+
+    @GetMapping("/free-slots")
+    public ResponseEntity<List<Map<String, String>>> getFreeSlots(
+            @RequestParam Long resourceId,
+            @RequestParam String date) {
+
+        LocalDate bookingDate = LocalDate.parse(date);
+        return ResponseEntity.ok(bookingService.getFreeSlots(resourceId, bookingDate));
+    }
 }
+
 
     
 
