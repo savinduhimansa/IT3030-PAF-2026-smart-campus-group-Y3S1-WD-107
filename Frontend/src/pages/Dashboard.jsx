@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, BarChart3, Loader2, AlertTriangle, Users, MapPin, Clock, Plus, Zap } from 'lucide-react'
+import { Activity, BarChart3, Loader2, AlertTriangle, Users, MapPin, Clock, Plus, Zap, TrendingUp, Calendar, ChevronRight } from 'lucide-react'
 import { RESOURCE_TYPES, getTypeInfo, getStatusInfo, getUnitLabel } from '../constants'
-import { resourceApi } from '../services/api'
+import { resourceApi, getAllBookings } from '../services/api'
 
 export default function Dashboard() {
   const navigate = useNavigate()
   const [resources, setResources] = useState([])
+  const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => { fetchResources() }, [])
+  useEffect(() => {
+    fetchResources()
+    fetchBookings()
+  }, [])
 
   const fetchResources = async () => {
     try {
@@ -20,6 +24,19 @@ export default function Dashboard() {
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to connect to the server. Make sure the backend is running on port 8080.')
     } finally { setLoading(false) }
+  }
+
+  const fetchBookings = async () => {
+    try {
+      const uId = localStorage.getItem('userId')
+      const uRole = localStorage.getItem('role') || 'USER'
+      if (uId) {
+        const data = await getAllBookings(Number(uId), uRole)
+        setBookings(Array.isArray(data) ? data : [])
+      }
+    } catch (err) {
+      console.error('Failed to fetch bookings for analytics', err)
+    }
   }
 
   const stats = {
@@ -42,6 +59,38 @@ export default function Dashboard() {
   ]
 
   const recentResources = [...resources].sort((a, b) => b.resourceId - a.resourceId).slice(0, 6)
+
+  // Analytics logic
+  const topResources = (() => {
+    const counts = bookings.reduce((acc, b) => {
+      acc[b.resourceId] = (acc[b.resourceId] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([id, count]) => {
+        const res = resources.find(r => r.resourceId === Number(id));
+        return { 
+          name: res?.name || `Unknown Asset (${id})`, 
+          count, 
+          type: res?.type || 'UNKNOWN' 
+        };
+      });
+  })();
+
+  const peakHours = (() => {
+    const hours = new Array(24).fill(0);
+    bookings.forEach(b => {
+      const date = new Date(b.startTime);
+      if (!isNaN(date.getTime())) {
+        hours[date.getHours()]++;
+      }
+    });
+    return hours;
+  })();
+
+  const maxHourCount = Math.max(...peakHours, 1);
 
   if (loading) {
     return (
@@ -142,6 +191,101 @@ export default function Dashboard() {
               <p className="text-xs text-[#94A3B8] font-bold">{tc.count} items</p>
             </div>
           ))}
+        </div>
+
+        {/* Usage Analytics Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Top Resources Card */}
+          <div className="animate-in" style={{ animationDelay: '200ms' }}>
+            <div className="flex items-center gap-2 mb-6">
+              <TrendingUp size={20} className="text-[#4F8CFF]" />
+              <h3 className="text-lg font-bold text-[#1E293B]">High-Demand Facilities</h3>
+            </div>
+            <div className="bg-white rounded-3xl p-6 border border-slate-50 shadow-sm relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-8 opacity-5">
+                  <Zap size={120} className="text-blue-600" />
+               </div>
+               <div className="flex flex-col gap-5 relative z-10">
+                 {topResources.length === 0 ? (
+                   <div className="py-12 text-center text-[#94A3B8] font-medium italic">No booking trends available yet.</div>
+                 ) : (
+                   topResources.map((item, idx) => {
+                     const typeInfo = getTypeInfo(item.type);
+                     return (
+                       <div key={idx} className="flex items-center justify-between group cursor-pointer">
+                         <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow-sm group-hover:scale-110 transition-transform" style={{ background: `${typeInfo.color}10`, color: typeInfo.color }}>
+                               {typeInfo.icon}
+                            </div>
+                            <div>
+                               <div className="text-sm font-bold text-[#334155] group-hover:text-[#4F8CFF] transition-colors">{item.name}</div>
+                               <div className="text-[10px] text-[#94A3B8] font-bold uppercase tracking-wider">{item.type}</div>
+                            </div>
+                         </div>
+                         <div className="flex items-center gap-3">
+                            <div className="text-right">
+                               <div className="text-sm font-extrabold text-[#1E293B]">{item.count}</div>
+                               <div className="text-[9px] text-[#64748B] font-bold uppercase">Bookings</div>
+                            </div>
+                            <ChevronRight size={16} className="text-slate-200 group-hover:text-[#4F8CFF] group-hover:translate-x-1 transition-all" />
+                         </div>
+                       </div>
+                     )
+                   })
+                 )}
+               </div>
+            </div>
+          </div>
+
+          {/* Peak Booking Hours Card */}
+          <div className="animate-in" style={{ animationDelay: '300ms' }}>
+            <div className="flex items-center gap-2 mb-6">
+              <Calendar size={20} className="text-[#4F8CFF]" />
+              <h3 className="text-lg font-bold text-[#1E293B]">Activity Peak Times</h3>
+            </div>
+            <div className="bg-white rounded-3xl p-6 border border-slate-50 shadow-sm overflow-hidden">
+                <div className="flex items-end justify-between h-40 gap-[3px] px-2 mb-8 relative">
+                  {peakHours.map((count, hr) => {
+                    const height = (count / maxHourCount) * 100;
+                    const isPeak = count === maxHourCount && count > 0;
+                    return (
+                      <div key={hr} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                        <div 
+                          className={`w-full rounded-t-sm transition-all duration-500 relative z-10 ${isPeak ? 'bg-blue-gradient shadow-lg shadow-blue-500/20' : 'bg-[#F1F5F9] group-hover:bg-blue-100'}`}
+                          style={{ height: `${Math.max(height, 6)}%` }}
+                        >
+                           {/* Tooltip */}
+                           <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-[#1E293B] text-white text-[10px] font-bold px-2 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-20 shadow-xl border border-white/10 scale-90 group-hover:scale-100">
+                              {hr % 12 || 12} {hr >= 12 ? 'PM' : 'AM'}: {count} bookings
+                           </div>
+                        </div>
+                        {/* Time labels - Absolutely positioned to prevent layout shift */}
+                        {hr % 4 === 0 && (
+                          <div className="absolute -bottom-7 left-1/2 -translate-x-1/2">
+                            <span className="text-[10px] font-extrabold text-[#94A3B8]">{hr}:00</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+                <div className="mt-6 flex items-center justify-between px-2">
+                   <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5">
+                         <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                         <span className="text-[10px] font-bold text-[#64748B] uppercase">Peak Hour</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                         <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
+                         <span className="text-[10px] font-bold text-[#64748B] uppercase">Off-Peak</span>
+                      </div>
+                   </div>
+                   <div className="text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                      Avg: {Math.round(bookings.length / 24 * 10) / 10} / hr
+                   </div>
+                </div>
+            </div>
+          </div>
         </div>
 
         {/* Distribution & Recent */}
