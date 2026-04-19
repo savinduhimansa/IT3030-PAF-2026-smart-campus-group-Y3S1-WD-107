@@ -36,7 +36,7 @@ export default function HomePage() {
   useEffect(() => {
     const interval = setInterval(() => {
       setBgIndex((prev) => (prev + 1) % images.length)
-    }, 1500)
+    }, 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -212,7 +212,7 @@ export default function HomePage() {
             </div>
             <h2 className="text-4xl md:text-[52px] font-black text-slate-900 mb-6 tracking-tight">Explore Our Facilities</h2>
             <p className="text-lg text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
-              Step into high-performance environments designed for future-shaping research, 
+              Step into high-performance environments designed for future-shaping research,
               collaboration, and intensive learning.
             </p>
           </div>
@@ -259,17 +259,17 @@ export default function HomePage() {
                   <div className="w-10 h-10 rounded-xl bg-blue-500 text-white flex items-center justify-center mb-4 shadow-lg shadow-blue-500/20">
                     {facility.icon}
                   </div>
-                  
+
                   {/* Bypass global light-theme color with inline style */}
-                  <div 
+                  <div
                     className="text-xl font-black mb-2 tracking-tight drop-shadow-md"
                     style={{ color: 'white' }}
                   >
                     {facility.title}
                   </div>
-                  
-                  <div 
-                    className="text-xs font-medium leading-relaxed opacity-90 drop-shadow-sm" 
+
+                  <div
+                    className="text-xs font-medium leading-relaxed opacity-90 drop-shadow-sm"
                     style={{ color: '#e2e8f0' }}
                   >
                     {facility.desc}
@@ -284,7 +284,7 @@ export default function HomePage() {
               to="/catalogue"
               className="group/btn relative px-12 py-5 bg-blue-600 text-white font-bold rounded-2xl transition-all hover:scale-105 hover:bg-blue-700 hover:shadow-2xl hover:shadow-blue-500/40 flex items-center gap-3 no-underline"
             >
-              Explore Full Catalogue 
+              Explore Full Catalogue
               <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center transition-all group-hover/btn:bg-white/20">
                 <ArrowRight size={20} className="transition-transform group-hover/btn:translate-x-1" />
               </div>
@@ -476,7 +476,7 @@ export default function HomePage() {
                     {action.title}
                   </h4>
 
-                  <div 
+                  <div
                     className="text-base font-medium leading-relaxed mb-8 opacity-100 transition-all duration-500 drop-shadow-[0_2px_8px_rgba(0,0,0,1)]"
                     style={{ color: '#ffffff' }}
                   >
