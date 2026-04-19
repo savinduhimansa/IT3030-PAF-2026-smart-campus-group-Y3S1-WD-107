@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, NavLink, useLocation, Link, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -9,6 +9,7 @@ import {
   Zap,
   Ticket,
   LogOut,
+  AlertCircle,
 } from 'lucide-react'
 import HomePage from './pages/HomePage'
 import Dashboard from './pages/Dashboard'
@@ -35,13 +36,32 @@ const baseNavItems = [
   { path: '/tickets', label: 'Tickets', icon: Ticket },
 ]
 
+// Internal Toast Component
+const Toast = ({ message, type, onClose }) => {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 3000);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+
+  return (
+    <div className={`toast-notification flex items-center gap-3 ${type === 'error' ? 'border-red-500' : 'border-blue-500'}`}>
+      <AlertCircle size={18} className={type === 'error' ? 'text-red-500' : 'text-blue-500'} />
+      <span className="text-white font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 hover:opacity-70 transition-opacity">
+        <X size={14} className="text-white/50" />
+      </button>
+    </div>
+  );
+};
+
 function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+
   const closeSidebar = () => setSidebarOpen(false);
   const hideSidebar =
-      location.pathname.startsWith('/feedbacks/') ||
+      location.pathname.includes('feedback') ||
       location.pathname === '/find-best-lab' ||
       location.pathname === '/register' ||
       location.pathname === '/login';
@@ -162,17 +182,38 @@ function AppLayout() {
 }
 
 function App() {
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    const handleToast = (e) => {
+      setToast(e.detail);
+    };
+    window.addEventListener('show-toast', handleToast);
+    return () => window.removeEventListener('show-toast', handleToast);
+  }, []);
+
   const location = useLocation();
   const isHomepage = location.pathname === '/';
   const isCatalogue = location.pathname === '/catalogue';
 
-  if (isHomepage) {
-    return <HomePage />;
-  }
-  if (isCatalogue) {
-    return <Catalogue />;
-  }
-  return <AppLayout />;
+  const renderContent = () => {
+    if (isHomepage) return <HomePage />;
+    if (isCatalogue) return <Catalogue />;
+    return <AppLayout />;
+  };
+
+  return (
+    <>
+      {renderContent()}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+    </>
+  );
 }
 
 export default App;

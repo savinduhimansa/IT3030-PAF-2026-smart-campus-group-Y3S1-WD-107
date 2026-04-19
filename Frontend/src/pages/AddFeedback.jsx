@@ -12,8 +12,8 @@ export default function AddFeedback() {
       <FeedbackForm
         resourceId={resourceId}
         onFeedbackSubmitted={() => navigate(-1)}
+        onCancel={() => navigate(-1)}
       />
-      <button onClick={() => navigate(-1)} style={{ marginTop: 16 }}>Cancel</button>
     </div>
   );
 }

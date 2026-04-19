@@ -165,7 +165,17 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
               </div>
               <button
                 className="px-5 py-2.5 bg-slate-50 text-[#1E293B] hover:bg-slate-100 text-sm font-bold rounded-xl border border-slate-200 transition-all flex items-center gap-2"
-                onClick={() => { onClose(); navigate(`/feedback/${resource.resourceId}`); }}
+                onClick={() => {
+                  const storedUserId = localStorage.getItem('userId');
+                  if (!storedUserId && !user?.id) {
+                    window.dispatchEvent(new CustomEvent('show-toast', {
+                      detail: { message: 'Please log in before proceeding.', type: 'error' }
+                    }));
+                    return;
+                  }
+                  onClose();
+                  navigate(`/feedback/${resource.resourceId}`);
+                }}
               >
                 Share Experience
               </button>

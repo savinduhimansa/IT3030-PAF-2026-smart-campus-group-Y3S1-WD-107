@@ -2,13 +2,22 @@ import React, { useState } from "react";
 import axios from "axios";
 
 // Feedback form for submitting feedback
-const FeedbackForm = ({ resourceId, onFeedbackSubmitted }) => {
+const FeedbackForm = ({ resourceId, onFeedbackSubmitted, onCancel }) => {
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const storedUserId = localStorage.getItem('userId');
+    if (!storedUserId) {
+      window.dispatchEvent(new CustomEvent('show-toast', { 
+        detail: { message: 'login first', type: 'error' } 
+      }));
+      return;
+    }
+
     setLoading(true);
     try {
       await axios.post("/api/feedback", {
@@ -112,8 +121,12 @@ const FeedbackForm = ({ resourceId, onFeedbackSubmitted }) => {
         <button
           type="button"
           onClick={() => {
-            setRating(5);
-            setComment("");
+            if (onCancel) {
+              onCancel();
+            } else {
+              setRating(5);
+              setComment("");
+            }
           }}
           style={{
             background: '#eee',
