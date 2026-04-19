@@ -157,7 +157,14 @@ public class ResourceServiceImpl implements ResourceService {
         resource.setStatus(request.getStatus());
         resource.setAvailableFrom(request.getAvailableFrom());
         resource.setAvailableTo(request.getAvailableTo());
-        resource.setIsBookable(request.getIsBookable());
+
+        // Logic: Non-active resources cannot be bookable
+        if (request.getStatus() == ResourceStatus.OUT_OF_SERVICE || request.getStatus() == ResourceStatus.MAINTENANCE) {
+            resource.setIsBookable(false);
+        } else {
+            resource.setIsBookable(request.getIsBookable());
+        }
+
         resource.setBrand(request.getBrand());
         resource.setModel(request.getModel());
         resource.setSerialNumber(request.getSerialNumber());
