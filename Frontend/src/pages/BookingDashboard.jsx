@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, MapPin, XCircle, CheckCircle, FileText, User, Filter } from 'lucide-react';
-import { getAllBookings, approveBooking, rejectBooking } from '../services/api';
+import { Clock, XCircle, CheckCircle, FileText, User, Filter } from 'lucide-react';
+import { getAllBookings, approveBooking, rejectBooking, resourceApi } from '../services/api';
 import { format, parseISO } from 'date-fns';
+import { RESOURCE_TYPES } from '../constants';
 
 // Stat summary card
 function StatCard({ label, value, color, icon }) {
@@ -21,8 +22,33 @@ export default function AdminDashboard({ user }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterResourceType, setFilterResourceType] = useState('ALL');
   const [rejectId, setRejectId] = useState(null);
   const [rejectReason, setRejectReason] = useState('');
+  const [resourceIndex, setResourceIndex] = useState({});
+  const [resourcesLoaded, setResourcesLoaded] = useState(false);
+
+  const EQUIPMENT_TYPES = new Set(['PROJECTOR', 'CAMERA', 'EQUIPMENT']);
+  const isEquipmentType = (type) => EQUIPMENT_TYPES.has(type);
+
+  const fetchResources = async () => {
+    try {
+      const res = await resourceApi.getAll();
+      const list = Array.isArray(res.data) ? res.data : [];
+      const index = {};
+      list.forEach((r) => {
+        if (r?.resourceId !== null && r?.resourceId !== undefined) {
+          index[r.resourceId] = r;
+        }
+      });
+      setResourceIndex(index);
+    } catch {
+      // Non-blocking: bookings can still render with resourceId fallback
+      setResourceIndex({});
+    } finally {
+      setResourcesLoaded(true);
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -50,11 +76,25 @@ export default function AdminDashboard({ user }) {
     // eslint-disable-next-line
   }, [filterStatus]);
 
+  useEffect(() => {
+    fetchResources();
+    // eslint-disable-next-line
+  }, []);
+
   // Stat counts
-  const total = bookings.length;
-  const pending = bookings.filter(b => b.status === 'PENDING').length;
-  const approved = bookings.filter(b => b.status === 'APPROVED').length;
-  const rejected = bookings.filter(b => b.status === 'REJECTED').length;
+  const filteredBookings = filterResourceType === 'ALL' || !resourcesLoaded
+    ? bookings
+    : bookings.filter((b) => resourceIndex?.[b?.resourceId]?.type === filterResourceType);
+
+  const attendeeQtyHeader = (() => {
+    if (filterResourceType === 'ALL') return 'Attendees / Qty';
+    return isEquipmentType(filterResourceType) ? 'Quantity' : 'Attendees';
+  })();
+
+  const total = filteredBookings.length;
+  const pending = filteredBookings.filter(b => b.status === 'PENDING').length;
+  const approved = filteredBookings.filter(b => b.status === 'APPROVED').length;
+  const rejected = filteredBookings.filter(b => b.status === 'REJECTED').length;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] px-4 py-10">
@@ -86,34 +126,59 @@ export default function AdminDashboard({ user }) {
             <option value="CANCELLED">Cancelled</option>
           </select>
         </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={filterResourceType}
+            onChange={e => setFilterResourceType(e.target.value)}
+            disabled={!resourcesLoaded}
+            className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg px-3 py-2 text-[14px] font-medium text-[#0F172A] focus:ring-2 focus:ring-[#4F46E5] outline-none disabled:opacity-60"
+            style={{minWidth: 180}}
+          >
+            <option value="ALL">All Resource Types</option>
+            {RESOURCE_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
       {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl shadow-sm text-sm font-medium animate-pulse mb-6">{error}</div>}
       {/* Table */}
-      <div className="bg-white rounded-xl shadow overflow-x-auto border border-[#E2E8F0]" style={{borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)'}}>
-        <table className="w-full text-left text-[14px] whitespace-nowrap">
+      <div
+        className="bg-white rounded-xl shadow overflow-x-scroll overflow-y-hidden border border-[#E2E8F0] relative w-full max-w-full pb-2"
+        style={{
+          borderRadius: 12,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarGutter: 'stable',
+        }}
+      >
+        <table className="w-full min-w-max text-left text-[14px] whitespace-nowrap">
           <thead className="bg-[#F8FAFC] text-[#64748B] font-bold border-b border-[#E2E8F0] uppercase text-[11px] tracking-widest">
             <tr>
               <th className="px-6 py-4">Status</th>
               <th className="px-6 py-4">Resource</th>
+              <th className="px-6 py-4">Department</th>
+              <th className="px-6 py-4">Special Reqs</th>
               <th className="px-6 py-4">User</th>
               <th className="px-6 py-4">Date & Time</th>
-              <th className="px-6 py-4">Attendees</th>
-              <th className="px-6 py-4 text-right">Actions</th>
+              <th className="px-6 py-4">{attendeeQtyHeader}</th>
+              <th className="px-6 py-4 text-right min-w-[240px] sticky right-0 z-20 bg-[#F8FAFC] border-l border-[#E2E8F0]">Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" className="px-6 py-16 text-center text-[#64748B]">
+                <td colSpan="8" className="px-6 py-16 text-center text-[#64748B]">
                   <div className="animate-pulse flex items-center justify-center gap-3">
                     <div className="w-5 h-5 border-2 border-[#4F46E5] border-t-transparent rounded-full animate-spin"></div>
                     <span className="font-medium">Loading bookings...</span>
                   </div>
                 </td>
               </tr>
-            ) : bookings.length === 0 ? (
+            ) : filteredBookings.length === 0 ? (
               <tr>
-                <td colSpan="6" className="px-6 py-20 text-center text-[#64748B]">
+                <td colSpan="8" className="px-6 py-20 text-center text-[#64748B]">
                   <div className="flex flex-col items-center gap-3">
                     <FileText size={40} className="text-[#E2E8F0]" />
                     <span className="text-base font-medium">No bookings match the selected filter.</span>
@@ -121,7 +186,7 @@ export default function AdminDashboard({ user }) {
                 </td>
               </tr>
             ) : (
-              bookings.map(b => {
+              filteredBookings.map(b => {
                 // Status badge color mapping
                 const statusMap = {
                   PENDING: { bg: '#FFFBEB', color: '#F59E0B', text: '#F59E0B' },
@@ -171,6 +236,16 @@ export default function AdminDashboard({ user }) {
                 const startTimeLabel = formatTimeLabel(b?.startTime);
                 const endTimeLabel = formatTimeLabel(b?.endTime);
 
+                const resource = resourceIndex?.[b?.resourceId];
+                const resourceName = resource?.name || (b?.resourceId ? `Resource #${b.resourceId}` : 'Resource');
+                const specialReqs = b?.specialRequirements || b?.specialReqs;
+
+                const resolvedType = resource?.type;
+                const showQuantity = isEquipmentType(resolvedType) || (filterResourceType !== 'ALL' && isEquipmentType(filterResourceType));
+                const attendeeQtyLabel = showQuantity
+                  ? `${b?.quantity ?? '—'} qty`
+                  : `${b?.expectedAttendees ?? '—'} pax`;
+
                 return (
                   <tr key={b.id} className="transition-colors group" style={{background: b.status === 'REJECTED' ? '#FEF2F2' : undefined}}>
                     <td className="px-6 py-5">
@@ -185,13 +260,15 @@ export default function AdminDashboard({ user }) {
                       </span>
                     </td>
                     <td className="px-6 py-5">
-                      <div className="font-bold text-[#0F172A] flex items-center gap-2">
-                        <MapPin size={16} className="text-[#4F46E5]" /> {b.resourceId}
-                      </div>
-                      <div className="text-xs text-[#64748B] max-w-[200px] truncate mt-1" title={b.purpose}>{b.purpose}</div>
-                      {b.department && <div className="text-xs text-[#6366F1] mt-1">Department: <span className="font-semibold">{b.department}</span></div>}
-                      {b.contactEmail && <div className="text-xs text-[#6366F1] mt-1">Email: <span className="font-semibold">{b.contactEmail}</span></div>}
-                      {b.specialRequirements && <div className="text-xs text-[#6366F1] mt-1">Special: <span className="font-semibold">{b.specialRequirements}</span></div>}
+                      <div className="font-bold text-[#0F172A]">{resourceName}</div>
+                    </td>
+                    <td className="px-6 py-5 text-[#64748B] font-medium">
+                      <span className="bg-[#F8FAFC] px-2.5 py-1 rounded-md border border-[#E2E8F0]">{b.department || '—'}</span>
+                    </td>
+                    <td className="px-6 py-5 text-[#64748B] font-medium max-w-[240px]">
+                      <span className="bg-[#F8FAFC] px-2.5 py-1 rounded-md border border-[#E2E8F0] inline-block truncate max-w-[220px]" title={specialReqs || ''}>
+                        {specialReqs || '—'}
+                      </span>
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2 text-[#64748B] font-medium bg-[#F8FAFC] px-3 py-1.5 rounded-lg border border-[#E2E8F0] w-fit">
@@ -203,9 +280,12 @@ export default function AdminDashboard({ user }) {
                       <div className="text-[#64748B] text-xs mt-1 font-medium">{startTimeLabel} <span className="text-[#E2E8F0] mx-0.5">→</span> {endTimeLabel}</div>
                     </td>
                     <td className="px-6 py-5 text-[#64748B] font-medium">
-                      <span className="bg-[#F8FAFC] px-2.5 py-1 rounded-md border border-[#E2E8F0]">{b.expectedAttendees ?? '—'} pax</span>
+                      <span className="bg-[#F8FAFC] px-2.5 py-1 rounded-md border border-[#E2E8F0]">{attendeeQtyLabel}</span>
                     </td>
-                    <td className="px-6 py-5 text-right w-48 relative">
+                    <td
+                      className="px-6 py-5 text-right min-w-[240px] sticky right-0 z-10 border-l border-[#E2E8F0] relative"
+                      style={{ background: b.status === 'REJECTED' ? '#FEF2F2' : '#FFFFFF' }}
+                    >
                       {b.status === 'PENDING' && rejectId !== b.id && (
                         <div className="flex justify-end gap-2">
                           <button
