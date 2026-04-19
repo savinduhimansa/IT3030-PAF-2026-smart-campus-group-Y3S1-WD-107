@@ -3,12 +3,14 @@ package com.code_wizards.Backend.controller;
 import com.code_wizards.Backend.entity.Booking;
 import com.code_wizards.Backend.entity.BookingStatus;
 import com.code_wizards.Backend.entity.BookingStatusHistory;
+import com.code_wizards.Backend.repository.BookingRepository;
 
 import com.code_wizards.Backend.service.BookingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +22,12 @@ import java.util.stream.Collectors;
 
 public class BookingController {
     private final BookingService bookingService;
+    private final BookingRepository bookingRepository;
 
    
-    public BookingController(BookingService bookingService) {
+    public BookingController(BookingService bookingService, BookingRepository bookingRepository) {
         this.bookingService = bookingService;
+        this.bookingRepository = bookingRepository;
     }
 
     @PostMapping
@@ -143,6 +147,36 @@ public class BookingController {
         boolean available = bookingService.checkAvailability(resourceId, bookingDate, start, end);
         return ResponseEntity.ok(Map.of("available", available));
     }
+
+        /**
+         * Returns all APPROVED booked time slots for a resource on a specific date.
+         * Used by the frontend to display the visual timeline in BookingModal.
+         */
+        @GetMapping("/booked-slots")
+        public ResponseEntity<List<Map<String, String>>> getBookedSlots(
+            @RequestParam Long resourceId,
+            @RequestParam String date) {
+
+        LocalDate bookingDate = LocalDate.parse(date);
+        LocalDateTime startOfDay = bookingDate.atStartOfDay();
+        LocalDateTime endOfDay = bookingDate.atTime(23, 59, 59);
+
+        // Only show APPROVED bookings (not pending — those aren't confirmed yet)
+        List<BookingStatus> approvedStatus = List.of(BookingStatus.APPROVED);
+
+        List<Booking> bookedSlots = bookingRepository.findOverlappingBookings(
+            resourceId, startOfDay, endOfDay, approvedStatus);
+
+        List<Map<String, String>> result = bookedSlots.stream()
+            .map(b -> Map.of(
+                "startTime", b.getStartTime().toLocalTime().toString(),
+                "endTime", b.getEndTime().toLocalTime().toString(),
+                "purpose", b.getPurpose() != null ? b.getPurpose() : ""
+            ))
+            .collect(Collectors.toList());
+
+        return ResponseEntity.ok(result);
+        }
 }
 
     

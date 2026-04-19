@@ -134,11 +134,7 @@ public class BookingService {
         booking.setStatus(BookingStatus.APPROVED);
         logStatusChange(booking, BookingStatus.APPROVED, changeBy);
 
-        // KEY FIX: Mark resource as booked
-        resource.setIsBookable(false);
-
         // Step 4: Save both entities
-        resourceRepository.save(resource);
         return bookingRepository.save(booking);
     }
 
@@ -162,15 +158,6 @@ public class BookingService {
         }
         if (booking.getStatus() == BookingStatus.CANCELLED || booking.getStatus() == BookingStatus.REJECTED) {
             throw new IllegalStateException("Booking is already inactive.");
-        }
-
-        // KEY FIX: If booking was APPROVED, make resource available again
-        if (booking.getStatus() == BookingStatus.APPROVED) {
-            Resource resource = booking.getResource();
-            if (resource != null) {
-                resource.setIsBookable(true);
-                resourceRepository.save(resource);
-            }
         }
 
         booking.setStatus(BookingStatus.CANCELLED);

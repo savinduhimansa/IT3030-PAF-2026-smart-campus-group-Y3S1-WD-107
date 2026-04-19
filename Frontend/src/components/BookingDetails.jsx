@@ -11,6 +11,12 @@ import BookingModal from './BookingModal';
 // Booking history modal
 function BookingHistoryModal({ isOpen, onClose, history }) {
     if (!isOpen) return null;
+
+    const getChangedByLabel = (h) => {
+        if (h?.status === 'APPROVED' || h?.status === 'REJECTED') return 'Admin';
+        return h?.changedBy ? `User ${h.changedBy}` : 'User';
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
             <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
@@ -25,7 +31,7 @@ function BookingHistoryModal({ isOpen, onClose, history }) {
                         {history.map((h, i) => (
                             <li key={i} className="py-2 flex flex-col">
                                 <span className="font-semibold text-[#0F172A]">{h.status}</span>
-                                <span className="text-xs text-gray-500">{new Date(h.changedAt).toLocaleString()} by {h.changedBy}</span>
+                                <span className="text-xs text-gray-500">{new Date(h.changedAt).toLocaleString()} by {getChangedByLabel(h)}</span>
                             </li>
                         ))}
                     </ul>
@@ -254,7 +260,7 @@ function BookingDashboard({ user }) {
                                         <span className="text-[16px] font-bold text-[#0F172A] mt-2">{getResourceLabel(b)}</span>
                                         <span className="text-[11px] text-[#64748B] font-medium">Resource ID: <span className="font-semibold">{b.resourceId ?? '—'}</span></span>
                                         <span className="text-[13px] text-[#64748B] font-medium mt-1">{b.purpose}</span>
-                                        <span className="text-xs text-[#64748B] mt-1">{b.department && <>Dept: <span className="font-semibold">{b.department}</span></>}</span>
+                                        <span className="text-xs text-[#64748B] mt-1">{b.department && <>Department: <span className="font-semibold">{b.department}</span></>}</span>
                                         <span className="text-xs text-[#64748B] mt-1">{b.contactEmail && <>Email: <span className="font-semibold">{b.contactEmail}</span></>}</span>
                                         <span className="text-xs text-[#64748B] mt-1">{b.expectedAttendees && <>Attendees: <span className="font-semibold">{b.expectedAttendees}</span></>}</span>
                                         <span className="text-xs text-[#64748B] mt-1">{b.quantity != null && b.quantity > 0 && <>Quantity: <span className="font-semibold">{b.quantity}</span></>}</span>

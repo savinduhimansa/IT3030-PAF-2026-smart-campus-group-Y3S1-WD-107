@@ -21,6 +21,14 @@ const checkAvailability = async (resourceId, bookingDate, startTime, endTime) =>
     return response.data.available;
 };
 
+// Fetch all approved booked slots for a resource on a given date
+const fetchBookedSlots = async (resourceId, date) => {
+    const response = await axios.get(`${API_BASE}/bookings/booked-slots`, {
+        params: { resourceId, date }
+    });
+    return response.data; // [{ startTime, endTime, purpose }]
+};
+
 export default function BookingModal({ isOpen, onClose, onSubmit, initialData, prefillResource }) {
     const todayISODate = getTodayLocalISODate();
 
@@ -40,6 +48,8 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
         // Availability state
     const [availability, setAvailability] = useState(null); // null | true | false
     const [checkingAvailability, setCheckingAvailability] = useState(false);
+    const [bookedSlots, setBookedSlots] = useState([]);
+    const [loadingSlots, setLoadingSlots] = useState(false);
 
     // Error message from backend
     const [error, setError] = useState('');
@@ -110,6 +120,23 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
 
         return () => clearTimeout(timer); // cleanup on re-render
     }, [formData.resourceId, formData.bookingDate, formData.startTime, formData.endTime]);
+
+    // Fetch booked slots whenever resource or date changes
+    useEffect(() => {
+        const { resourceId, bookingDate } = formData;
+
+        if (!resourceId || !bookingDate) {
+            setBookedSlots([]);
+            return;
+        }
+
+        setLoadingSlots(true);
+        fetchBookedSlots(resourceId, bookingDate)
+            .then(slots => setBookedSlots(slots))
+            .catch(() => setBookedSlots([]))
+            .finally(() => setLoadingSlots(false));
+
+    }, [formData.resourceId, formData.bookingDate]);
 
     if (!isOpen) return null;
 
@@ -287,6 +314,128 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
                                 </div>
                             </div>
                         </div>
+
+                        {/* ── Visual Timeline: Booked Slots for Selected Date ── */}
+                        {formData.bookingDate && formData.resourceId && (
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
+                                    Booked slots on {new Date(formData.bookingDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                                </p>
+
+                                {loadingSlots ? (
+                                    <p className="text-xs text-gray-400 flex items-center gap-1.5">
+                                        <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <circle cx="12" cy="12" r="10" strokeOpacity="0.25"/>
+                                            <path d="M12 2a10 10 0 0 1 10 10"/>
+                                        </svg>
+                                        Loading schedule...
+                                    </p>
+                                ) : bookedSlots.length === 0 ? (
+                                    <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1.5">
+                                        <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="2 7 5 10 11 4"/></svg>
+                                        No bookings yet — all slots available
+                                    </p>
+                                ) : (
+                                    <>
+                                        {/* Timeline bar: 8AM to 10PM */}
+                                        <div className="relative h-8 rounded-lg bg-gray-200 overflow-hidden mb-3">
+                                            {/* Hour markers */}
+                                            {[8, 10, 12, 14, 16, 18, 20].map(hour => (
+                                                <div
+                                                    key={hour}
+                                                    className="absolute top-0 bottom-0 w-px bg-gray-300 opacity-60"
+                                                    style={{ left: `${((hour - 8) / 14) * 100}%` }}
+                                                />
+                                            ))}
+
+                                            {/* Booked slots — red blocks */}
+                                            {bookedSlots.map((slot, i) => {
+                                                const toMinutes = (t) => {
+                                                    const [h, m] = t.split(':').map(Number);
+                                                    return h * 60 + m;
+                                                };
+                                                const dayStart = 8 * 60;  // 8AM
+                                                const dayEnd = 22 * 60;   // 10PM
+                                                const totalMinutes = dayEnd - dayStart;
+
+                                                const slotStart = Math.max(toMinutes(slot.startTime), dayStart);
+                                                const slotEnd = Math.min(toMinutes(slot.endTime), dayEnd);
+
+                                                const left = ((slotStart - dayStart) / totalMinutes) * 100;
+                                                const width = ((slotEnd - slotStart) / totalMinutes) * 100;
+
+                                                return (
+                                                    <div
+                                                        key={i}
+                                                        className="absolute top-0 bottom-0 bg-red-400 opacity-80 flex items-center justify-center group"
+                                                        style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
+                                                        title={`${slot.startTime} – ${slot.endTime}${slot.purpose ? ': ' + slot.purpose : ''}`}
+                                                    >
+                                                        <span className="text-[9px] text-white font-bold truncate px-1 hidden group-hover:block">
+                                                            {slot.startTime}–{slot.endTime}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })}
+
+                                            {/* Selected slot — blue block (if user has filled start + end time) */}
+                                            {formData.startTime && formData.endTime && formData.startTime < formData.endTime && (() => {
+                                                const toMinutes = (t) => {
+                                                    const [h, m] = t.split(':').map(Number);
+                                                    return h * 60 + m;
+                                                };
+                                                const dayStart = 8 * 60;
+                                                const dayEnd = 22 * 60;
+                                                const totalMinutes = dayEnd - dayStart;
+                                                const slotStart = Math.max(toMinutes(formData.startTime), dayStart);
+                                                const slotEnd = Math.min(toMinutes(formData.endTime), dayEnd);
+                                                const left = ((slotStart - dayStart) / totalMinutes) * 100;
+                                                const width = ((slotEnd - slotStart) / totalMinutes) * 100;
+
+                                                return (
+                                                    <div
+                                                        className="absolute top-0 bottom-0 bg-indigo-500 opacity-70 border-2 border-indigo-600"
+                                                        style={{ left: `${left}%`, width: `${Math.max(width, 2)}%` }}
+                                                        title={`Your selection: ${formData.startTime}–${formData.endTime}`}
+                                                    />
+                                                );
+                                            })()}
+                                        </div>
+
+                                        {/* Time labels below bar */}
+                                        <div className="flex justify-between text-[10px] text-gray-400 mb-3">
+                                            {['8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM', '10PM'].map(t => (
+                                                <span key={t}>{t}</span>
+                                            ))}
+                                        </div>
+
+                                        {/* Legend */}
+                                        <div className="flex items-center gap-4 text-[11px] text-gray-500">
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="w-3 h-3 rounded-sm bg-red-400 inline-block" /> Booked
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="w-3 h-3 rounded-sm bg-indigo-500 inline-block" /> Your selection
+                                            </span>
+                                            <span className="flex items-center gap-1.5">
+                                                <span className="w-3 h-3 rounded-sm bg-gray-200 inline-block" /> Available
+                                            </span>
+                                        </div>
+
+                                        {/* List of booked slots below timeline */}
+                                        <div className="mt-3 flex flex-col gap-1.5">
+                                            {bookedSlots.map((slot, i) => (
+                                                <div key={i} className="flex items-center gap-2 text-xs text-gray-600">
+                                                    <span className="w-2 h-2 rounded-full bg-red-400 shrink-0" />
+                                                    <span className="font-semibold">{slot.startTime} – {slot.endTime}</span>
+                                                    {slot.purpose && <span className="text-gray-400">· {slot.purpose}</span>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
 
                         {/* Availability checker — keep exactly as is */}
                         {!initialData && (
