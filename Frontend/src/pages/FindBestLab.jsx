@@ -3,6 +3,7 @@ import { resourceApi } from '../services/api';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { MapPin, Users, Clock, Sparkles, Search, ChevronRight, AlertCircle } from 'lucide-react';
+import { getUnitLabel } from '../constants';
 
 const RESOURCE_TYPE_OPTIONS = [
   { label: 'Any Type', value: '' },
@@ -224,7 +225,7 @@ export default function FindBestLab() {
                           <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider">Capacity</span>
                             <span className="text-[#334155] font-bold flex items-center gap-2">
-                              <Users size={14} className="text-[#4F8CFF]" /> {r.capacity} seats
+                              <Users size={14} className="text-[#4F8CFF]" /> {r.capacity} {getUnitLabel(r.type, r.capacity)}
                             </span>
                           </div>
                           <div className="flex flex-col gap-1">

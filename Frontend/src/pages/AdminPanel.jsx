@@ -16,7 +16,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from 'lucide-react'
-import { RESOURCE_TYPES, STATUSES, FACULTIES, getTypeInfo, getStatusInfo } from '../constants'
+import { RESOURCE_TYPES, STATUSES, FACULTIES, getTypeInfo, getStatusInfo, getUnitLabel } from '../constants'
 import { resourceApi } from '../services/api'
 
 const emptyForm = {
@@ -104,7 +104,17 @@ export default function AdminPanel() {
     if (inputType === 'checkbox') {
       setForm((prev) => ({ ...prev, [name]: e.target.checked }))
     } else {
-      setForm((prev) => ({ ...prev, [name]: value }))
+      setForm((prev) => {
+        const newForm = { ...prev, [name]: value }
+        
+        // Logic: If status is set to OUT_OF_SERVICE or MAINTENANCE, 
+        // automatically turn off the "Bookable" flag to maintain data integrity.
+        if (name === 'status' && (value === 'OUT_OF_SERVICE' || value === 'MAINTENANCE')) {
+          newForm.isBookable = false
+        }
+        
+        return newForm
+      })
     }
   }
 
@@ -152,10 +162,23 @@ export default function AdminPanel() {
       await fetchResources()
     } catch (err) {
       console.error('Failed to save resource:', err)
-      const errorMsg = err.response?.data?.message
-        || (err.response?.data && typeof err.response.data === 'object'
-          ? Object.values(err.response.data).join(', ')
-          : 'Failed to save resource. Check the console for details.')
+      
+      // Extract detailed error message from backend if available
+      let errorMsg = 'Failed to save resource. Check the console for details.';
+      
+      if (err.response?.data) {
+        if (typeof err.response.data === 'string') {
+          errorMsg = err.response.data;
+        } else if (err.response.data.message) {
+          errorMsg = err.response.data.message;
+        } else if (typeof err.response.data === 'object') {
+          // If it's a validation error map, format it nicely
+          errorMsg = Object.entries(err.response.data)
+            .map(([field, msg]) => `${field}: ${msg}`)
+            .join(', ');
+        }
+      }
+      
       showToast(errorMsg, 'error')
     } finally {
       setSaving(false)
@@ -332,7 +355,7 @@ export default function AdminPanel() {
 
                   <div className="flex flex-col gap-2">
                     <label htmlFor="form-capacity" className="text-xs font-bold text-[#475569] px-1 italic">
-                      {['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(form.type) ? 'Quantity *' : 'Capacity *'}
+                      {getTypeInfo(form.type).unit === 'units' ? 'Quantity *' : 'Capacity *'}
                     </label>
                     <input
                       type="number"
@@ -591,7 +614,7 @@ export default function AdminPanel() {
                                 </div>
                                 <div className="text-[11px] font-bold flex items-center gap-1.5">
                                   <Users size={12} className="text-[#4F8CFF]" /> 
-                                  {r.capacity} {['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(r.type) ? 'Units' : 'Seats'}
+                                  {r.capacity} <span className="capitalize">{getUnitLabel(r.type, r.capacity)}</span>
                                 </div>
                                 {(r.brand || r.model) && (
                                   <div className="text-[10px] font-extrabold text-[#1E293B] bg-slate-100 px-2 py-0.5 rounded mt-1 inline-block w-fit">

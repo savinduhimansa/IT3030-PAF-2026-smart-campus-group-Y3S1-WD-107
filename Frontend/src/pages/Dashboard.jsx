@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Activity, BarChart3, Loader2, AlertTriangle, Users, MapPin, Clock, Plus, Zap } from 'lucide-react'
-import { RESOURCE_TYPES, getTypeInfo, getStatusInfo } from '../constants'
+import { RESOURCE_TYPES, getTypeInfo, getStatusInfo, getUnitLabel } from '../constants'
 import { resourceApi } from '../services/api'
 
 export default function Dashboard() {
@@ -73,8 +73,8 @@ export default function Dashboard() {
             <h3 className="text-xl font-bold text-[#1E293B] mb-2">Connection Error</h3>
             <p className="text-[#64748B] max-w-[500px] mb-8 leading-relaxed font-medium">{error}</p>
           </div>
-          <button 
-            className="px-6 py-2.5 bg-blue-gradient text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all" 
+          <button
+            className="px-6 py-2.5 bg-blue-gradient text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
             onClick={fetchResources}
           >
             Retry Connection
@@ -92,7 +92,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold mb-1 gradient-text">Dashboard</h1>
           <p className="text-[#64748B] text-sm font-medium">Welcome back — your campus at a glance</p>
         </div>
-        <button 
+        <button
           className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-gradient text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/10 hover:shadow-xl transition-all"
           onClick={() => navigate('/admin')}
         >
@@ -159,8 +159,8 @@ export default function Dashboard() {
                   <div key={tc.value} className="animate-in">
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-[13px] font-bold text-[#334155] flex items-center gap-2">
-                         <span className="w-2 h-2 rounded-full" style={{ background: tc.color }} />
-                         {tc.label}
+                        <span className="w-2 h-2 rounded-full" style={{ background: tc.color }} />
+                        {tc.label}
                       </span>
                       <span className="text-[11px] text-[#64748B] font-bold">{tc.count} ({pct}%)</span>
                     </div>
@@ -192,8 +192,8 @@ export default function Dashboard() {
                     const typeInfo = getTypeInfo(r.type)
                     const statusInfo = getStatusInfo(r.status)
                     return (
-                      <div 
-                        key={r.resourceId} 
+                      <div
+                        key={r.resourceId}
                         className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50/50 transition-colors animate-in"
                         style={{ animationDelay: `${i * 40}ms` }}
                       >
@@ -207,18 +207,17 @@ export default function Dashboard() {
                               <MapPin size={10} /> {r.location}
                             </span>
                             <span className="text-[11px] font-medium text-[#64748B] flex items-center gap-1">
-                              <Users size={10} /> {r.capacity} seats
+                              <Users size={10} /> {r.capacity} {getUnitLabel(r.type, r.capacity)}
                             </span>
                           </div>
                         </div>
                         <span
-                          className={`text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap uppercase tracking-wider ${
-                            r.status === 'ACTIVE' 
-                              ? 'bg-green-100 text-green-600' 
-                              : r.status === 'OUT_OF_SERVICE' 
-                                ? 'bg-red-100 text-red-600' 
-                                : 'bg-amber-100 text-amber-600'
-                          }`}
+                          className={`text-[10px] font-bold px-3 py-1 rounded-full whitespace-nowrap uppercase tracking-wider ${r.status === 'ACTIVE'
+                            ? 'bg-green-100 text-green-600'
+                            : r.status === 'OUT_OF_SERVICE'
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-amber-100 text-amber-600'
+                            }`}
                         >
                           {statusInfo.label}
                         </span>
