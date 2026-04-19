@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { RESOURCE_TYPES, STATUSES, FACULTIES, getTypeInfo, getStatusInfo } from '../constants';
+import { RESOURCE_TYPES, STATUSES, FACULTIES, getTypeInfo, getStatusInfo, getUnitLabel } from '../constants';
 import { resourceApi } from '../services/api';
 import ResourceDetailModal from '../components/ResourceDetailModal'
 
@@ -330,18 +330,26 @@ export default function Catalogue() {
               return (
                 <div
                   key={resource.resourceId}
-                  className={`relative group bg-white rounded-2xl border border-slate-100 p-1 flex flex-col transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 ${!resource.isBookable ? 'opacity-80' : ''
-                    }`}
+                  className={`relative group ${!resource.isBookable ? 'bg-slate-100' : 'bg-white'} rounded-2xl border border-slate-100 p-1 flex flex-col transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2`}
                   id={`resource-card-${resource.resourceId}`}
                   style={{ animationDelay: `${i * 50}ms` }}
                   onClick={() => setSelectedResource(resource)}
                 >
                   {!resource.isBookable && (
-                    <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-10 flex justify-center pointer-events-none">
-                      <span className="px-4 py-1.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-2xl">
-                        Unavailable
-                      </span>
-                    </div>
+                    <>
+                      {/* Decorative Mesh Overlay */}
+                      <div 
+                        className="absolute inset-0 z-0 pointer-events-none rounded-2xl opacity-[0.05]" 
+                        style={{ 
+                          backgroundImage: 'repeating-linear-gradient(45deg, #64748b, #64748b 1px, transparent 1px, transparent 12px), repeating-linear-gradient(-45deg, #64748b, #64748b 1px, transparent 1px, transparent 12px)',
+                        }} 
+                      />
+                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-10 flex justify-center pointer-events-none">
+                        <span className="px-4 py-1.5 bg-slate-900/80 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-widest rounded-full shadow-2xl">
+                          Unavailable
+                        </span>
+                      </div>
+                    </>
                   )}
 
                   <div
@@ -389,7 +397,7 @@ export default function Catalogue() {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-[#334155]">
                         <UsersIcon size={14} className="text-[#64748B]" />
-                        <span className="font-medium">{resource.capacity} {resource.capacity === 1 ? 'unit' : 'seats'}</span>
+                        <span className="font-medium">{resource.capacity} {getUnitLabel(resource.type, resource.capacity)}</span>
                       </div>
                       {resource.availableFrom && (
                         <div className="flex items-center gap-2 text-xs text-[#334155] col-span-2">
@@ -400,7 +408,7 @@ export default function Catalogue() {
                     </div>
                   </div>
 
-                  <div className="px-5 py-4 border-t border-slate-50 flex items-center justify-between bg-slate-50/30 rounded-b-2xl">
+                  <div className={`px-5 py-4 border-t border-slate-100 flex items-center justify-between ${!resource.isBookable ? 'bg-slate-200/30' : 'bg-slate-50/30'} rounded-b-2xl`}>
                     <button
                       className="text-sm font-bold text-[#334155] hover:text-[#4F8CFF] flex items-center gap-1 transition-colors"
                       onClick={(e) => { e.stopPropagation(); setSelectedResource(resource); }}

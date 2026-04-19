@@ -28,57 +28,31 @@ const FeedbackList = ({ resourceId }) => {
   const showFeedback = Array.isArray(feedback) ? feedback.slice(0, 2) : [];
 
   return (
-    <div className="feedback-list" style={{
-      marginTop: 24,
-      marginBottom: 8,
-      maxWidth: '100%',
-      boxSizing: 'border-box',
-      maxHeight: 220,
-      overflowY: 'auto',
-      paddingRight: 8
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-        <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: '#fff' }}>Feedback</h3>
-        {typeof averageRating === "number" && !isNaN(averageRating) && (
-          <span style={{ fontSize: 15, color: '#fbbf24', fontWeight: 600, background: 'rgba(251,191,36,0.08)', borderRadius: 8, padding: '2px 10px' }}>
-            ★ {averageRating.toFixed(2)} / 5
-          </span>
-        )}
-      </div>
+    <div className="feedback-list">
       {showFeedback.length === 0 ? (
-        <p style={{ color: '#aaa', fontSize: 15, margin: '12px 0' }}>No feedback yet.</p>
+        <p className="text-[#94A3B8] text-sm italic py-4">No reviews shared for this facility yet.</p>
       ) : (
-        <ul style={{ padding: 0, margin: 0, listStyle: 'none', maxWidth: '100%' }}>
+        <ul className="space-y-4 p-0 m-0 list-none">
           {showFeedback.map(fb => (
-            <li key={fb.feedbackId} style={{
-              background: 'rgba(36,41,47,0.7)',
-              borderRadius: 10,
-              marginBottom: 16,
-              padding: '14px 18px',
-              boxShadow: '0 2px 8px 0 rgba(0,0,0,0.04)',
-              border: '1px solid #23272f',
-              color: '#e5e7eb',
-              maxWidth: '100%',
-              overflowWrap: 'break-word',
-              wordBreak: 'break-word',
-              boxSizing: 'border-box',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                <span style={{ color: '#fbbf24', fontWeight: 600, fontSize: 16 }}>★ {fb.rating} / 5</span>
-                <span style={{ fontSize: 13, color: '#888', marginLeft: 'auto' }}>{new Date(fb.createdAt).toLocaleString()}</span>
+            <li key={fb.feedbackId} className="bg-slate-50 border border-slate-100 rounded-[20px] p-5 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[#fbbf24] font-bold text-sm">★ {fb.rating} / 5</span>
+                <span className="text-[10px] text-[#94A3B8] font-bold ml-auto uppercase tracking-wider">
+                  {new Date(fb.createdAt).toLocaleDateString()}
+                </span>
               </div>
-              <div style={{ fontSize: 15, color: '#fff', marginBottom: 2 }}>{fb.comment}</div>
+              <div className="text-sm text-[#334155] font-medium leading-relaxed">{fb.comment}</div>
             </li>
           ))}
         </ul>
       )}
       {Array.isArray(feedback) && feedback.length > 2 && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
+        <div className="flex justify-center mt-6">
           <button
-            style={{ background: '#2563eb', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 22px', fontWeight: 600, fontSize: 15, cursor: 'pointer', boxShadow: '0 2px 8px 0 rgba(37,99,235,0.08)' }}
+            className="px-6 py-2 bg-white border border-slate-200 text-[#1E293B] text-xs font-bold rounded-lg hover:bg-slate-50 transition-all"
             onClick={() => window.location.href = `/feedbacks/${resourceId}`}
           >
-            View More
+            Read All Reviews
           </button>
         </div>
       )}
