@@ -27,6 +27,7 @@ import {
 import { resourceApi } from '../services/api'
 import Footer from '../components/Footer'
 import Navbar from '../components/Navbar'
+import ContactSection from '../components/ContactSection'
 
 export default function HomePage() {
   const [stats, setStats] = useState({ total: 0, active: 0, capacity: 0 })
@@ -406,6 +407,8 @@ export default function HomePage() {
         </div>
 
       </section>
+
+      <ContactSection />
 
       {/* Quick Actions Hub Replacement */}
       <section className="px-5 md:px-12 py-24 md:py-32 relative overflow-hidden" id="quick-actions">

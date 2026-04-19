@@ -61,6 +61,17 @@ export default function Navbar() {
         }, 300);
     };
 
+    const handleContactClick = () => {
+        if (location.pathname === '/') {
+            document.getElementById('contact-us')?.scrollIntoView({ behavior: 'smooth' });
+            return;
+        }
+        navigate('/');
+        setTimeout(() => {
+            document.getElementById('contact-us')?.scrollIntoView({ behavior: 'smooth' });
+        }, 300);
+    };
+
     return (
         <>
             {isLoggingOut && <SpaceLoader message="Disconnecting from SpaceLink..." fullScreen={true} />}
@@ -83,10 +94,13 @@ export default function Navbar() {
                         <>
                             {/* ✅ Added from Main: Home & About scroll logic */}
                             <Link to="/" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Home</Link>
-                            <button onClick={handleAboutClick} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 bg-transparent border-none cursor-pointer focus:outline-none">
-                                About
-                            </button>
                             <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Catalogue</Link>
+                            <button onClick={handleAboutClick} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 bg-transparent border-none cursor-pointer focus:outline-none">
+                                About Us
+                            </button>
+                            <button onClick={handleContactClick} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 bg-transparent border-none cursor-pointer focus:outline-none">
+                                Contact Us
+                            </button>
 
 
                             <Link to="/login" className="ml-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white border border-white/20 hover:border-blue-400 hover:bg-blue-500/10 no-underline">
@@ -98,6 +112,9 @@ export default function Navbar() {
                             <Link to="/dashboard" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Dashboard</Link>
                             <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Catalogue</Link>
                             <Link to={bookingPath} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Booking</Link>
+                            <button onClick={handleContactClick} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 bg-transparent border-none cursor-pointer focus:outline-none">
+                                Contact Us
+                            </button>
 
                             <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:text-red-400 hover:bg-red-400/10 no-underline flex items-center gap-1">
                                 <AlertCircle size={14} /> Report Issue
