@@ -39,6 +39,16 @@ export const resourceApi = {
     delete: (resourceId) => api.delete(`/resources/${resourceId}`),
 }
 
+// ─── Feedback endpoints ───
+
+export const feedbackApi = {
+    // GET /api/feedback/all
+    getAll: () => api.get('/feedback/all'),
+
+    // DELETE /api/feedback/:id
+    delete: (feedbackId) => api.delete(`/feedback/${feedbackId}`),
+}
+
 // Get booking history (audit trail)
 export const getBookingHistory = (bookingId) =>
     Historyapi.get(`/${bookingId}/history`).then((res) => res.data);
