@@ -88,10 +88,6 @@ export default function Navbar() {
                             </button>
                             <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Catalogue</Link>
 
-                            {/* ✅ Added from Main: Report Issue Link */}
-                            <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:text-red-400 hover:bg-red-400/10 no-underline flex items-center gap-1">
-                                <AlertCircle size={14} /> Report Issue
-                            </Link>
 
                             <Link to="/login" className="ml-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white border border-white/20 hover:border-blue-400 hover:bg-blue-500/10 no-underline">
                                 Login
@@ -102,6 +98,10 @@ export default function Navbar() {
                             <Link to="/dashboard" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Dashboard</Link>
                             <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Catalogue</Link>
                             <Link to={bookingPath} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Booking</Link>
+
+                            <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:text-red-400 hover:bg-red-400/10 no-underline flex items-center gap-1">
+                                <AlertCircle size={14} /> Report Issue
+                            </Link>
 
                             {/* YOUR PROFILE DROPDOWN AREA */}
                             <div className="relative ml-4" ref={dropdownRef}>
