@@ -1,14 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import { PlusCircle, Search, Clock, CheckCircle2, XCircle, AlertCircle } from 'lucide-react';
+import { PlusCircle, Search, Clock, CheckCircle2, XCircle, AlertCircle, Timer } from 'lucide-react';
 
 const API_URL = 'http://localhost:8090/api/tickets';
+
+// Helper: calculate elapsed time from a date string to now (or to an end date)
+const getElapsedTime = (startStr, endStr = null) => {
+  if (!startStr) return null;
+  const start = new Date(startStr);
+  const end = endStr ? new Date(endStr) : new Date();
+  const diffMs = end - start;
+  if (diffMs < 0) return null;
+
+  const mins = Math.floor(diffMs / 60000);
+  const hrs = Math.floor(mins / 60);
+  const days = Math.floor(hrs / 24);
+
+  if (days > 0) return `${days}d ${hrs % 24}h`;
+  if (hrs > 0) return `${hrs}h ${mins % 60}m`;
+  return `${mins}m`;
+};
 
 export default function TicketDashboard() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+
+  const role = localStorage.getItem('role') || 'USER';
+  const isAdmin = role.toUpperCase() === 'ADMIN';
 
   useEffect(() => {
     fetchTickets();
@@ -18,7 +38,6 @@ export default function TicketDashboard() {
     try {
       setLoading(true);
       const url = filter ? `${API_URL}?status=${filter}` : API_URL;
-      const role = localStorage.getItem('role') || 'USER';
       const userId = localStorage.getItem('userId') || '';
       const response = await axios.get(url, {
         headers: { 'X-User-Role': role, 'X-User-Id': userId }
@@ -39,6 +58,45 @@ export default function TicketDashboard() {
       case 'REJECTED': return <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-semibold flex items-center gap-1"><XCircle size={14}/> Rejected</span>;
       default: return <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold">{status}</span>;
     }
+  };
+
+  const getSlaIndicator = (ticket) => {
+    // If resolved, show total resolution time
+    if (ticket.resolvedAt) {
+      const elapsed = getElapsedTime(ticket.createdAt, ticket.resolvedAt);
+      return (
+        <span className="flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-1 rounded-lg">
+          <CheckCircle2 size={13} /> {elapsed}
+        </span>
+      );
+    }
+
+    // If first response received, show time since creation (still open)
+    if (ticket.firstResponseAt) {
+      const elapsed = getElapsedTime(ticket.createdAt);
+      return (
+        <span className="flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg">
+          <Timer size={13} /> {elapsed}
+        </span>
+      );
+    }
+
+    // No response yet — show waiting time with urgency color
+    const elapsed = getElapsedTime(ticket.createdAt);
+    if (!elapsed) return <span className="text-xs text-gray-400">—</span>;
+
+    const start = new Date(ticket.createdAt);
+    const hoursWaiting = (new Date() - start) / 3600000;
+
+    return (
+      <span className={`flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-lg ${
+        hoursWaiting > 24 ? 'text-red-700 bg-red-50' : 
+        hoursWaiting > 4 ? 'text-orange-700 bg-orange-50' : 
+        'text-blue-700 bg-blue-50'
+      }`}>
+        <Clock size={13} className="animate-pulse" /> {elapsed}
+      </span>
+    );
   };
 
   return (
@@ -86,30 +144,34 @@ export default function TicketDashboard() {
                 <tr className="bg-gray-50 border-b border-gray-100 text-gray-500 text-sm font-semibold uppercase tracking-wider text-left">
                   <th className="p-5">ID</th>
                   <th className="p-5">Category</th>
-                  <th className="p-5 w-1/3">Description</th>
+                  <th className="p-5 w-1/4">Description</th>
                   <th className="p-5">Priority</th>
                   <th className="p-5">Status</th>
+                  <th className="p-5">
+                    <span className="flex items-center gap-1"><Timer size={14}/> SLA Timer</span>
+                  </th>
                   <th className="p-5 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr><td colSpan="6" className="p-8 text-center text-gray-500">Loading tickets...</td></tr>
+                  <tr><td colSpan="7" className="p-8 text-center text-gray-500">Loading tickets...</td></tr>
                 ) : tickets.length === 0 ? (
-                  <tr><td colSpan="6" className="p-8 text-center text-gray-500">No tickets found.</td></tr>
+                  <tr><td colSpan="7" className="p-8 text-center text-gray-500">No tickets found.</td></tr>
                 ) : (
                   tickets.map((ticket) => (
                     <tr key={ticket.id} className="hover:bg-indigo-50/30 transition-colors group">
                       <td className="p-5 font-medium text-gray-900">#{ticket.id}</td>
                       <td className="p-5 text-gray-600">{ticket.category}</td>
                       <td className="p-5">
-                        <p className="truncate w-64 text-gray-600">{ticket.description}</p>
+                        <p className="truncate w-52 text-gray-600">{ticket.description}</p>
                       </td>
                       <td className="p-5 flex items-center">
                         <span className={`w-2 h-2 rounded-full mr-2 ${ticket.priority === 'High' ? 'bg-red-500' : ticket.priority === 'Medium' ? 'bg-yellow-500' : 'bg-green-500'}`}></span>
                         {ticket.priority}
                       </td>
                       <td className="p-5">{getStatusBadge(ticket.status)}</td>
+                      <td className="p-5">{getSlaIndicator(ticket)}</td>
                       <td className="p-5 text-right">
                         <Link 
                           to={`/tickets/${ticket.id}`} 
