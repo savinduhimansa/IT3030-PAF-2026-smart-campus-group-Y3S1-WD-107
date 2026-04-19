@@ -5,6 +5,7 @@ import { getTypeInfo, getStatusInfo, getUnitLabel } from '../constants'
 import FeedbackList from './FeedbackList'
 import FeedbackForm from './FeedbackForm'
 import BookingModal from './BookingModal'
+import AvailabilityTracker from './AvailabilityTracker'
 import { createBooking } from '../services/api'
 
 // Pass 'user' prop (null if not logged in)
@@ -172,6 +173,20 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
 
             <div className="max-h-[220px] overflow-y-auto pr-4 mb-4 custom-scrollbar">
               <FeedbackList resourceId={resource.resourceId} key={feedbackRefresh} />
+            </div>
+
+            {/* Resource Availability Tracker */}
+            <div className="mt-12">
+              <h4 className="text-[11px] font-black text-[#94A3B8] uppercase tracking-[0.2em] mb-4 flex items-center gap-3">
+                Live Availability
+                <div className="flex-1 h-px bg-slate-100" />
+              </h4>
+              <AvailabilityTracker
+                resourceId={resource.resourceId}
+                resourceName={resource.name}
+                availableFrom={resource.availableFrom}
+                availableTo={resource.availableTo}
+              />
             </div>
 
             {/* Book Now Action */}
