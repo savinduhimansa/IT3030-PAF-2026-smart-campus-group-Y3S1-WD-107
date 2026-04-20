@@ -83,4 +83,39 @@ public class AuthController {
             return ResponseEntity.status(400).body(response);
         }
     }
+
+    // ==========================================
+    // 7. Google Login Endpoint
+    // ==========================================
+    @PostMapping("/google")
+    public ResponseEntity<Map<String, Object>> googleLogin(@RequestBody GoogleLoginRequest request) {
+        // Authenticate or register the user via Google details
+        User loggedInUser = userService.googleLogin(request.getEmail(), request.getName(), request.getGoogleId());
+
+        // Create a response map to match the exact JSON structure expected by the frontend
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("id", loggedInUser.getId());
+        responseData.put("email", loggedInUser.getEmail());
+        responseData.put("role", loggedInUser.getRole());
+        responseData.put("name", loggedInUser.getUsername());
+        responseData.put("token", "auth-token-success"); // Dummy token for frontend validation
+
+        return ResponseEntity.ok(responseData);
+    }
+
+    // DTO (Data Transfer Object) inner class to capture Google Login payload from React
+    public static class GoogleLoginRequest {
+        private String email;
+        private String name;
+        private String googleId;
+
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+
+        public String getGoogleId() { return googleId; }
+        public void setGoogleId(String googleId) { this.googleId = googleId; }
+    }
 }

@@ -92,13 +92,13 @@ export const deleteBooking = (role, id) =>
     Historyapi.delete(`/${id}`, { headers: { 'X-User-Role': role } });
 
 // ─── Availability endpoints ───
-export const getBookedSlots = (resourceId, date) => 
+export const getBookedSlots = (resourceId, date) =>
     Historyapi.get('/booked-slots', { params: { resourceId, date } }).then(res => res.data);
 
-export const getFreeSlots = (resourceId, date) => 
+export const getFreeSlots = (resourceId, date) =>
     Historyapi.get('/free-slots', { params: { resourceId, date } }).then(res => res.data);
 
-export const checkAvailability = (resourceId, date, startTime, endTime) => 
+export const checkAvailability = (resourceId, date, startTime, endTime) =>
     Historyapi.get('/availability', { params: { resourceId, date, startTime, endTime } }).then(res => res.data);
 
 // ─── Auth endpoints (Member 4) ───
@@ -108,6 +108,9 @@ export const authApi = {
 
     // POST /api/auth/login
     login: (credentials) => api.post('/auth/login', credentials),
+
+    // POST /api/auth/google
+    googleLogin: (data) => api.post('/auth/google', data),
 };
 
 export default Historyapi
