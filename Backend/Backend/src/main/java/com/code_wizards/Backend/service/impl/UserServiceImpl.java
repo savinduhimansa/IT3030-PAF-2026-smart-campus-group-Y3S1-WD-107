@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
     }
 
     // ==========================================
-    // NEW: Change Password Logic
+    // Change Password Logic
     // ==========================================
     @Override
     public void changePassword(Long userId, String currentPassword, String newPassword) {
@@ -99,6 +99,33 @@ public class UserServiceImpl implements UserService {
             userRepository.save(user);
         } else {
             throw new RuntimeException("Current password is incorrect!");
+        }
+    }
+
+    // ==========================================
+    // NEW: Google Login Logic
+    // ==========================================
+    @Override
+    public User googleLogin(String email, String name, String googleId) {
+        Optional<User> existingUser = userRepository.findByEmail(email);
+
+        if (existingUser.isPresent()) {
+            // 1. If user already exists in our database, just log them in
+            return existingUser.get();
+        } else {
+            // 2. If it's a new user from Google, create a new account for them
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setUsername(name);
+
+            // Set a dummy password because they authenticate via Google, not with a typed password
+            newUser.setPassword("GOOGLE_AUTH_USER_NO_PASSWORD");
+
+            // Set default role as normal USER
+            newUser.setRole("USER");
+
+            // Save and return the new user
+            return userRepository.save(newUser);
         }
     }
 }

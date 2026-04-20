@@ -20,4 +20,9 @@ public interface UserService {
 
     // Change user password
     void changePassword(Long userId, String currentPassword, String newPassword);
+
+    // ==========================================
+    // NEW: Google Login
+    // ==========================================
+    User googleLogin(String email, String name, String googleId);
 }
