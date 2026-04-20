@@ -51,6 +51,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(BookingNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleBookingNotFoundException(BookingNotFoundException ex, HttpServletRequest request) {
+        ErrorResponse errorDetails = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(UnauthorizedCommentEditException.class)
     public ResponseEntity<ErrorResponse> handleUnauthorizedCommentEditException(UnauthorizedCommentEditException ex, HttpServletRequest request) {
         ErrorResponse errorDetails = ErrorResponse.builder()

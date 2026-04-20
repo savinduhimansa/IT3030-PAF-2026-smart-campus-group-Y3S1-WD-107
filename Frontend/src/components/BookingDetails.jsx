@@ -2,7 +2,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
-import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon } from 'lucide-react';
+import { Plus, Calendar, Clock, MapPin, XCircle, FileText, User as UserIcon, CheckCircle, X as XIcon, QrCode, Download } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { resourceApi, getMyBookings, createBooking, cancelBooking, updateBooking, getBookingHistory } from '../services/api';
 
 import BookingModal from './BookingModal';
@@ -41,6 +42,128 @@ function BookingHistoryModal({ isOpen, onClose, history }) {
     );
 }
 
+// QR modal
+function QRCodeModal({ isOpen, onClose, booking, resourceLabel }) {
+    if (!isOpen || !booking) return null;
+
+    const parseDateSafely = (raw) => {
+        if (!raw) return null;
+        if (typeof raw === 'string') {
+            try {
+                const parsed = parseISO(raw);
+                if (!Number.isNaN(parsed.getTime())) return parsed;
+            } catch {
+                // ignore
+            }
+            const fallback = new Date(raw);
+            return Number.isNaN(fallback.getTime()) ? null : fallback;
+        }
+        const asDate = new Date(raw);
+        return Number.isNaN(asDate.getTime()) ? null : asDate;
+    };
+
+    const dateLabel = (() => {
+        if (booking.bookingDate) {
+            try {
+                return format(parseISO(booking.bookingDate), 'MMM d, yyyy');
+            } catch {
+                return booking.bookingDate;
+            }
+        }
+        const dt = parseDateSafely(booking.startTime);
+        return dt ? format(dt, 'MMM d, yyyy') : 'N/A';
+    })();
+
+    const timeLabel = (() => {
+        const rawStart = booking?.startTime;
+        const rawEnd = booking?.endTime;
+        const start = typeof rawStart === 'string' ? (rawStart.includes('T') ? format(parseDateSafely(rawStart), 'HH:mm') : rawStart.slice(0, 5)) : '—';
+        const end = typeof rawEnd === 'string' ? (rawEnd.includes('T') ? format(parseDateSafely(rawEnd), 'HH:mm') : rawEnd.slice(0, 5)) : '—';
+        return `${start} - ${end}`;
+    })();
+
+    const verifyUrl = booking?.verifyToken
+        ? `${window.location.origin}/verify/${booking.verifyToken}`
+        : '';
+
+    const handleDownload = () => {
+        const svg = document.getElementById('checkin-qr-svg');
+        if (!svg) return;
+
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svg);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const scale = 4; // Higher-res export
+            canvas.width = 220 * scale;
+            canvas.height = 220 * scale;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            URL.revokeObjectURL(url);
+
+            const pngUrl = canvas.toDataURL('image/png');
+            const a = document.createElement('a');
+            a.href = pngUrl;
+            a.download = `booking-checkin-${booking?.id || 'qr'}.png`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        };
+        img.src = url;
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 px-4">
+            <div className="bg-white w-full max-w-md relative p-6" style={{ borderRadius: 16 }}>
+                <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-700">
+                    <XIcon size={22} />
+                </button>
+
+                <div className="flex items-center gap-2">
+                    <QrCode size={18} className="text-[#4F46E5]" />
+                    <h2 className="text-lg font-bold text-[#0F172A]">Check-in QR Code</h2>
+                </div>
+
+                <div className="text-sm text-[#64748B] mt-2 font-medium">
+                    {resourceLabel} • {dateLabel} • {timeLabel}
+                </div>
+
+                <div className="flex justify-center py-6">
+                    {booking?.verifyToken ? (
+                        <QRCodeSVG id="checkin-qr-svg" size={220} value={verifyUrl} />
+                    ) : (
+                        <div className="text-sm text-[#64748B]">QR code not available for this booking.</div>
+                    )}
+                </div>
+
+                <div className="text-xs text-[#64748B] text-center mb-4">
+                    Scan this code at the facility entrance
+                </div>
+
+                <button
+                    type="button"
+                    onClick={handleDownload}
+                    disabled={!booking?.verifyToken}
+                    className="w-full flex items-center justify-center gap-2 bg-[#4F46E5] text-white px-4 py-2.5 rounded-lg font-semibold shadow hover:bg-[#4338CA] transition-colors disabled:opacity-60 disabled:hover:bg-[#4F46E5]"
+                    style={{ borderRadius: 8, fontFamily: 'Inter, sans-serif' }}
+                >
+                    <Download size={18} />
+                    Download QR
+                </button>
+            </div>
+        </div>
+    );
+}
+
 
 
 
@@ -69,6 +192,9 @@ function BookingDashboard({ user }) {
     const [historyModalOpen, setHistoryModalOpen] = useState(false);
     const [historyData, setHistoryData] = useState([]);
     const [resourceNameById, setResourceNameById] = useState({});
+
+    const [showQR, setShowQR] = useState(false);
+    const [selectedBooking, setSelectedBooking] = useState(null);
 
     const [searchParams] = useSearchParams();
     const resourceIdFromUrl = searchParams.get('resourceId');
@@ -162,6 +288,16 @@ function BookingDashboard({ user }) {
         return resourceNameById[key] || id;
     };
 
+    const openQR = (booking) => {
+        setSelectedBooking(booking);
+        setShowQR(true);
+    };
+
+    const closeQR = () => {
+        setShowQR(false);
+        setSelectedBooking(null);
+    };
+
     // Handles both create and update
     const handleSubmitBooking = async (formData) => {
         try {
@@ -176,7 +312,7 @@ function BookingDashboard({ user }) {
             setPrefillResource(null);
             fetchBookings();
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to save booking.');
+            setError(err.response?.data?.message || err.response?.data?.error || 'Failed to save booking.');
         }
     };
 
@@ -186,7 +322,7 @@ function BookingDashboard({ user }) {
             await cancelBooking(user.id, id);
             fetchBookings();
         } catch (err) {
-            setError(err.response?.data?.error || 'Failed to cancel booking.');
+            setError(err.response?.data?.message || err.response?.data?.error || 'Failed to cancel booking.');
         }
     };
 
@@ -275,6 +411,16 @@ function BookingDashboard({ user }) {
                                                 <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
                                             </button>
                                         )}
+                                        {b.status === 'APPROVED' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => openQR(b)}
+                                                className="text-xs font-semibold px-3 py-1.5 text-[#4F46E5] hover:text-[#0F172A] hover:bg-[#F1F5F9] rounded-md transition-colors border border-[#E2E8F0]"
+                                                title="Show QR Code"
+                                            >
+                                                Show QR Code
+                                            </button>
+                                        )}
                                         {(b.status === 'PENDING' || b.status === 'APPROVED') && (
                                             <button onClick={() => handleCancelBooking(b.id)} className="text-[#EF4444] hover:bg-[#FEF2F2] p-2 rounded-full transition-colors" title="Cancel Booking">
                                                 <XCircle size={22} />
@@ -321,6 +467,13 @@ function BookingDashboard({ user }) {
                     isOpen={historyModalOpen}
                     onClose={() => setHistoryModalOpen(false)}
                     history={historyData}
+                />
+
+                <QRCodeModal
+                    isOpen={showQR}
+                    onClose={closeQR}
+                    booking={selectedBooking}
+                    resourceLabel={selectedBooking ? getResourceLabel(selectedBooking) : '—'}
                 />
             </main>
         </div>
