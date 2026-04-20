@@ -30,6 +30,7 @@ import Profile from './pages/Profile' // New Import
 import ChangePassword from './pages/ChangePassword' // New Import
 import PrivacyPolicy from './pages/PrivacyPolicy'
 import TermsConditions from './pages/TermsConditions'
+import VerifyPage from './pages/VerifyPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 
 const baseNavItems = [
@@ -62,7 +63,9 @@ function AppLayout() {
   const navigate = useNavigate();
 
   const closeSidebar = () => setSidebarOpen(false);
+  const hideChrome = location.pathname.startsWith('/verify/');
   const hideSidebar =
+    hideChrome ||
     location.pathname.includes('feedback') ||
     location.pathname === '/find-best-lab' ||
     location.pathname === '/register' ||
@@ -150,9 +153,10 @@ function AppLayout() {
       )}
 
       <main className={hideSidebar ? 'flex-1 min-h-screen' : 'ml-0 md:ml-[260px] flex-1 min-h-screen'}>
-        <Navbar /> {/* Ensure Navbar is displayed globally inside AppLayout */}
-        <div className="pt-20"> {/* Add padding for the fixed navbar */}
+        {!hideChrome && <Navbar />}{/* Hide navbar for standalone verify page */}
+        <div className={hideChrome ? '' : 'pt-20'}>
           <Routes>
+            <Route path="/verify/:token" element={<VerifyPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route
               path="/admin"

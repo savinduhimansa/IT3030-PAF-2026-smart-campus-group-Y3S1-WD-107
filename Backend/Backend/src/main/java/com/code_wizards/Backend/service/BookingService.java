@@ -1,10 +1,12 @@
 package com.code_wizards.Backend.service;
 
+import com.code_wizards.Backend.dto.VerifyResponse;
 import com.code_wizards.Backend.entity.Booking;
 import com.code_wizards.Backend.entity.BookingStatus;
 import com.code_wizards.Backend.entity.BookingStatusHistory;
 import com.code_wizards.Backend.entity.Resource;
 import com.code_wizards.Backend.entity.ResourceStatus;
+import com.code_wizards.Backend.exception.BookingNotFoundException;
 import com.code_wizards.Backend.repository.BookingHistoryRepository;
 import com.code_wizards.Backend.repository.BookingRepository;
 import com.code_wizards.Backend.repository.ResourceRepository;
@@ -17,6 +19,7 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -87,19 +90,28 @@ public class BookingService {
     }
 
     public List<Booking> getUserBookings(Long userId) {
-        return bookingRepository.findByUserId(userId);
+        List<Booking> bookings = bookingRepository.findByUserId(userId);
+        backfillVerifyTokens(bookings);
+        return bookings;
     }
 
     public List<Booking> getBookingsByUserId(Long userId) {
-        return getUserBookings(userId);
+        List<Booking> bookings = getUserBookings(userId);
+        // getUserBookings already backfills; keep this for safety if behavior changes
+        backfillVerifyTokens(bookings);
+        return bookings;
     }
 
     public List<Booking> getAllBookings() {
-        return bookingRepository.findAll();
+        List<Booking> bookings = bookingRepository.findAll();
+        backfillVerifyTokens(bookings);
+        return bookings;
     }
 
     public List<Booking> getAllBookingsByStatus(BookingStatus status) {
-        return bookingRepository.findByStatus(status);
+        List<Booking> bookings = bookingRepository.findByStatus(status);
+        backfillVerifyTokens(bookings);
+        return bookings;
     }
 
     @Transactional
@@ -133,10 +145,45 @@ public class BookingService {
 
         // Step 3: Approve booking and UPDATE RESOURCE AVAILABILITY
         booking.setStatus(BookingStatus.APPROVED);
+        booking.setVerifyToken(UUID.randomUUID().toString());
         logStatusChange(booking, BookingStatus.APPROVED, changeBy);
 
         // Step 4: Save both entities
         return bookingRepository.save(booking);
+    }
+
+    @Transactional(readOnly = true)
+    public VerifyResponse verifyBooking(String token) {
+        Booking booking = bookingRepository.findByVerifyToken(token)
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
+
+        if (booking.getStatus() != BookingStatus.APPROVED) {
+            return new VerifyResponse(false, "Booking is not approved", null, null, null, null, null, 0);
+        }
+
+        LocalDate bookingDate = booking.getStartTime() != null ? booking.getStartTime().toLocalDate() : null;
+        LocalDate today = LocalDate.now();
+
+        if (bookingDate == null) {
+            return new VerifyResponse(false, "Invalid booking time", null, null, null, null, null, 0);
+        }
+
+        if (!today.equals(bookingDate)) {
+            return new VerifyResponse(
+                    false,
+                    "Wrong check-in date (Today: " + today + ", Booking: " + bookingDate + ")",
+                    null, null, null, null, null, 0);
+        }
+
+        return new VerifyResponse(
+                true,
+                null,
+                booking.getResourceId(),
+                booking.getUserId(),
+                booking.getStartTime(),
+                booking.getEndTime(),
+                booking.getPurpose(),
+                booking.getExpectedAttendees());
     }
 
     @Transactional
@@ -193,6 +240,26 @@ public class BookingService {
                 java.time.LocalDateTime.now(),
                 changedBy);
         bookingStatusHistoryRepository.save(history);
+    }
+
+    private void backfillVerifyTokens(List<Booking> bookings) {
+        if (bookings == null || bookings.isEmpty()) return;
+
+        boolean changed = false;
+        for (Booking booking : bookings) {
+            if (booking == null) continue;
+            if (booking.getStatus() == BookingStatus.APPROVED) {
+                String token = booking.getVerifyToken();
+                if (token == null || token.isBlank()) {
+                    booking.setVerifyToken(UUID.randomUUID().toString());
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed) {
+            bookingRepository.saveAll(bookings);
+        }
     }
 
     private Resource requireBookableActiveResource(Long resourceId) {

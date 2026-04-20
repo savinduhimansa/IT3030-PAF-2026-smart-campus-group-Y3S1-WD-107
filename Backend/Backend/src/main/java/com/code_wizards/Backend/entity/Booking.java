@@ -37,6 +37,9 @@ public class Booking {
 
     private String specialReqs;
 
+    @Column(name = "verify_token")
+    private String verifyToken;
+
     private Integer quantity; // for equipment-type bookings (cameras, projectors, etc.)
 
     // Getters and Setters
@@ -159,6 +162,16 @@ public class Booking {
 
     public void setSpecialReqs(String specialReqs) {
         this.specialReqs = specialReqs;
+    }
+
+    @JsonProperty("verifyToken")
+    public String getVerifyToken() {
+        return verifyToken;
+    }
+
+    @JsonProperty("verifyToken")
+    public void setVerifyToken(String verifyToken) {
+        this.verifyToken = verifyToken;
     }
 
     public Integer getQuantity() {

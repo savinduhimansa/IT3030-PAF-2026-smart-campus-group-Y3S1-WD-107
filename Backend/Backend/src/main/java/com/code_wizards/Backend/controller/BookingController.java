@@ -1,5 +1,6 @@
 package com.code_wizards.Backend.controller;
 
+import com.code_wizards.Backend.dto.VerifyResponse;
 import com.code_wizards.Backend.entity.Booking;
 import com.code_wizards.Backend.entity.BookingStatus;
 import com.code_wizards.Backend.entity.BookingStatusHistory;
@@ -106,6 +107,12 @@ public class BookingController {
             return ResponseEntity.status(403).build();
         }
         return ResponseEntity.ok(bookingService.approveBooking(id, userId));
+    }
+
+    // Public endpoint (no auth headers required)
+    @GetMapping("/verify/{token}")
+    public ResponseEntity<VerifyResponse> verifyBooking(@PathVariable String token) {
+        return ResponseEntity.ok(bookingService.verifyBooking(token));
     }
 
     @PostMapping("/{id}/reject")
