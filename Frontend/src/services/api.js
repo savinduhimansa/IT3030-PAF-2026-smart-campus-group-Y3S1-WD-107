@@ -101,6 +101,7 @@ export const getFreeSlots = (resourceId, date) =>
 export const checkAvailability = (resourceId, date, startTime, endTime) =>
     Historyapi.get('/availability', { params: { resourceId, date, startTime, endTime } }).then(res => res.data);
 
+// ─── Auth & User Management endpoints (Member 4) ───
 // Public: Verify booking by QR token (NO auth headers)
 export const verifyBooking = async (token) => {
     const response = await axios.get(`/api/bookings/verify/${token}`);
@@ -117,6 +118,15 @@ export const authApi = {
 
     // POST /api/auth/google
     googleLogin: (data) => api.post('/auth/google', data),
+
+    // GET /api/auth/all (Admin only - fetch all users)
+    getAllUsers: () => api.get('/auth/all'),
+
+    // PUT /api/auth/:id (Admin only - update user details like role)
+    updateUser: (userId, userData) => api.put(`/auth/${userId}`, userData),
+
+    // DELETE /api/auth/:id (Admin only - delete a user)
+    deleteUser: (userId) => api.delete(`/auth/${userId}`),
 };
 
 export default Historyapi

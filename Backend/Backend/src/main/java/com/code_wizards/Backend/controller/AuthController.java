@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List; // ADDED: Import for List
 import java.util.Map;
 
 @RestController
@@ -47,6 +48,15 @@ public class AuthController {
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    // ==========================================
+    // NEW: 8. Get All Users Endpoint (For Admin Dashboard)
+    // ==========================================
+    @GetMapping("/all")
+    public ResponseEntity<List<User>> getAllUsers() {
+        // Fetch all users to display in the User Management table
+        return ResponseEntity.ok(userService.getAllUsers());
     }
 
     // 4. Update User Endpoint (Modify existing user details)

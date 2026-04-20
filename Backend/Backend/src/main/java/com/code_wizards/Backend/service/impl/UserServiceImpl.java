@@ -6,6 +6,7 @@ import com.code_wizards.Backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List; // ADDED: Import for List
 import java.util.Optional;
 
 @Service
@@ -50,6 +51,15 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RuntimeException("User not found!"));
     }
 
+    // ==========================================
+    // NEW: Get All Users Logic for Admin Dashboard
+    // ==========================================
+    @Override
+    public List<User> getAllUsers() {
+        // Retrieve all users from the database
+        return userRepository.findAll();
+    }
+
     @Override
     public User updateUser(Long id, User updatedUser) {
         // Find the existing user
@@ -65,7 +75,7 @@ public class UserServiceImpl implements UserService {
             existingUser.setPassword(updatedUser.getPassword());
         }
 
-        // Only update the role if a new one is provided
+        // Only update the role if a new one is provided (Crucial for assigning TECHNICIAN role)
         if (updatedUser.getRole() != null && !updatedUser.getRole().isEmpty()) {
             existingUser.setRole(updatedUser.getRole());
         }
@@ -103,7 +113,7 @@ public class UserServiceImpl implements UserService {
     }
 
     // ==========================================
-    // NEW: Google Login Logic
+    // Google Login Logic
     // ==========================================
     @Override
     public User googleLogin(String email, String name, String googleId) {
