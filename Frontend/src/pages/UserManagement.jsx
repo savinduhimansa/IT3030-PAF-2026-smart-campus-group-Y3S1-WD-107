@@ -1,0 +1,276 @@
+import React, { useState, useEffect } from 'react';
+import { authApi } from '../services/api';
+import { Users, Shield, Wrench, Trash2, Search, AlertCircle } from 'lucide-react';
+
+const UserManagement = () => {
+    const [users, setUsers] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [filterRole, setFilterRole] = useState('ALL');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    // NEW: State for the custom delete modal
+    const [deleteModal, setDeleteModal] = useState({ isOpen: false, userId: null, username: '' });
+
+    // Fetch all users on component mount
+    useEffect(() => {
+        fetchUsers();
+    }, []);
+
+    const fetchUsers = async () => {
+        setIsLoading(true);
+        try {
+            const response = await authApi.getAllUsers();
+            setUsers(response.data || response);
+            setError('');
+        } catch (err) {
+            console.error("Error fetching users:", err);
+            setError('Failed to load users. Please try again.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Handle Role Update
+    const handleRoleChange = async (userId, newRole) => {
+        try {
+            const userToUpdate = users.find(u => u.id === userId);
+
+            setUsers(users.map(user => user.id === userId ? { ...user, role: newRole } : user));
+
+            await authApi.updateUser(userId, {
+                username: userToUpdate.username,
+                email: userToUpdate.email,
+                role: newRole
+            });
+
+        } catch (err) {
+            console.error("Error updating role:", err);
+            alert("Failed to update role. Reverting changes.");
+            fetchUsers();
+        }
+    };
+
+    // NEW: Open the custom delete modal
+    const handleDeleteClick = (userId, username) => {
+        setDeleteModal({ isOpen: true, userId, username });
+    };
+
+    // NEW: Execute the delete action from the modal
+    const confirmDelete = async () => {
+        const { userId } = deleteModal;
+        try {
+            setUsers(users.filter(user => user.id !== userId));
+            await authApi.deleteUser(userId);
+            setDeleteModal({ isOpen: false, userId: null, username: '' }); // Close modal on success
+        } catch (err) {
+            console.error("Error deleting user:", err);
+            alert("Failed to delete user.");
+            fetchUsers();
+            setDeleteModal({ isOpen: false, userId: null, username: '' }); // Close modal on error
+        }
+    };
+
+    // Filter Logic
+    const filteredUsers = users.filter(user => {
+        const matchesRole = filterRole === 'ALL' || user.role === filterRole;
+        const matchesSearch = (user.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (user.email || '').toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesRole && matchesSearch;
+    });
+
+    // Stats Calculation
+    const totalUsers = users.length;
+    const totalAdmins = users.filter(u => u.role === 'ADMIN').length;
+    const totalTechnicians = users.filter(u => u.role === 'TECHNICIAN').length;
+
+    return (
+        <div className="min-h-screen bg-[#F8FAFC] p-6 lg:p-8 font-sans animate-in fade-in duration-500 relative">
+
+            {/* Header Section */}
+            <div className="mb-8">
+                <h1 className="text-3xl font-bold text-slate-800 tracking-tight">User Management</h1>
+                <p className="text-slate-500 mt-1">Review and manage all campus system users and roles.</p>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 border-l-4 border-l-blue-500">
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Users</p>
+                        <h2 className="text-3xl font-bold text-slate-800">{isLoading ? '-' : totalUsers}</h2>
+                    </div>
+                    <div className="bg-blue-50 p-3 rounded-lg text-blue-500">
+                        <Users size={24} />
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 border-l-4 border-l-purple-500">
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">System Admins</p>
+                        <h2 className="text-3xl font-bold text-slate-800">{isLoading ? '-' : totalAdmins}</h2>
+                    </div>
+                    <div className="bg-purple-50 p-3 rounded-lg text-purple-500">
+                        <Shield size={24} />
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-center justify-between hover:-translate-y-1 hover:shadow-md transition-all duration-300 border-l-4 border-l-orange-500">
+                    <div>
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Technicians</p>
+                        <h2 className="text-3xl font-bold text-slate-800">{isLoading ? '-' : totalTechnicians}</h2>
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded-lg text-orange-500">
+                        <Wrench size={24} />
+                    </div>
+                </div>
+            </div>
+
+            {/* Filters & Search */}
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+                <div className="flex gap-4 w-full sm:w-auto">
+                    <select
+                        value={filterRole}
+                        onChange={(e) => setFilterRole(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block px-4 py-2.5 outline-none transition-colors"
+                    >
+                        <option value="ALL">All Roles</option>
+                        <option value="USER">Standard Users</option>
+                        <option value="TECHNICIAN">Technicians</option>
+                        <option value="ADMIN">Admins</option>
+                    </select>
+                </div>
+
+                <div className="relative w-full sm:w-72">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-slate-400">
+                        <Search size={18} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search by name or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 px-4 py-2.5 outline-none transition-all"
+                    />
+                </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-3 border border-red-100">
+                    <AlertCircle size={20} />
+                    <p className="text-sm font-medium">{error}</p>
+                </div>
+            )}
+
+            {/* Main Table */}
+            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-slate-600">
+                        <thead className="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200">
+                        <tr>
+                            <th scope="col" className="px-6 py-4 font-semibold">User Details</th>
+                            <th scope="col" className="px-6 py-4 font-semibold">System Role</th>
+                            <th scope="col" className="px-6 py-4 font-semibold text-right">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                        {isLoading ? (
+                            [...Array(5)].map((_, i) => (
+                                <tr key={i} className="animate-pulse">
+                                    <td className="px-6 py-5"><div className="h-10 bg-slate-200 rounded-lg w-48"></div></td>
+                                    <td className="px-6 py-5"><div className="h-8 bg-slate-200 rounded-full w-32"></div></td>
+                                    <td className="px-6 py-5 text-right"><div className="h-8 bg-slate-200 rounded-lg w-8 ml-auto"></div></td>
+                                </tr>
+                            ))
+                        ) : filteredUsers.length > 0 ? (
+                            filteredUsers.map((user) => (
+                                <tr key={user.id} className="hover:bg-slate-50/50 transition-colors group">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="h-10 w-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
+                                                {(user.username || 'U').charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-slate-800">{user.username || 'Unknown User'}</div>
+                                                <div className="text-slate-400 text-xs mt-0.5">{user.email}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <select
+                                            value={user.role || 'USER'}
+                                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                                            className={`text-xs font-bold rounded-full px-4 py-1.5 outline-none cursor-pointer appearance-none text-center transition-all border-2
+                                                    ${user.role === 'ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100' :
+                                                user.role === 'TECHNICIAN' ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100' :
+                                                    'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}
+                                                `}
+                                        >
+                                            <option value="USER">USER</option>
+                                            <option value="TECHNICIAN">TECHNICIAN</option>
+                                            <option value="ADMIN">ADMIN</option>
+                                        </select>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button
+                                            onClick={() => handleDeleteClick(user.id, user.username)}
+                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                            title="Delete User"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="3" className="px-6 py-12 text-center text-slate-500">
+                                    <div className="flex flex-col items-center justify-center">
+                                        <Users size={40} className="text-slate-300 mb-3" />
+                                        <p>No users found matching your search.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* NEW: Custom Delete Confirmation Modal */}
+            {deleteModal.isOpen && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-6">
+                            <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mb-4 border border-red-100">
+                                <AlertCircle className="text-red-500" size={24} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">Delete User</h3>
+                            <p className="text-slate-500 text-sm leading-relaxed">
+                                Are you sure you want to permanently delete <span className="font-semibold text-slate-700">"{deleteModal.username}"</span>? This action cannot be undone and will remove all their access.
+                            </p>
+                        </div>
+                        <div className="bg-slate-50 px-6 py-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                            <button
+                                onClick={() => setDeleteModal({ isOpen: false, userId: null, username: '' })}
+                                className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-xl transition-all"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                className="px-5 py-2.5 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-xl shadow-sm hover:shadow transition-all"
+                            >
+                                Delete User
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
+    );
+};
+
+export default UserManagement;
