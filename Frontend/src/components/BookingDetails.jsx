@@ -77,8 +77,23 @@ function QRCodeModal({ isOpen, onClose, booking, resourceLabel }) {
     const timeLabel = (() => {
         const rawStart = booking?.startTime;
         const rawEnd = booking?.endTime;
-        const start = typeof rawStart === 'string' ? (rawStart.includes('T') ? format(parseDateSafely(rawStart), 'HH:mm') : rawStart.slice(0, 5)) : '—';
-        const end = typeof rawEnd === 'string' ? (rawEnd.includes('T') ? format(parseDateSafely(rawEnd), 'HH:mm') : rawEnd.slice(0, 5)) : '—';
+        const start = (() => {
+            if (typeof rawStart !== 'string') return '—';
+            if (rawStart.includes('T')) {
+                const dt = parseDateSafely(rawStart);
+                return dt ? format(dt, 'HH:mm') : '—';
+            }
+            return rawStart.slice(0, 5);
+        })();
+
+        const end = (() => {
+            if (typeof rawEnd !== 'string') return '—';
+            if (rawEnd.includes('T')) {
+                const dt = parseDateSafely(rawEnd);
+                return dt ? format(dt, 'HH:mm') : '—';
+            }
+            return rawEnd.slice(0, 5);
+        })();
         return `${start} - ${end}`;
     })();
 
@@ -340,6 +355,43 @@ function BookingDashboard({ user }) {
         CANCELLED: { bg: '#F1F5F9', color: '#64748B', text: '#64748B', border: '#64748B' },
     };
 
+    const toValidDate = (raw) => {
+        if (!raw) return null;
+        if (raw instanceof Date) return Number.isNaN(raw.getTime()) ? null : raw;
+        if (typeof raw === 'string') {
+            try {
+                const parsedIso = parseISO(raw);
+                if (!Number.isNaN(parsedIso.getTime())) return parsedIso;
+            } catch {
+                // fall through
+            }
+            const parsed = new Date(raw);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+        const parsed = new Date(raw);
+        return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+
+    const formatTimeLabel = (raw) => {
+        if (!raw) return '—';
+        if (typeof raw === 'string') {
+            // If it's already HH:mm or HH:mm:ss
+            if (/^\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
+            // Spring LocalDateTime typically comes as ISO string
+            const date = toValidDate(raw);
+            return date ? format(date, 'HH:mm') : '—';
+        }
+        const date = toValidDate(raw);
+        return date ? format(date, 'HH:mm') : '—';
+    };
+
+    const formatBookingDateLabel = (booking) => {
+        // Backend may not expose bookingDate; derive from startTime/endTime when needed
+        const raw = booking?.bookingDate ?? booking?.startTime ?? booking?.endTime;
+        const date = toValidDate(raw);
+        return date ? format(date, 'MMM d, yyyy') : '—';
+    };
+
     return (
         <div className="min-h-screen bg-[#F8FAFC] pt-24">
             <main className="px-8 py-10">
@@ -434,11 +486,11 @@ function BookingDashboard({ user }) {
                                 <div className="flex flex-col gap-1 px-5 pb-5">
                                     <div className="flex items-center gap-2 text-[14px] text-[#4F46E5] font-medium">
                                         <Calendar size={16} />
-                                        {b.bookingDate ? format(parseISO(b.bookingDate), 'MMM d, yyyy') : 'N/A'}
+                                        {formatBookingDateLabel(b)}
                                     </div>
                                     <div className="flex items-center gap-2 text-[14px] text-[#4F46E5] font-medium">
                                         <Clock size={16} />
-                                        {b.startTime.slice(0, 5)} - {b.endTime.slice(0, 5)}
+                                        {formatTimeLabel(b?.startTime)} - {formatTimeLabel(b?.endTime)}
                                     </div>
                                     {b.specialRequirements && (
                                         <div className="text-xs text-[#6366F1] mt-1"><span className="font-semibold">Special:</span> {b.specialRequirements}</div>
