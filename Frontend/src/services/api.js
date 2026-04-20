@@ -102,6 +102,13 @@ export const checkAvailability = (resourceId, date, startTime, endTime) =>
     Historyapi.get('/availability', { params: { resourceId, date, startTime, endTime } }).then(res => res.data);
 
 // ─── Auth & User Management endpoints (Member 4) ───
+// Public: Verify booking by QR token (NO auth headers)
+export const verifyBooking = async (token) => {
+    const response = await axios.get(`/api/bookings/verify/${token}`);
+    return response.data;
+};
+
+// ─── Auth endpoints (Member 4) ───
 export const authApi = {
     // POST /api/auth/register
     register: (userData) => api.post('/auth/register', userData),

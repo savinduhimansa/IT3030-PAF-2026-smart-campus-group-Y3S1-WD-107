@@ -29,6 +29,13 @@ const fetchBookedSlots = async (resourceId, date) => {
     return response.data; // [{ startTime, endTime, purpose }]
 };
 
+const isResourceBookableNow = (resource) => {
+    if (!resource) return true;
+    if (resource.isBookable === false) return false;
+    if (typeof resource.status === 'string' && resource.status.toUpperCase() !== 'ACTIVE') return false;
+    return true;
+};
+
 export default function BookingModal({ isOpen, onClose, onSubmit, initialData, prefillResource }) {
     const todayISODate = getTodayLocalISODate();
 
@@ -165,6 +172,12 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
         setError('');
         // Block submission if slot is taken (only for new bookings)
         if (!initialData && availability === false) return;
+
+        // Block submission if the prefilled resource is not bookable/active.
+        if (!isResourceBookableNow(prefillResource)) {
+            setError('Selected resource is no longer available for booking.');
+            return;
+        }
         try {
             // Prepare data with correct types and ISO datetime
             const {

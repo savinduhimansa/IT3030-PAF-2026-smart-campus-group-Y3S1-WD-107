@@ -1,5 +1,6 @@
 package com.code_wizards.Backend.repository;
 
+import java.util.Optional;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +18,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long>{
        List<Booking> findByStatus(BookingStatus status);
     
        List<Booking> findByResource_ResourceIdAndStatus(Long resourceId, BookingStatus status);
+
+       Optional<Booking> findByVerifyToken(String verifyToken);
 
     @Query("SELECT b FROM Booking b WHERE b.resource.resourceId = :resourceId " +
            "AND b.status IN :statuses " +
