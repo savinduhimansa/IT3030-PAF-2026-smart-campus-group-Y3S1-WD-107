@@ -22,6 +22,7 @@ export default function FindBestLab() {
   const [loading, setLoading] = useState(false);
   const [recommendations, setRecommendations] = useState([]);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState({});
   const [toast, setToast] = useState({ visible: false, message: '' });
 
   useEffect(() => {
@@ -34,26 +35,47 @@ export default function FindBestLab() {
   }, [toast.visible]);
 
   const validateForm = () => {
-    if (!minCapacity) return 'Minimum capacity is required';
-    const cap = Number(minCapacity);
-    if (isNaN(cap) || cap < 1 || !Number.isInteger(cap)) return 'Capacity must be a positive whole number';
-    if (!requiredTime) return 'Selection of time is required';
-    
-    // Time range validation (08:00 - 18:00)
-    const [hours, minutes] = requiredTime.split(':').map(Number);
-    const timeInMinutes = hours * 60 + minutes;
-    const minTime = 8 * 60; // 08:00
-    const maxTime = 18 * 60; // 18:00
-
-    if (timeInMinutes < minTime || timeInMinutes > maxTime) {
-      return 'Resources are only available between 08:00 and 18:00';
+    const newErrors = {};
+    if (!minCapacity) {
+      newErrors.minCapacity = 'Capacity is required';
+    } else {
+      const cap = Number(minCapacity);
+      if (isNaN(cap) || cap < 1 || !Number.isInteger(cap)) {
+        newErrors.minCapacity = 'Must be a positive whole number';
+      }
     }
 
-    return null;
+    if (!requiredTime) {
+      newErrors.requiredTime = 'Time selection is required';
+    } else {
+      const [hours, minutes] = requiredTime.split(':').map(Number);
+      const timeInMinutes = hours * 60 + minutes;
+      const minTime = 8 * 60; // 08:00
+      const maxTime = 18 * 60; // 18:00
+
+      if (timeInMinutes < minTime || timeInMinutes > maxTime) {
+        newErrors.requiredTime = 'Selection must be 08:00 - 18:00';
+      }
+    }
+
+    return newErrors;
   };
 
-  const handleInputChange = (setter, value) => {
-    setter(value);
+  const handleInputChange = (field, setter, value) => {
+    let finalValue = value;
+    if (field === 'minCapacity' && value !== '') {
+      const num = Number(value);
+      if (num < 1) finalValue = '1';
+    }
+    
+    setter(finalValue);
+    if (fieldErrors[field]) {
+      setFieldErrors(prev => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    }
   };
 
   const rankResources = (resources, requestedType, requestedCapacity) => {
@@ -77,11 +99,12 @@ export default function FindBestLab() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    const errorMsg = validateForm();
-    if (errorMsg) {
-      setToast({ visible: true, message: errorMsg });
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
       return;
     }
+    setFieldErrors({});
 
     setLoading(true);
     setError('');
@@ -138,11 +161,23 @@ export default function FindBestLab() {
                   <input
                     type="number"
                     value={minCapacity}
-                    onChange={e => handleInputChange(setMinCapacity, e.target.value)}
+                    onChange={e => handleInputChange('minCapacity', setMinCapacity, e.target.value)}
                     placeholder="e.g. 50"
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-[#4F8CFF] outline-none transition-all placeholder:text-[#94A3B8]"
+                    onKeyDown={(e) => {
+                      if (['-', '+', 'e', 'E'].includes(e.key)) e.preventDefault();
+                    }}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 transition-all placeholder:text-[#94A3B8] outline-none ${
+                      fieldErrors.minCapacity 
+                        ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
+                        : 'border-slate-200 focus:ring-blue-100 focus:border-[#4F8CFF]'
+                    }`}
                   />
                 </div>
+                {fieldErrors.minCapacity && (
+                  <span className="text-red-500 text-[10px] font-bold mt-1 ml-1 animate-in">
+                    {fieldErrors.minCapacity}
+                  </span>
+                )}
               </div>
 
               <div className="grid gap-2">
@@ -152,10 +187,19 @@ export default function FindBestLab() {
                   <input
                     type="time"
                     value={requiredTime}
-                    onChange={e => handleInputChange(setRequiredTime, e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-[#4F8CFF] outline-none transition-all"
+                    onChange={e => handleInputChange('requiredTime', setRequiredTime, e.target.value)}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-slate-50 border rounded-xl text-[#1E293B] font-medium focus:bg-white focus:ring-2 transition-all outline-none ${
+                        fieldErrors.requiredTime 
+                          ? 'border-red-400 focus:ring-red-100 focus:border-red-500' 
+                          : 'border-slate-200 focus:ring-blue-100 focus:border-[#4F8CFF]'
+                      }`}
                   />
                 </div>
+                {fieldErrors.requiredTime && (
+                  <span className="text-red-500 text-[10px] font-bold mt-1 ml-1 animate-in">
+                    {fieldErrors.requiredTime}
+                  </span>
+                )}
               </div>
 
               <div className="grid gap-2">

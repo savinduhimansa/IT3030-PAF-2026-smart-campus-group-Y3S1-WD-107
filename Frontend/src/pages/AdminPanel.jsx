@@ -132,7 +132,13 @@ export default function AdminPanel() {
       setForm((prev) => ({ ...prev, [name]: e.target.checked }))
     } else {
       setForm((prev) => {
-        const newForm = { ...prev, [name]: value }
+        let finalValue = value
+        if (name === 'capacity' && value !== '') {
+          const num = Number(value)
+          if (num < 1) finalValue = '1'
+        }
+        
+        const newForm = { ...prev, [name]: finalValue }
         if (name === 'status' && (value === 'OUT_OF_SERVICE' || value === 'MAINTENANCE')) {
           newForm.isBookable = false
         }
