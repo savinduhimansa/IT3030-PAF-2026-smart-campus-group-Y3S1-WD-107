@@ -14,6 +14,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+// --- NEW: Imports for Notification System ---
+import com.code_wizards.Backend.repository.UserRepository;
+import com.code_wizards.Backend.entity.User;
+// --------------------------------------------
+
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -28,6 +33,11 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final BookingHistoryRepository bookingStatusHistoryRepository;
     private final ResourceRepository resourceRepository;
+
+    // --- NEW: Inject NotificationService and UserRepository ---
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
+    // ----------------------------------------------------------
 
     @Transactional
     public Booking updateBooking(Long id, Booking updatedBooking) {
@@ -82,6 +92,20 @@ public class BookingService {
         Booking saved = bookingRepository.save(booking);
         // Seed the audit trail with the initial status
         logStatusChange(saved, BookingStatus.PENDING, String.valueOf(saved.getUserId()));
+
+        // --- NEW: Notify Admins about the new booking request ---
+        try {
+            String message = "New booking request for " + resource.getName() + " on " + booking.getStartTime().toLocalDate() + ".";
+            // Assuming role 'ADMIN' exists. If you use Enums, this might need tweaking (e.g., Role.ADMIN)
+            List<User> admins = userRepository.findByRole("ADMIN");
+            for (User admin : admins) {
+                notificationService.sendNotification(admin.getId(), message, "BOOKING");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send new booking notification: " + e.getMessage());
+        }
+        // --------------------------------------------------------
+
         return saved;
     }
 
@@ -139,6 +163,13 @@ public class BookingService {
             booking.setStatus(BookingStatus.REJECTED);
             booking.setRejectionReason("Auto-rejected due to conflict with another approved booking");
             logStatusChange(booking, BookingStatus.REJECTED, changeBy);
+
+            // --- NEW: Notify user of auto-rejection ---
+            try {
+                notificationService.sendNotification(booking.getUserId(), "Your booking for " + resource.getName() + " was auto-rejected due to a conflict.", "BOOKING");
+            } catch (Exception e) {}
+            // ------------------------------------------
+
             bookingRepository.save(booking);
             throw new IllegalStateException("Conflict detected with an already approved booking.");
         }
@@ -147,6 +178,14 @@ public class BookingService {
         booking.setStatus(BookingStatus.APPROVED);
         booking.setVerifyToken(UUID.randomUUID().toString());
         logStatusChange(booking, BookingStatus.APPROVED, changeBy);
+
+        // --- NEW: Notify user of approval ---
+        try {
+            notificationService.sendNotification(booking.getUserId(), "Your booking for " + resource.getName() + " has been APPROVED!", "BOOKING");
+        } catch (Exception e) {
+            System.err.println("Failed to send approval notification: " + e.getMessage());
+        }
+        // ------------------------------------
 
         // Step 4: Save both entities
         return bookingRepository.save(booking);
@@ -195,6 +234,16 @@ public class BookingService {
         booking.setStatus(BookingStatus.REJECTED);
         booking.setRejectionReason(reason);
         logStatusChange(booking, BookingStatus.REJECTED, changedBy);
+
+        // --- NEW: Notify user of rejection ---
+        try {
+            String resourceName = booking.getResource() != null ? booking.getResource().getName() : "a resource";
+            notificationService.sendNotification(booking.getUserId(), "Your booking for " + resourceName + " was REJECTED.", "BOOKING");
+        } catch (Exception e) {
+            System.err.println("Failed to send rejection notification: " + e.getMessage());
+        }
+        // -------------------------------------
+
         return bookingRepository.save(booking);
     }
 
@@ -332,4 +381,3 @@ public class BookingService {
         return freeSlots;
     }
 }
-

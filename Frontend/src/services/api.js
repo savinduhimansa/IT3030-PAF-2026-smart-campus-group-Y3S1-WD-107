@@ -129,4 +129,16 @@ export const authApi = {
     deleteUser: (userId) => api.delete(`/auth/${userId}`),
 };
 
+// ─── Notification endpoints (Member 4) ───
+export const notificationApi = {
+    // GET /api/notifications/user/:userId
+    getUserNotifications: (userId) => api.get(`/notifications/user/${userId}`),
+
+    // GET /api/notifications/unread-count/:userId
+    getUnreadCount: (userId) => api.get(`/notifications/unread-count/${userId}`),
+
+    // PUT /api/notifications/:notificationId/read
+    markAsRead: (notificationId) => api.put(`/notifications/${notificationId}/read`),
+};
+
 export default Historyapi

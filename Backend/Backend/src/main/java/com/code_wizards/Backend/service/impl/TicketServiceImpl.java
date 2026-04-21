@@ -17,6 +17,12 @@ import org.springframework.web.server.ResponseStatusException;
 import com.code_wizards.Backend.exception.TicketNotFoundException;
 import com.code_wizards.Backend.exception.UnauthorizedCommentEditException;
 
+// --- NEW: Imports for Notification System ---
+import com.code_wizards.Backend.service.NotificationService;
+import com.code_wizards.Backend.repository.UserRepository;
+import com.code_wizards.Backend.entity.User;
+// --------------------------------------------
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,6 +33,11 @@ public class TicketServiceImpl implements TicketService {
     private final TicketRepository ticketRepository;
     private final CommentRepository commentRepository;
     private final FileStorageService fileStorageService;
+
+    // --- NEW: Inject Notification Service and User Repository ---
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
+    // ----------------------------------------------------------
 
     @Override
     @Transactional
@@ -49,7 +60,21 @@ public class TicketServiceImpl implements TicketService {
             ticket.getAttachments().add(attachment);
         }
 
-        return ticketRepository.save(ticket);
+        Ticket savedTicket = ticketRepository.save(ticket);
+
+        // --- NEW: Notify Admins about the newly created ticket ---
+        try {
+            String message = "A new support ticket (ID: " + savedTicket.getId() + ") has been submitted.";
+            List<User> admins = userRepository.findByRole("ADMIN");
+            for (User admin : admins) {
+                notificationService.sendNotification(admin.getId(), message, "TICKET");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send new ticket notification: " + e.getMessage());
+        }
+        // ---------------------------------------------------------
+
+        return savedTicket;
     }
 
     @Override
@@ -110,8 +135,21 @@ public class TicketServiceImpl implements TicketService {
         if (resolutionNotes != null) {
             ticket.setResolutionNotes(resolutionNotes);
         }
-        
-        return ticketRepository.save(ticket);
+
+        Ticket updatedTicket = ticketRepository.save(ticket);
+
+        // --- NEW: Notify the user about the ticket status change ---
+        try {
+            if (status != null) {
+                String message = "Your ticket (ID: " + updatedTicket.getId() + ") status has been updated to: " + updatedTicket.getStatus();
+                notificationService.sendNotification(updatedTicket.getCreatorId(), message, "TICKET");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send ticket update notification: " + e.getMessage());
+        }
+        // -----------------------------------------------------------
+
+        return updatedTicket;
     }
 
     @Override

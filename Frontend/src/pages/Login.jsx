@@ -3,7 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../services/api';
 import spacelinkLogo from '../assets/spacelink-logo.png';
 import SpaceLoader from '../components/SpaceLoader';
-import { useGoogleLogin } from '@react-oauth/google'; // ✅ Google Auth Import එක
+import { useGoogleLogin } from '@react-oauth/google';
+
+// --- NEW: Added axios and API_BASE for sending Welcome Notifications ---
+import axios from 'axios';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
+// ----------------------------------------------------------------------
 
 const Login = () => {
     const [credentials, setCredentials] = useState({
@@ -43,17 +48,34 @@ const Login = () => {
                 email: response.data?.email || credentials.email
             }));
 
+            // --- NEW: Send Welcome Notification after successful normal login ---
+            try {
+                const userName = response.data?.name || credentials.email.split('@')[0];
+                await axios.post(`${API_BASE}/notifications/send`, null, {
+                    params: {
+                        userId: response.data.id,
+                        message: `Welcome back to SpaceLink, ${userName}! Ready to book your space?`,
+                        type: 'WELCOME'
+                    }
+                });
+            } catch (notifError) {
+                console.error("Failed to send welcome notification:", notifError);
+            }
+            // ------------------------------------------------------------------
+
+            // --- NEW: Use window.location.href instead of navigate for fresh context load ---
             setTimeout(() => {
                 const pendingResourceId = localStorage.getItem('pendingResourceId');
                 if (pendingResourceId) {
                     localStorage.removeItem('pendingResourceId');
-                    navigate(`/bookingDetails?resourceId=${pendingResourceId}`);
+                    window.location.href = `/bookingDetails?resourceId=${pendingResourceId}`;
                 } else if (userRole === 'ADMIN') {
-                    navigate('/dashboard');
+                    window.location.href = '/dashboard';
                 } else {
-                    navigate('/');
+                    window.location.href = '/';
                 }
             }, 800);
+            // --------------------------------------------------------------------------------
 
         } catch (error) {
             setErrorMsg("Login failed: " + (error.response?.data?.message || "Invalid email or password."));
@@ -98,17 +120,34 @@ const Login = () => {
                     email: response.data?.email || userInfo.email
                 }));
 
+                // --- NEW: Send Welcome Notification after successful Google login ---
+                try {
+                    const userName = response.data?.name || userInfo.name;
+                    await axios.post(`${API_BASE}/notifications/send`, null, {
+                        params: {
+                            userId: response.data.id,
+                            message: `Welcome back to SpaceLink, ${userName}! Ready to book your space?`,
+                            type: 'WELCOME'
+                        }
+                    });
+                } catch (notifError) {
+                    console.error("Failed to send Google login welcome notification:", notifError);
+                }
+                // ------------------------------------------------------------------
+
+                // --- NEW: Use window.location.href instead of navigate for fresh context load ---
                 setTimeout(() => {
                     const pendingResourceId = localStorage.getItem('pendingResourceId');
                     if (pendingResourceId) {
                         localStorage.removeItem('pendingResourceId');
-                        navigate(`/bookingDetails?resourceId=${pendingResourceId}`);
+                        window.location.href = `/bookingDetails?resourceId=${pendingResourceId}`;
                     } else if (userRole === 'ADMIN') {
-                        navigate('/dashboard');
+                        window.location.href = '/dashboard';
                     } else {
-                        navigate('/');
+                        window.location.href = '/';
                     }
                 }, 800);
+                // --------------------------------------------------------------------------------
 
             } catch (error) {
                 setErrorMsg("Google Login failed at server. Make sure backend endpoint is ready.");
