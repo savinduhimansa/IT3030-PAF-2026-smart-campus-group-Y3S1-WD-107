@@ -4,11 +4,12 @@ import { authApi } from '../services/api';
 import spacelinkLogo from '../assets/spacelink-logo.png';
 import SpaceLoader from '../components/SpaceLoader';
 import { useGoogleLogin } from '@react-oauth/google';
-
-// --- NEW: Added axios and API_BASE for sending Welcome Notifications ---
 import axios from 'axios';
+
+// Import the CSS file for the Astronaut animation
+import './AstronautLogin.css';
+
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
-// ----------------------------------------------------------------------
 
 const Login = () => {
     const [credentials, setCredentials] = useState({
@@ -20,12 +21,21 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
+    // Animation States
+    const [isEmailFocused, setIsEmailFocused] = useState(false);
+    const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
     const handleChange = (e) => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
         setErrorMsg('');
     };
 
-    // 🟢 Normal Email/Password Login
+    // Animation Logic Calculations
+    const eyeMoveX = isEmailFocused ? Math.min(credentials.email.length * 1.5, 15) : 0;
+    const handMoveY = isPasswordFocused ? -65 : 0;
+    const leftHandMoveX = isPasswordFocused ? 25 : 0;
+    const rightHandMoveX = isPasswordFocused ? -25 : 0;
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMsg('');
@@ -48,7 +58,6 @@ const Login = () => {
                 email: response.data?.email || credentials.email
             }));
 
-            // --- NEW: Send Welcome Notification after successful normal login ---
             try {
                 const userName = response.data?.name || credentials.email.split('@')[0];
                 await axios.post(`${API_BASE}/notifications/send`, null, {
@@ -61,9 +70,7 @@ const Login = () => {
             } catch (notifError) {
                 console.error("Failed to send welcome notification:", notifError);
             }
-            // ------------------------------------------------------------------
 
-            // --- NEW: Use window.location.href instead of navigate for fresh context load ---
             setTimeout(() => {
                 const pendingResourceId = localStorage.getItem('pendingResourceId');
                 if (pendingResourceId) {
@@ -75,7 +82,6 @@ const Login = () => {
                     window.location.href = '/';
                 }
             }, 800);
-            // --------------------------------------------------------------------------------
 
         } catch (error) {
             setErrorMsg("Login failed: " + (error.response?.data?.message || "Invalid email or password."));
@@ -84,29 +90,23 @@ const Login = () => {
         }
     };
 
-    // 🔵 New Google Login Function
     const loginWithGoogle = useGoogleLogin({
         onSuccess: async (tokenResponse) => {
             setIsLoading(true);
             setErrorMsg('');
             try {
-                // 1. Get user details from Google
                 const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
                     headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
                 });
                 const userInfo = await userInfoResponse.json();
                 console.log("Google User Info:", userInfo);
 
-                // 2. Send to Backend (You will need an authApi.googleLogin endpoint)
-                // Note: If backend endpoint is not ready, this might throw an error,
-                // but the Google popup will still work perfectly!
                 const response = await authApi.googleLogin({
                     email: userInfo.email,
                     name: userInfo.name,
                     googleId: userInfo.sub
                 });
 
-                // 3. Handle success identically to normal login
                 const token = response.data?.token;
                 const userRole = response.data?.role || 'USER';
                 const userId = response.data?.id;
@@ -120,7 +120,6 @@ const Login = () => {
                     email: response.data?.email || userInfo.email
                 }));
 
-                // --- NEW: Send Welcome Notification after successful Google login ---
                 try {
                     const userName = response.data?.name || userInfo.name;
                     await axios.post(`${API_BASE}/notifications/send`, null, {
@@ -133,9 +132,7 @@ const Login = () => {
                 } catch (notifError) {
                     console.error("Failed to send Google login welcome notification:", notifError);
                 }
-                // ------------------------------------------------------------------
 
-                // --- NEW: Use window.location.href instead of navigate for fresh context load ---
                 setTimeout(() => {
                     const pendingResourceId = localStorage.getItem('pendingResourceId');
                     if (pendingResourceId) {
@@ -147,7 +144,6 @@ const Login = () => {
                         window.location.href = '/';
                     }
                 }, 800);
-                // --------------------------------------------------------------------------------
 
             } catch (error) {
                 setErrorMsg("Google Login failed at server. Make sure backend endpoint is ready.");
@@ -170,7 +166,6 @@ const Login = () => {
                  style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)' }}
             />
 
-            {/* 🔥 SPACELINK IMAGE LOGO AREA */}
             <div className="mb-8 relative z-10">
                 <Link to="/">
                     <img
@@ -182,8 +177,37 @@ const Login = () => {
             </div>
 
             <div className="w-full max-w-[420px] bg-[#1E293B]/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl relative z-10">
-                <h2 className="text-2xl font-bold text-white mb-2">Welcome Back</h2>
-                <p className="text-slate-400 text-sm mb-6">Sign in to manage your campus resources.</p>
+
+                {/* Animated Astronaut SVG */}
+                <div className="astronaut-container mx-auto mb-4">
+                    <svg viewBox="0 0 200 200" className="astronaut-svg">
+                        <rect x="40" y="40" width="120" height="110" rx="55" className="astro-head" />
+                        <rect x="30" y="80" width="15" height="30" rx="5" fill="#94A3B8" />
+                        <rect x="155" y="80" width="15" height="30" rx="5" fill="#94A3B8" />
+                        <rect x="55" y="60" width="90" height="60" rx="30" className="astro-visor" />
+                        <g style={{
+                            transform: `translateX(${eyeMoveX}px)`,
+                            opacity: isPasswordFocused ? 0 : 1,
+                            transition: 'all 0.3s ease-out'
+                        }}>
+                            <circle cx="85" cy="90" r="6" className="astro-eye" />
+                            <circle cx="115" cy="90" r="6" className="astro-eye" />
+                        </g>
+                        <rect
+                            x="30" y="140" width="35" height="25" rx="12"
+                            className="astro-hand"
+                            style={{ transform: `translate(${leftHandMoveX}px, ${handMoveY}px)` }}
+                        />
+                        <rect
+                            x="135" y="140" width="35" height="25" rx="12"
+                            className="astro-hand"
+                            style={{ transform: `translate(${rightHandMoveX}px, ${handMoveY}px)` }}
+                        />
+                    </svg>
+                </div>
+
+                <h2 className="text-2xl font-bold text-white mb-2 text-center">Welcome Back</h2>
+                <p className="text-slate-400 text-sm mb-6 text-center">Sign in to manage your campus resources.</p>
 
                 {errorMsg && (
                     <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2">
@@ -199,6 +223,8 @@ const Login = () => {
                             name="email"
                             value={credentials.email}
                             onChange={handleChange}
+                            onFocus={() => setIsEmailFocused(true)}
+                            onBlur={() => setIsEmailFocused(false)}
                             required
                             disabled={isLoading}
                             className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
@@ -213,6 +239,8 @@ const Login = () => {
                             name="password"
                             value={credentials.password}
                             onChange={handleChange}
+                            onFocus={() => setIsPasswordFocused(true)}
+                            onBlur={() => setIsPasswordFocused(false)}
                             required
                             disabled={isLoading}
                             className="w-full bg-[#0B1120]/50 border border-slate-600 text-white placeholder-slate-500 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all disabled:opacity-50"
@@ -229,7 +257,6 @@ const Login = () => {
                     </button>
                 </form>
 
-                {/* 🔥 NEW GOOGLE LOGIN SECTION */}
                 <div className="mt-6 flex items-center justify-between">
                     <span className="border-b border-slate-600 w-1/5 lg:w-1/4"></span>
                     <span className="text-xs text-center text-slate-400 font-medium uppercase tracking-wider">Or continue with</span>
@@ -242,7 +269,6 @@ const Login = () => {
                     disabled={isLoading}
                     className="w-full bg-white hover:bg-gray-100 text-slate-800 font-bold py-3 px-4 rounded-xl transition-colors duration-200 mt-6 disabled:opacity-70 flex justify-center items-center gap-3 shadow-lg"
                 >
-                    {/* Google SVG Logo */}
                     <svg className="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
