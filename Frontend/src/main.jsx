@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './index.css'
 import App from './App.jsx'
+import { NotificationProvider } from './context/NotificationContext.jsx' // NEW IMPORT
 
 // Google OAuth Client ID for SpaceLink Authentication
 const clientId = "40512885165-6tm5icspl5ccbpocv2qdjco9l0p0507d.apps.googleusercontent.com";
@@ -13,7 +14,10 @@ createRoot(document.getElementById('root')).render(
         {/* Wrap the entire app with GoogleOAuthProvider to enable Google Login anywhere */}
         <GoogleOAuthProvider clientId={clientId}>
             <BrowserRouter>
-                <App />
+                {/* Wrap the App with NotificationProvider for global notifications */}
+                <NotificationProvider>
+                    <App />
+                </NotificationProvider>
             </BrowserRouter>
         </GoogleOAuthProvider>
     </StrictMode>,

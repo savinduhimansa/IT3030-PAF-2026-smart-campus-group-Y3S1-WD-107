@@ -10,6 +10,12 @@ import com.code_wizards.Backend.repository.ResourceRepository;
 import com.code_wizards.Backend.service.ResourceService;
 import org.springframework.stereotype.Service;
 
+// --- NEW: Imports for Notification System ---
+import com.code_wizards.Backend.service.NotificationService;
+import com.code_wizards.Backend.repository.UserRepository;
+import com.code_wizards.Backend.entity.User;
+// --------------------------------------------
+
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,9 +31,18 @@ public class ResourceServiceImpl implements ResourceService {
 
     private final ResourceRepository resourceRepository;
 
-    public ResourceServiceImpl(ResourceRepository resourceRepository) {
+    // --- NEW: Inject NotificationService and UserRepository ---
+    private final NotificationService notificationService;
+    private final UserRepository userRepository;
+
+    public ResourceServiceImpl(ResourceRepository resourceRepository,
+                               NotificationService notificationService,
+                               UserRepository userRepository) {
         this.resourceRepository = resourceRepository;
+        this.notificationService = notificationService;
+        this.userRepository = userRepository;
     }
+    // ----------------------------------------------------------
 
     @Override
     public byte[] generateResourcesPdf() {
@@ -62,6 +77,21 @@ public class ResourceServiceImpl implements ResourceService {
         mapRequestToEntity(request, resource);
 
         Resource savedResource = resourceRepository.save(resource);
+
+        // --- NEW: Send notification to all users about the new resource ---
+        try {
+            String message = "New resource added: " + savedResource.getName() + " is now available for booking!";
+            List<User> allUsers = userRepository.findAll();
+
+            for (User user : allUsers) {
+                // NOTE: If your User entity uses getUserId() instead of getId(), change it here
+                notificationService.sendNotification(user.getId(), message, "RESOURCE");
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to send resource notifications: " + e.getMessage());
+        }
+        // ------------------------------------------------------------------
+
         // Save to DB
         return mapEntityToResponse(savedResource);
         // Return response DTO
@@ -131,14 +161,14 @@ public class ResourceServiceImpl implements ResourceService {
             public List<ResourceResponse> getAvailableResources(ResourceType type, Integer minCapacity, String location) {
             List<Resource> resources = resourceRepository.findByStatus(ResourceStatus.ACTIVE);
 
-            return resources.stream()
+        return resources.stream()
                 .filter(resource -> type == null || resource.getType() == type)
                 .filter(resource -> minCapacity == null || resource.getCapacity() >= minCapacity)
                 .filter(resource -> location == null || location.isBlank() ||
-                    resource.getLocation().toLowerCase().contains(location.toLowerCase()))
+                        resource.getLocation().toLowerCase().contains(location.toLowerCase()))
                 .map(this::mapEntityToResponse)
                 .collect(Collectors.toList());
-            }
+    }
 
     // Validation method
     private void validateAvailabilityWindow(LocalTime from, LocalTime to) {
