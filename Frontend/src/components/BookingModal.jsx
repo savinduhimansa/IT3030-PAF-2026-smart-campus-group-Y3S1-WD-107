@@ -4,6 +4,52 @@ import { X, Calendar, Clock, Users, FileText } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
+const pad2 = (n) => String(n).padStart(2, '0');
+
+const toISODate = (raw) => {
+    if (!raw) return '';
+    if (raw instanceof Date) {
+        if (Number.isNaN(raw.getTime())) return '';
+        return `${raw.getFullYear()}-${pad2(raw.getMonth() + 1)}-${pad2(raw.getDate())}`;
+    }
+    if (typeof raw === 'string') {
+        // Already YYYY-MM-DD
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+        // ISO datetime like 2026-04-21T10:30:00
+        if (/^\d{4}-\d{2}-\d{2}T/.test(raw)) return raw.slice(0, 10);
+        // Try parsing other date strings
+        const d = new Date(raw);
+        if (!Number.isNaN(d.getTime())) {
+            return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+        }
+    }
+    return '';
+};
+
+const toHHmm = (raw) => {
+    if (!raw) return '';
+    if (raw instanceof Date) {
+        if (Number.isNaN(raw.getTime())) return '';
+        return `${pad2(raw.getHours())}:${pad2(raw.getMinutes())}`;
+    }
+    if (typeof raw === 'string') {
+        // Already HH:mm or HH:mm:ss
+        if (/^\d{2}:\d{2}/.test(raw)) return raw.slice(0, 5);
+        // ISO datetime like 2026-04-21T10:30:00
+        const tIndex = raw.indexOf('T');
+        if (tIndex !== -1 && raw.length >= tIndex + 6) {
+            const timePart = raw.slice(tIndex + 1);
+            if (/^\d{2}:\d{2}/.test(timePart)) return timePart.slice(0, 5);
+        }
+        // Try parsing other date strings
+        const d = new Date(raw);
+        if (!Number.isNaN(d.getTime())) {
+            return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+        }
+    }
+    return '';
+};
+
 const getTodayLocalISODate = () => {
     const now = new Date();
     const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -66,17 +112,26 @@ export default function BookingModal({ isOpen, onClose, onSubmit, initialData, p
         if (!isOpen) return;
 
         if (initialData) {
+            const derivedBookingDate =
+                toISODate(initialData.bookingDate) ||
+                toISODate(initialData.startTime) ||
+                toISODate(initialData.endTime) ||
+                '';
+
+            const derivedStartTime = toHHmm(initialData.startTime) || '';
+            const derivedEndTime = toHHmm(initialData.endTime) || '';
+
             setFormData({
-                resourceId: initialData.resourceId || '',
-                bookingDate: initialData.bookingDate || '',
-                startTime: initialData.startTime || '',
-                endTime: initialData.endTime || '',
-                purpose: initialData.purpose || '',
-                expectedAttendees: initialData.expectedAttendees || '',
-                contactEmail: initialData.contactEmail || '',
-                department: initialData.department || '',
-                specialRequirements: initialData.specialRequirements || '',
-                quantity: initialData.quantity || 1,
+                resourceId: initialData.resourceId ?? '',
+                bookingDate: derivedBookingDate,
+                startTime: derivedStartTime,
+                endTime: derivedEndTime,
+                purpose: initialData.purpose ?? '',
+                expectedAttendees: initialData.expectedAttendees ?? '',
+                contactEmail: initialData.contactEmail ?? '',
+                department: initialData.department ?? '',
+                specialRequirements: initialData.specialRequirements ?? initialData.specialReqs ?? '',
+                quantity: initialData.quantity ?? 1,
             });
         } else {
             setFormData({
