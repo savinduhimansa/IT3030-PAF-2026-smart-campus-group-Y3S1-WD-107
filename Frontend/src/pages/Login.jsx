@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { authApi } from '../services/api';
 import spacelinkLogo from '../assets/spacelink-logo.png';
 import SpaceLoader from '../components/SpaceLoader';
@@ -19,18 +19,95 @@ const Login = () => {
 
     const [errorMsg, setErrorMsg] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+    const location = useLocation();
+
+    // Prevent double execution of the OAuth callback in React Strict Mode
+    const hasProcessedCode = useRef(false);
 
     // Animation States
     const [isEmailFocused, setIsEmailFocused] = useState(false);
     const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+
+    // ==========================================
+    // --- Member 4: GitHub OAuth 2.0 Logic ---
+    // ==========================================
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const code = params.get('code');
+
+        // Moved function inside useEffect to satisfy ESLint hooks rules
+        const processGitHubLogin = async (githubCode) => {
+            setIsLoading(true);
+            setErrorMsg('');
+            try {
+                const response = await authApi.githubLogin({ code: githubCode });
+
+                const token = response.data?.token;
+                const userRole = response.data?.role || 'USER';
+                const userId = response.data?.id;
+
+                if (token) localStorage.setItem('token', token);
+                localStorage.setItem('role', userRole);
+                if (userId !== undefined && userId !== null) localStorage.setItem('userId', String(userId));
+
+                localStorage.setItem('user', JSON.stringify({
+                    name: response.data?.name || "GitHub User",
+                    email: response.data?.email || ""
+                }));
+
+                try {
+                    const userName = response.data?.name || "Space Traveler";
+                    await axios.post(`${API_BASE}/notifications/send`, null, {
+                        params: {
+                            userId: response.data.id,
+                            message: `Welcome back to SpaceLink, ${userName}! Ready to book your space?`,
+                            type: 'WELCOME'
+                        }
+                    });
+                } catch (notifError) {
+                    console.error("Failed to send GitHub login welcome notification:", notifError);
+                }
+
+                setTimeout(() => {
+                    const pendingResourceId = localStorage.getItem('pendingResourceId');
+                    if (pendingResourceId) {
+                        localStorage.removeItem('pendingResourceId');
+                        window.location.href = `/bookingDetails?resourceId=${pendingResourceId}`;
+                    } else if (userRole === 'ADMIN') {
+                        window.location.href = '/dashboard';
+                    } else {
+                        window.location.href = '/';
+                    }
+                }, 800);
+
+            } catch (error) {
+                setErrorMsg("GitHub Login failed at server.");
+                console.error("GitHub Server Error:", error);
+                setIsLoading(false);
+            }
+        };
+
+        if (code && !hasProcessedCode.current) {
+            hasProcessedCode.current = true;
+            window.history.replaceState({}, document.title, location.pathname);
+
+            // Execute the async function
+            processGitHubLogin(code).catch(console.error);
+        }
+    }, [location]);
+
+    const handleGitHubLogin = () => {
+        const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+        const redirectUri = import.meta.env.VITE_GITHUB_REDIRECT_URI;
+        window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=user:email`;
+    };
+    // ==========================================
 
     const handleChange = (e) => {
         setCredentials({ ...credentials, [e.target.name]: e.target.value });
         setErrorMsg('');
     };
 
-    // Animation Logic Calculations
     const eyeMoveX = isEmailFocused ? Math.min(credentials.email.length * 1.5, 15) : 0;
     const handMoveY = isPasswordFocused ? -65 : 0;
     const leftHandMoveX = isPasswordFocused ? 25 : 0;
@@ -178,7 +255,6 @@ const Login = () => {
 
             <div className="w-full max-w-[420px] bg-[#1E293B]/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 shadow-2xl relative z-10">
 
-                {/* Animated Astronaut SVG */}
                 <div className="astronaut-container mx-auto mb-4">
                     <svg viewBox="0 0 200 200" className="astronaut-svg">
                         <rect x="40" y="40" width="120" height="110" rx="55" className="astro-head" />
@@ -276,6 +352,18 @@ const Login = () => {
                         <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                     </svg>
                     Sign in with Google
+                </button>
+
+                <button
+                    type="button"
+                    onClick={handleGitHubLogin}
+                    disabled={isLoading}
+                    className="w-full bg-[#24292e] hover:bg-[#1a1e22] text-white font-bold py-3 px-4 rounded-xl transition-colors duration-200 mt-4 disabled:opacity-70 flex justify-center items-center gap-3 shadow-lg border border-slate-700"
+                >
+                    <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                    </svg>
+                    Sign in with GitHub
                 </button>
 
                 <p className="mt-8 text-center text-sm text-slate-400">

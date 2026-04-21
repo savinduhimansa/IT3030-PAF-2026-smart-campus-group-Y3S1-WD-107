@@ -5,8 +5,16 @@ import com.code_wizards.Backend.repository.UserRepository;
 import com.code_wizards.Backend.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpMethod;
 
-import java.util.List; // ADDED: Import for List
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -17,93 +25,67 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(User user) {
-        // Check if the email is already registered
         Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
         if (existingUser.isPresent()) {
             throw new RuntimeException("Email is already in use!");
         }
-
-        // Set default role to 'USER' if not provided
         if (user.getRole() == null || user.getRole().isEmpty()) {
             user.setRole("USER");
         }
-
-        // Save the user to the database
         return userRepository.save(user);
     }
 
     @Override
     public User loginUser(String email, String password) {
         Optional<User> user = userRepository.findByEmail(email);
-
-        // Check if user exists and password matches
         if (user.isPresent() && user.get().getPassword().equals(password)) {
             return user.get();
         }
-
         throw new RuntimeException("Invalid email or password!");
     }
 
     @Override
     public User getUserById(Long id) {
-        // Find the user by ID or throw an exception if not found
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
     }
 
-    // ==========================================
-    // NEW: Get All Users Logic for Admin Dashboard
-    // ==========================================
     @Override
     public List<User> getAllUsers() {
-        // Retrieve all users from the database
         return userRepository.findAll();
     }
 
     @Override
     public User updateUser(Long id, User updatedUser) {
-        // Find the existing user
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        // Update the basic details
         existingUser.setUsername(updatedUser.getUsername());
         existingUser.setEmail(updatedUser.getEmail());
 
-        // Only update the password if a new one is provided
         if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
             existingUser.setPassword(updatedUser.getPassword());
         }
 
-        // Only update the role if a new one is provided (Crucial for assigning TECHNICIAN role)
         if (updatedUser.getRole() != null && !updatedUser.getRole().isEmpty()) {
             existingUser.setRole(updatedUser.getRole());
         }
 
-        // Save and return the updated user
         return userRepository.save(existingUser);
     }
 
     @Override
     public void deleteUser(Long id) {
-        // Find the user first to ensure they exist
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
-
-        // Delete the user from the database
         userRepository.delete(existingUser);
     }
 
-    // ==========================================
-    // Change Password Logic
-    // ==========================================
     @Override
     public void changePassword(Long userId, String currentPassword, String newPassword) {
-        // Find the user from database
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found!"));
 
-        // Check if the provided current password matches the one in DB
         if (user.getPassword().equals(currentPassword)) {
             user.setPassword(newPassword);
             userRepository.save(user);
@@ -112,29 +94,76 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    // ==========================================
-    // Google Login Logic
-    // ==========================================
     @Override
     public User googleLogin(String email, String name, String googleId) {
         Optional<User> existingUser = userRepository.findByEmail(email);
 
         if (existingUser.isPresent()) {
-            // 1. If user already exists in our database, just log them in
             return existingUser.get();
         } else {
-            // 2. If it's a new user from Google, create a new account for them
             User newUser = new User();
             newUser.setEmail(email);
             newUser.setUsername(name);
-
-            // Set a dummy password because they authenticate via Google, not with a typed password
             newUser.setPassword("GOOGLE_AUTH_USER_NO_PASSWORD");
-
-            // Set default role as normal USER
             newUser.setRole("USER");
+            return userRepository.save(newUser);
+        }
+    }
 
-            // Save and return the new user
+    // ==========================================
+    // NEW: GitHub Login Logic (Member 4 Task)
+    // ==========================================
+    @Override
+    public User githubLogin(String code) {
+        RestTemplate restTemplate = new RestTemplate();
+
+        // 1. Exchange 'code' for an 'access_token' from GitHub
+        String tokenUrl = "https://github.com/login/oauth/access_token";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("Accept", "application/json");
+
+        Map<String, String> tokenRequest = new HashMap<>();
+        tokenRequest.put("client_id", "Ov23liTMXkUirMyotb3o"); // Using your precise Client ID
+        tokenRequest.put("client_secret", "a215473c39e9d11409d3f5b1667aa3267f1ffad9"); // Using your precise Secret
+        tokenRequest.put("code", code);
+
+        HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(tokenRequest, headers);
+        ResponseEntity<Map> tokenResponse = restTemplate.postForEntity(tokenUrl, requestEntity, Map.class);
+
+        String accessToken = (String) tokenResponse.getBody().get("access_token");
+        if (accessToken == null) {
+            throw new RuntimeException("Failed to retrieve GitHub access token");
+        }
+
+        // 2. Use the 'access_token' to get user details from GitHub API
+        String userUrl = "https://api.github.com/user";
+        HttpHeaders userHeaders = new HttpHeaders();
+        userHeaders.set("Authorization", "Bearer " + accessToken);
+        HttpEntity<String> userRequestEntity = new HttpEntity<>(userHeaders);
+
+        ResponseEntity<Map> userResponse = restTemplate.exchange(userUrl, HttpMethod.GET, userRequestEntity, Map.class);
+        Map<String, Object> githubUser = userResponse.getBody();
+
+        String githubId = String.valueOf(githubUser.get("id"));
+        String name = (String) githubUser.get("name");
+        String email = (String) githubUser.get("email");
+
+        // Fallbacks if GitHub user hasn't set a public name or email
+        if (name == null) name = (String) githubUser.get("login");
+        if (email == null) email = githubId + "@github.com";
+
+        // 3. Save to DB or login existing user
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        if (existingUser.isPresent()) {
+            return existingUser.get();
+        } else {
+            User newUser = new User();
+            newUser.setEmail(email);
+            newUser.setUsername(name);
+            newUser.setPassword("GITHUB_AUTH_USER_NO_PASSWORD");
+            newUser.setRole("USER"); // Default role
             return userRepository.save(newUser);
         }
     }
