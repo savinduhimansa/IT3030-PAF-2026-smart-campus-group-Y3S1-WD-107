@@ -119,6 +119,9 @@ export const authApi = {
     // POST /api/auth/google
     googleLogin: (data) => api.post('/auth/google', data),
 
+    // POST /api/auth/github (Added for OAuth Improvements)
+    githubLogin: (data) => api.post('/auth/github', data),
+
     // GET /api/auth/all (Admin only - fetch all users)
     getAllUsers: () => api.get('/auth/all'),
 

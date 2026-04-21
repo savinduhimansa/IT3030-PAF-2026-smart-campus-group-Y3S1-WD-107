@@ -1,7 +1,7 @@
 package com.code_wizards.Backend.service;
 
 import com.code_wizards.Backend.entity.User;
-import java.util.List; // ADDED: Import for List
+import java.util.List;
 
 public interface UserService {
     // Register a new user (ADD)
@@ -13,9 +13,7 @@ public interface UserService {
     // Get user details by ID
     User getUserById(Long id);
 
-    // ==========================================
-    // NEW: Get all users for Admin Dashboard
-    // ==========================================
+    // Get all users for Admin Dashboard
     List<User> getAllUsers();
 
     // Update existing user details including Role (UPDATE)
@@ -29,4 +27,7 @@ public interface UserService {
 
     // Google Login
     User googleLogin(String email, String name, String googleId);
+
+    // NEW: GitHub Login (Member 4 - OAuth Improvements)
+    User githubLogin(String code);
 }
