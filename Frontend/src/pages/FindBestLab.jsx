@@ -110,9 +110,10 @@ export default function FindBestLab() {
   };
 
   return (
-    <div className="light-theme min-h-screen pb-20 bg-[#F8FAFC]">
+    <div className="light-theme min-h-screen flex flex-col bg-[#F8FAFC]">
       <Navbar />
-      <div style={{ height: '72px' }} />
+      <div className="flex-grow">
+        <div style={{ height: '72px' }} />
 
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-center mb-12">
@@ -262,6 +263,7 @@ export default function FindBestLab() {
               </div>
             </div>
           )}
+        </div>
         </div>
       </div>
       <Footer />

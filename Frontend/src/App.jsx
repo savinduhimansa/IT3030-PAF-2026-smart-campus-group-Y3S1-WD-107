@@ -36,7 +36,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import UserManagement from './pages/UserManagement'
 
 const baseNavItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, adminOnly: true },
     { path: '/admin', label: 'Resources', icon: Settings, adminOnly: true },
     { path: '/users', label: 'Users', icon: Users, adminOnly: true },
     { path: '/tickets', label: 'Tickets', icon: Ticket },
