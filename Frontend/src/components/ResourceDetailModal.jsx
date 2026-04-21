@@ -57,7 +57,7 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
                 <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusInfo.color }} />
                 {statusInfo.label}
               </span>
-              {resource.isBookable ? (
+              {resource.status === 'ACTIVE' ? (
                 <span className="px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 border border-green-200 bg-green-50 text-green-600 shadow-sm">
                   <CheckCircle size={14} /> Bookable
                 </span>
@@ -200,7 +200,7 @@ export default function ResourceDetailModal({ resource, onClose, user }) {
             </div>
 
             {/* Book Now Action */}
-            {resource.isBookable && (
+            {resource.status === 'ACTIVE' && (
               <div className="flex justify-center pt-8 mt-4 border-t border-slate-100">
                 <button
                   className="btn btn-primary px-12 py-4 text-base font-black shadow-xl shadow-blue-500/30 hover:scale-105 active:scale-95 transition-all"
