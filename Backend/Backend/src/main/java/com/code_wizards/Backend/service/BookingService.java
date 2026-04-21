@@ -270,9 +270,6 @@ public class BookingService {
         Resource resource = resourceRepository.findById(resourceId)
                 .orElseThrow(() -> new IllegalArgumentException("Resource not found with id: " + resourceId));
 
-        if (Boolean.FALSE.equals(resource.getIsBookable())) {
-            throw new IllegalStateException("Selected resource is no longer available for booking");
-        }
 
         if (resource.getStatus() != ResourceStatus.ACTIVE) {
             throw new IllegalStateException(

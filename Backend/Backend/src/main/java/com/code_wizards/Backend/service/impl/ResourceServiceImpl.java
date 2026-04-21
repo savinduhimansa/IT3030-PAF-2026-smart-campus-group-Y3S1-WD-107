@@ -129,7 +129,7 @@ public class ResourceServiceImpl implements ResourceService {
 
             @Override
             public List<ResourceResponse> getAvailableResources(ResourceType type, Integer minCapacity, String location) {
-            List<Resource> resources = resourceRepository.findByIsBookableAndStatus(true, ResourceStatus.ACTIVE);
+            List<Resource> resources = resourceRepository.findByStatus(ResourceStatus.ACTIVE);
 
             return resources.stream()
                 .filter(resource -> type == null || resource.getType() == type)
