@@ -19,7 +19,11 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/bookings")
-@CrossOrigin("*") // Enable CORS for React frontend
+@CrossOrigin(
+    origins = "*",
+    allowedHeaders = "*",
+    methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.OPTIONS}
+) // Enable CORS for React frontend (incl. PUT for updates)
 
 public class BookingController {
     private final BookingService bookingService;
@@ -45,7 +49,7 @@ public class BookingController {
             @PathVariable Long id,
             @RequestBody Booking booking) {
         booking.setUserId(userId);
-        return ResponseEntity.ok(bookingService.updateBooking(id, booking));
+        return ResponseEntity.ok(bookingService.updateBooking(id, userId, booking));
     }
 
     @DeleteMapping("/{id}")

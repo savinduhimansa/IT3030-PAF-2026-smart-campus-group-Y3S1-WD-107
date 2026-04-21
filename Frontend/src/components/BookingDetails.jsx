@@ -216,6 +216,8 @@ function BookingDashboard({ user }) {
 
     const [prefillResource, setPrefillResource] = useState(null);
 
+    const resolvedUserId = user?.id ?? Number(localStorage.getItem('userId'));
+
     useEffect(() => {
         if (!resourceIdFromUrl) return;
 
@@ -245,14 +247,17 @@ function BookingDashboard({ user }) {
     const fetchBookings = useCallback(async () => {
         try {
             setLoading(true);
-            const data = await getMyBookings(user.id);
+            if (!resolvedUserId) {
+                throw new Error('Missing user id');
+            }
+            const data = await getMyBookings(resolvedUserId);
             setBookings(data);
         } catch {
             setError('Failed to fetch bookings.');
         } finally {
             setLoading(false);
         }
-    }, [user.id]);
+    }, [resolvedUserId]);
 
     useEffect(() => {
         fetchBookings();
@@ -313,19 +318,46 @@ function BookingDashboard({ user }) {
         setSelectedBooking(null);
     };
 
+    const handleEditBooking = async (booking) => {
+        setError('');
+        setEditingBooking(booking);
+
+        // Load the resource so BookingModal can detect the type (CAMERA => quantity).
+        // Open the modal after this to avoid flashing wrong fields.
+        let resource = null;
+        const resourceId = booking?.resourceId;
+        if (resourceId !== null && resourceId !== undefined && resourceId !== '') {
+            try {
+                const res = await resourceApi.getById(resourceId);
+                resource = res?.data ?? null;
+            } catch {
+                resource = null;
+            }
+        }
+        setPrefillResource(resource);
+        setIsModalOpen(true);
+    };
+
     // Handles both create and update
     const handleSubmitBooking = async (formData) => {
         try {
             setError('');
+            if (!resolvedUserId) {
+                throw new Error('Please log in before saving a booking.');
+            }
             if (editingBooking) {
-                await updateBooking(user.id, editingBooking.id, formData);
+                const updated = await updateBooking(resolvedUserId, editingBooking.id, formData);
+                // Apply server-confirmed payload immediately to avoid stale UI perception
+                if (updated?.id) {
+                    setBookings((prev) => prev.map((b) => (b.id === updated.id ? { ...b, ...updated } : b)));
+                }
             } else {
-                await createBooking(user.id, formData);
+                await createBooking(resolvedUserId, formData);
             }
             setIsModalOpen(false);
             setEditingBooking(null);
             setPrefillResource(null);
-            fetchBookings();
+            await fetchBookings();
         } catch (err) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Failed to save booking.');
         }
@@ -334,8 +366,11 @@ function BookingDashboard({ user }) {
     const handleCancelBooking = async (id) => {
         if (!window.confirm('Are you sure you want to cancel this booking?')) return;
         try {
-            await cancelBooking(user.id, id);
-            fetchBookings();
+            if (!resolvedUserId) {
+                throw new Error('Please log in before cancelling a booking.');
+            }
+            await cancelBooking(resolvedUserId, id);
+            await fetchBookings();
         } catch (err) {
             setError(err.response?.data?.message || err.response?.data?.error || 'Failed to cancel booking.');
         }
@@ -456,7 +491,7 @@ function BookingDashboard({ user }) {
                                     <div className="flex gap-2 items-center">
                                         {b.status === 'PENDING' && (
                                             <button
-                                                onClick={() => { setEditingBooking(b); setIsModalOpen(true); setPrefillResource(null); }}
+                                                onClick={() => handleEditBooking(b)}
                                                 className="text-[#4F46E5] hover:bg-[#EEF2FF] p-2 rounded-full transition-colors"
                                                 title="Edit Booking"
                                             >

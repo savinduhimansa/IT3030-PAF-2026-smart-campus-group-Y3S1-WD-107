@@ -40,11 +40,35 @@ public class BookingService {
     // ----------------------------------------------------------
 
     @Transactional
-    public Booking updateBooking(Long id, Booking updatedBooking) {
+    public Booking updateBooking(Long id, Long userId, Booking updatedBooking) {
+        if (updatedBooking == null) {
+            throw new IllegalArgumentException("Request body is required");
+        }
+
         Booking booking = getBooking(id);
+
+        // Ensure caller is updating their own booking (prevents silent no-ops / wrong target)
+        if (userId == null) {
+            throw new IllegalArgumentException("X-User-Id header is required");
+        }
+        if (booking.getUserId() == null || !booking.getUserId().equals(userId)) {
+            throw new IllegalStateException("You can only update your own bookings.");
+        }
+
         // Only allow update if booking is still pending
         if (booking.getStatus() != BookingStatus.PENDING) {
             throw new IllegalStateException("Only pending bookings can be updated.");
+        }
+
+        // Validate required update fields (PUT semantics)
+        if (updatedBooking.getResourceId() == null) {
+            throw new IllegalArgumentException("resourceId is required");
+        }
+        if (updatedBooking.getStartTime() == null || updatedBooking.getEndTime() == null) {
+            throw new IllegalArgumentException("startTime and endTime are required");
+        }
+        if (!updatedBooking.getEndTime().isAfter(updatedBooking.getStartTime())) {
+            throw new IllegalArgumentException("endTime must be after startTime");
         }
 
         booking.setResource(requireBookableActiveResource(updatedBooking.getResourceId()));
@@ -55,7 +79,10 @@ public class BookingService {
         booking.setContactEmail(updatedBooking.getContactEmail());
         booking.setDepartment(updatedBooking.getDepartment());
         booking.setSpecialReqs(updatedBooking.getSpecialReqs());
-        return bookingRepository.save(booking);
+        booking.setQuantity(updatedBooking.getQuantity());
+
+        // saveAndFlush ensures an UPDATE is issued before returning (helps catch DB issues early)
+        return bookingRepository.saveAndFlush(booking);
     }
 
     @Transactional
