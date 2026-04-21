@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { RESOURCE_TYPES, STATUSES, FACULTIES, getTypeInfo, getStatusInfo, getUnitLabel } from '../constants'
 import { resourceApi, feedbackApi } from '../services/api'
+import ResourceFormModal from '../components/ResourceFormModal'
 
 const emptyForm = {
   name: '',
@@ -50,6 +51,8 @@ export default function AdminPanel() {
   const [deleteConfirm, setDeleteConfirm] = useState({ visible: false, id: null, name: '' })
   const [tableFilter, setTableFilter] = useState('')
   const [activeTab, setActiveTab] = useState('resources') // 'resources' or 'feedbacks'
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [errors, setErrors] = useState({})
   const [feedbacks, setFeedbacks] = useState([])
   const [fetchingFeedbacks, setFetchingFeedbacks] = useState(false)
   const [viewingFeedback, setViewingFeedback] = useState(null)
@@ -93,33 +96,35 @@ export default function AdminPanel() {
   }
 
   const validateForm = () => {
-    if (!form.name.trim()) return 'Resource name is required';
-    if (/^\d+$/.test(form.name.trim())) return 'Resource name cannot be only numbers';
-    if (!form.capacity) return 'Capacity is required';
+    const newErrors = {}
+    if (!form.name.trim()) newErrors.name = 'Resource name is required'
+    else if (/^\d+$/.test(form.name.trim())) newErrors.name = 'Alphabetical characters required'
     
-    const cap = Number(form.capacity);
-    if (isNaN(cap) || cap < 1 || !Number.isInteger(cap)) return 'Capacity must be a positive whole number';
-    if (!form.location.trim()) return 'Location is required';
+    if (!form.capacity) newErrors.capacity = 'Capacity is required'
+    else {
+      const cap = Number(form.capacity)
+      if (isNaN(cap) || cap < 1 || !Number.isInteger(cap)) newErrors.capacity = 'Must be a positive whole number'
+    }
+    
+    if (!form.location.trim()) newErrors.location = 'Location is required'
 
-    // Time range validation
-    const [fromH, fromM] = form.availableFrom.split(':').map(Number);
-    const [toH, toM] = form.availableTo.split(':').map(Number);
-    const fromVal = fromH * 60 + fromM;
-    const toVal = toH * 60 + toM;
+    const [fromH, fromM] = form.availableFrom.split(':').map(Number)
+    const [toH, toM] = form.availableTo.split(':').map(Number)
+    const fromVal = fromH * 60 + fromM
+    const toVal = toH * 60 + toM
     
     if (fromVal >= toVal) {
-      return 'Opening time must be earlier than closing time';
+      newErrors.availableTo = 'Closing must be later than opening'
     }
 
-    const minTime = 8 * 60; // 08:00
-    const maxTime = 18 * 60; // 18:00
+    const minTime = 8 * 60
+    const maxTime = 18 * 60
 
-    if (fromVal < minTime || fromVal > maxTime || toVal < minTime || toVal > maxTime) {
-      return 'Operating hours must be between 08:00 and 18:00';
-    }
+    if (fromVal < minTime || fromVal > maxTime) newErrors.availableFrom = 'Must be 08:00 - 18:00'
+    if (toVal < minTime || toVal > maxTime) newErrors.availableTo = 'Must be 08:00 - 18:00'
 
-    return null;
-  };
+    return newErrors
+  }
 
   const handleChange = (e) => {
     const { name, value, type: inputType } = e.target
@@ -128,14 +133,18 @@ export default function AdminPanel() {
     } else {
       setForm((prev) => {
         const newForm = { ...prev, [name]: value }
-        
-        // Logic: If status is set to OUT_OF_SERVICE or MAINTENANCE, 
-        // automatically turn off the "Bookable" flag to maintain data integrity.
         if (name === 'status' && (value === 'OUT_OF_SERVICE' || value === 'MAINTENANCE')) {
           newForm.isBookable = false
         }
-        
         return newForm
+      })
+    }
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors(prev => {
+        const updated = { ...prev }
+        delete updated[name]
+        return updated
       })
     }
   }
@@ -143,11 +152,12 @@ export default function AdminPanel() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    const errorMsg = validateForm();
-    if (errorMsg) {
-      showToast(errorMsg, 'error')
+    const newErrors = validateForm()
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors)
       return
     }
+    setErrors({})
 
     // Build the request body matching ResourceRequest DTO
     // Build the request body matching ResourceRequest DTO
@@ -180,6 +190,7 @@ export default function AdminPanel() {
       }
 
       setForm({ ...emptyForm })
+      setIsModalOpen(false)
       // Refresh the list
       await fetchResources()
     } catch (err) {
@@ -224,7 +235,7 @@ export default function AdminPanel() {
       model: resource.model || '',
       serialNumber: resource.serialNumber || '',
     })
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setIsModalOpen(true)
   }
 
   const handleDelete = (resource) => {
@@ -270,6 +281,8 @@ export default function AdminPanel() {
   const handleCancel = () => {
     setEditingId(null)
     setForm({ ...emptyForm })
+    setIsModalOpen(false)
+    setErrors({})
   }
 
   const filteredList = tableFilter
@@ -329,13 +342,25 @@ export default function AdminPanel() {
             <h1 className="text-3xl font-bold gradient-text">Admin Dashboard</h1>
             <p className="text-[#64748B] text-sm font-bold mt-1">Streamline your campus facility management</p>
           </div>
-          <button 
-            className="flex items-center gap-2 px-4 py-2 bg-slate-50 text-[#1E293B] hover:bg-slate-100 text-sm font-bold rounded-xl border border-slate-200 transition-all font-sans"
-            onClick={activeTab === 'resources' ? fetchResources : fetchFeedbacks} 
-            title="Refresh"
-          >
-            <RefreshCw size={16} className={(saving || fetchingFeedbacks) ? 'animate-spin' : ''} /> Refresh List
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-gradient text-white text-sm font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:scale-105 transition-all"
+              onClick={() => {
+                setEditingId(null);
+                setForm({ ...emptyForm });
+                setIsModalOpen(true);
+              }}
+            >
+              <Plus size={18} /> Add Resource
+            </button>
+            <button 
+              className="flex items-center gap-2 px-4 py-2.5 bg-white text-[#1E293B] hover:bg-slate-50 text-sm font-bold rounded-xl border border-slate-200 transition-all font-sans"
+              onClick={activeTab === 'resources' ? fetchResources : fetchFeedbacks} 
+              title="Refresh"
+            >
+              <RefreshCw size={16} className={(saving || fetchingFeedbacks) ? 'animate-spin' : ''} /> Refresh
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -359,250 +384,10 @@ export default function AdminPanel() {
 
       <div className="max-w-7xl mx-auto px-8 py-10 pb-20">
         {activeTab === 'resources' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          <div className="flex flex-col gap-8">
             
-            {/* Form Section */}
-            <div className="lg:col-span-4" id="admin-form-section">
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sticky top-28">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-[#4F8CFF]">
-                    {editingId ? <Pencil size={20} /> : <Plus size={20} />}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-[#1E293B]">
-                      {editingId ? 'Edit Resource' : 'Add New Resource'}
-                    </h3>
-                    <p className="text-[11px] text-[#94A3B8] font-bold uppercase tracking-widest mt-0.5">
-                      {editingId ? 'Updating Entry' : 'New Database Entry'}
-                    </p>
-                  </div>
-                </div>
-
-                <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="form-name" className="text-xs font-bold text-[#475569] px-1 italic">Resource Name *</label>
-                    <input
-                      type="text"
-                      className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
-                      id="form-name"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      placeholder="e.g. Lecture Hall 201"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="form-type" className="text-xs font-bold text-[#475569] px-1 italic">Type *</label>
-                      <select
-                        className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none cursor-pointer"
-                        id="form-type"
-                        name="type"
-                        value={form.type}
-                        onChange={handleChange}
-                      >
-                        {RESOURCE_TYPES.map((t) => (
-                          <option key={t.value} value={t.value}>
-                            {t.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="form-capacity" className="text-xs font-bold text-[#475569] px-1 italic">
-                        {getTypeInfo(form.type).unit === 'units' ? 'Quantity *' : 'Capacity *'}
-                      </label>
-                      <input
-                        type="number"
-                        className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 outline-none font-sans"
-                        id="form-capacity"
-                        name="capacity"
-                        value={form.capacity}
-                        onChange={handleChange}
-                        placeholder={['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(form.type) ? "e.g. 5" : "e.g. 100"}
-                      />
-                    </div>
-                  </div>
-
-                  {['PROJECTOR', 'CAMERA', 'EQUIPMENT'].includes(form.type) && (
-                    <>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-2">
-                          <label htmlFor="form-brand" className="text-xs font-bold text-[#475569] px-1 italic">Brand</label>
-                          <input
-                            type="text"
-                            className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
-                            id="form-brand"
-                            name="brand"
-                            value={form.brand}
-                            onChange={handleChange}
-                            placeholder="e.g. Sony, Epson"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <label htmlFor="form-model" className="text-xs font-bold text-[#475569] px-1 italic">Model</label>
-                          <input
-                            type="text"
-                            className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
-                            id="form-model"
-                            name="model"
-                            value={form.model}
-                            onChange={handleChange}
-                            placeholder="e.g. VPL-EX435"
-                          />
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label htmlFor="form-serial" className="text-xs font-bold text-[#475569] px-1 italic">Serial Number / Asset ID</label>
-                        <input
-                          type="text"
-                          className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
-                          id="form-serial"
-                          name="serialNumber"
-                          value={form.serialNumber}
-                          onChange={handleChange}
-                          placeholder="e.g. SN-12345678"
-                        />
-                      </div>
-                    </>
-                  )}
-
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="form-location" className="text-xs font-bold text-[#475569] px-1 italic">Location *</label>
-                    <input
-                      type="text"
-                      className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none"
-                      id="form-location"
-                      name="location"
-                      value={form.location}
-                      onChange={handleChange}
-                      placeholder="e.g. Building A – Floor 1"
-                    />
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="form-department" className="text-xs font-bold text-[#475569] px-1 italic">Department *</label>
-                    <select
-                      className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none cursor-pointer font-sans"
-                      id="form-department"
-                      name="department"
-                      value={form.department}
-                      onChange={handleChange}
-                    >
-                      {FACULTIES.map((f) => (
-                        <option key={f.value} value={f.value}>
-                          {f.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="form-status" className="text-xs font-bold text-[#475569] px-1 italic">Status *</label>
-                      <select
-                        className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none cursor-pointer"
-                        id="form-status"
-                        name="status"
-                        value={form.status}
-                        onChange={handleChange}
-                      >
-                        {STATUSES.map((s) => (
-                          <option key={s.value} value={s.value}>
-                            {s.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col justify-end pb-1.5">
-                      <label className="flex items-center gap-3 cursor-pointer select-none group">
-                        <div className="relative flex items-center">
-                          <input
-                            type="checkbox"
-                            className="peer appearance-none w-10 h-6 bg-slate-100 rounded-full checked:bg-[#4F8CFF] transition-all cursor-pointer"
-                            name="isBookable"
-                            checked={form.isBookable}
-                            onChange={handleChange}
-                          />
-                          <div className="absolute left-1 w-4 h-4 bg-white rounded-full transition-all peer-checked:left-5 shadow-sm" />
-                        </div>
-                        <span className="text-xs font-bold text-[#475569] italic">Bookable</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="form-availableFrom" className="text-xs font-bold text-[#475569] px-1 italic">From *</label>
-                      <input
-                        type="time"
-                        className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 outline-none font-sans"
-                        id="form-availableFrom"
-                        name="availableFrom"
-                        value={form.availableFrom}
-                        onChange={handleChange}
-                      />
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <label htmlFor="form-availableTo" className="text-xs font-bold text-[#475569] px-1 italic">To *</label>
-                      <input
-                        type="time"
-                        className="w-full bg-slate-50 border-none rounded-xl px-3 py-3 text-sm font-bold text-[#1E293B] focus:ring-2 focus:ring-[#4F8CFF]/50 outline-none font-sans"
-                        id="form-availableTo"
-                        name="availableTo"
-                        value={form.availableTo}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <label htmlFor="form-description" className="text-xs font-bold text-[#475569] px-1 italic">Description</label>
-                    <textarea
-                      className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm font-bold text-[#1E293B] placeholder:text-[#94A3B8] focus:ring-2 focus:ring-[#4F8CFF]/50 transition-all outline-none resize-none"
-                      id="form-description"
-                      name="description"
-                      value={form.description}
-                      onChange={handleChange}
-                      placeholder="Special features, equipment, or access notes..."
-                      rows={3}
-                    />
-                  </div>
-
-                  <div className="flex gap-3 mt-2">
-                    <button 
-                      type="submit" 
-                      className="flex-1 bg-blue-gradient text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] transition-all flex items-center justify-center gap-2 disabled:opacity-70" 
-                      disabled={saving}
-                    >
-                      {saving ? (
-                        <Loader2 size={18} className="animate-spin" />
-                      ) : editingId ? (
-                        <><Check size={18} /> Update</>
-                      ) : (
-                        <><Plus size={18} /> Add Resource</>
-                      )}
-                    </button>
-                    {editingId && (
-                      <button 
-                        type="button" 
-                        className="px-5 bg-slate-100 text-[#64748B] font-bold rounded-xl hover:bg-slate-200 transition-all flex items-center justify-center" 
-                        onClick={handleCancel}
-                      >
-                        <X size={18} />
-                      </button>
-                    )}
-                  </div>
-                </form>
-              </div>
-            </div>
-
             {/* Table Section */}
-            <div className="lg:col-span-8">
+            <div className="w-full">
               <div className="flex items-center justify-between mb-6 gap-4">
                 <div className="flex items-center gap-2">
                   <ListFilter size={20} className="text-[#4F8CFF]" />
@@ -958,6 +743,19 @@ export default function AdminPanel() {
           <span className="pr-2">{toast.message}</span>
         </div>
       )}
+
+      {/* Resource Form Modal */}
+      <ResourceFormModal
+        isOpen={isModalOpen}
+        onClose={handleCancel}
+        editingId={editingId}
+        form={form}
+        errors={errors}
+        handleChange={handleChange}
+        handleSubmit={handleSubmit}
+        handleCancel={handleCancel}
+        saving={saving}
+      />
     </div>
   )
 }

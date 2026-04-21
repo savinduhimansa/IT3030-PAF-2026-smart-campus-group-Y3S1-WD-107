@@ -408,8 +408,6 @@ export default function HomePage() {
 
       </section>
 
-      <ContactSection />
-
       {/* Quick Actions Hub Replacement */}
       <section className="px-5 md:px-12 py-24 md:py-32 relative overflow-hidden" id="quick-actions">
         {/* Decorative background glow */}
@@ -502,6 +500,7 @@ export default function HomePage() {
         </div>
       </section>
 
+      <ContactSection />
       <Footer />
     </div>
   )
