@@ -109,6 +109,7 @@ export default function AdminDashboard({ user }) {
         <StatCard label="Approved" value={approved} color="#10B981" icon={<CheckCircle size={22} />} />
         <StatCard label="Rejected" value={rejected} color="#EF4444" icon={<XCircle size={22} />} />
       </div>
+      
       {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-4 mb-8 bg-white rounded-xl shadow px-6 py-4 border border-[#E2E8F0]" style={{borderRadius: 12}}>
         <div className="flex items-center gap-2">
