@@ -190,7 +190,7 @@ export default function Navbar() {
                         </>
                     ) : (
                         <>
-                            <Link to="/dashboard" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Dashboard</Link>
+                            <Link to="/" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Home</Link>
                             <Link to="/catalogue" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Catalogue</Link>
                             <Link to={bookingPath} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Booking</Link>
                             <button onClick={handleAboutClick} className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 bg-transparent border-none cursor-pointer focus:outline-none">
@@ -200,9 +200,7 @@ export default function Navbar() {
                                 Contact Us
                             </button>
 
-                            <Link to="/tickets/new" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:text-red-400 hover:bg-red-400/10 no-underline flex items-center gap-1">
-                                <AlertCircle size={14} /> Report Issue
-                            </Link>
+                            <Link to="/tickets" className="px-4 py-2 rounded-xl text-sm font-medium text-white hover:bg-white/10 no-underline">Tickets</Link>
 
                             <div className="relative ml-2 flex items-center" ref={notifRef}>
                                 <button

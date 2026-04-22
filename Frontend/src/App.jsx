@@ -67,6 +67,8 @@ function AppLayout() {
 
     const closeSidebar = () => setSidebarOpen(false);
 
+    const userRole = localStorage.getItem('role');
+
     // Logic to define hideChrome and hideSidebar exactly as intended in "their part"
     const hideChrome = location.pathname.startsWith('/verify/');
     const hideSidebar =
@@ -74,7 +76,8 @@ function AppLayout() {
         location.pathname.includes('feedback') ||
         location.pathname === '/find-best-lab' ||
         location.pathname === '/register' ||
-        location.pathname === '/login';
+        location.pathname === '/login' ||
+        userRole !== 'ADMIN';
 
     const handleLogout = () => {
         localStorage.removeItem('token');
@@ -84,7 +87,6 @@ function AppLayout() {
         navigate('/');
     };
 
-    const userRole = localStorage.getItem('role');
     const userIdRaw = localStorage.getItem('userId');
     const userId = userIdRaw ? Number(userIdRaw) : null;
     const user = userId ? { id: userId, role: userRole || 'USER' } : null;
