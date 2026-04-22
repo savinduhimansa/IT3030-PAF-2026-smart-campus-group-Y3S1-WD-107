@@ -1,3 +1,4 @@
 .env
 node_modules/
 package-lock.json
+Ticketing_System_Documentation.md
