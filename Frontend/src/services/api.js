@@ -62,8 +62,7 @@ export const createBooking = (userId, data) => Historyapi.post('', data, { heade
 export const cancelBooking = (userId, id) => Historyapi.post(`/${id}/cancel`, {}, { headers: { 'X-User-Id': userId } }).then(res => res.data);
 
 export const getAllBookings = (userId, role, status) => {
-    // Use Axios `params` instead of manual `?status=` string building.
-    // This avoids generating `/bookings/?status=...` which can 404 on Spring (trailing slash).
+    
     const normalizedStatus = typeof status === 'string' ? status.trim().toUpperCase() : null;
     const params = {};
     if (normalizedStatus && ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'].includes(normalizedStatus)) {

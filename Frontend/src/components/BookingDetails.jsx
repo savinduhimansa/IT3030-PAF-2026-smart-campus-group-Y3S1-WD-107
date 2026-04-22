@@ -211,12 +211,41 @@ function BookingDashboard({ user }) {
     const [showQR, setShowQR] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
 
+    const [resourceSearch, setResourceSearch] = useState('');
+
     const [searchParams] = useSearchParams();
     const resourceIdFromUrl = searchParams.get('resourceId');
 
     const [prefillResource, setPrefillResource] = useState(null);
 
     const resolvedUserId = user?.id ?? Number(localStorage.getItem('userId'));
+
+    useEffect(() => {
+        // Prefetch resources so resource-name search works even if per-ID lookups fail.
+        // This also avoids an N+1 call pattern when the user has many bookings.
+        let cancelled = false;
+        resourceApi
+            .getAll()
+            .then((res) => {
+                if (cancelled) return;
+                const list = Array.isArray(res?.data) ? res.data : [];
+                const nextMap = {};
+                list.forEach((r) => {
+                    const id = r?.resourceId;
+                    if (id === null || id === undefined) return;
+                    nextMap[String(id)] = r?.name ?? null;
+                });
+                if (Object.keys(nextMap).length === 0) return;
+                setResourceNameById((prev) => ({ ...nextMap, ...prev }));
+            })
+            .catch(() => {
+                // Ignore; we still fall back to per-ID lookups.
+            });
+
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     useEffect(() => {
         if (!resourceIdFromUrl) return;
@@ -302,11 +331,25 @@ function BookingDashboard({ user }) {
     }, [bookings, resourceNameById]);
 
     const getResourceLabel = (booking) => {
+        const inlineName = booking?.resourceName || booking?.resource?.name;
+        if (inlineName) return inlineName;
+
         const id = booking?.resourceId;
         if (id === null || id === undefined) return '—';
         const key = String(id);
         return resourceNameById[key] || id;
     };
+
+    const filteredBookings = (() => {
+        const query = resourceSearch.trim().toLowerCase();
+        if (!query) return bookings;
+
+        return (bookings || []).filter((b) => {
+            const label = String(getResourceLabel(b) ?? '').toLowerCase();
+            const idLabel = b?.resourceId !== null && b?.resourceId !== undefined ? String(b.resourceId) : '';
+            return label.includes(query) || idLabel.includes(query);
+        });
+    })();
 
     const openQR = (booking) => {
         setSelectedBooking(booking);
@@ -443,7 +486,18 @@ function BookingDashboard({ user }) {
                 </div>
 
                 <div className="flex justify-between items-center mb-6">
-                    <div />
+                    <div className="w-full max-w-md">
+                        <label className="sr-only" htmlFor="booking-resource-search">Search resource</label>
+                        <input
+                            id="booking-resource-search"
+                            type="text"
+                            value={resourceSearch}
+                            onChange={(e) => setResourceSearch(e.target.value)}
+                            placeholder="Search resource by name"
+                            className="w-full bg-white border border-[#E2E8F0] px-4 py-2.5 rounded-lg text-sm font-medium text-[#0F172A] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#4F46E5]"
+                            style={{ borderRadius: 8, fontFamily: 'Inter, sans-serif' }}
+                        />
+                    </div>
                     <button
                         onClick={() => { setIsModalOpen(true); setEditingBooking(null); setPrefillResource(null); }}
                         className="flex items-center gap-2 bg-[#4F46E5] text-white px-5 py-2.5 rounded-lg font-semibold shadow hover:bg-[#4338CA] transition-colors"
@@ -474,8 +528,16 @@ function BookingDashboard({ user }) {
                                 style={{borderRadius: 8, fontFamily: 'Inter, sans-serif'}}
                             >Create your first booking</button>
                         </div>
+                    ) : filteredBookings.length === 0 ? (
+                        <div className="col-span-full flex flex-col items-center justify-center py-20 bg-white border-2 border-dashed border-[#E2E8F0] rounded-xl" style={{borderRadius: 12}}>
+                            <div className="w-20 h-20 flex items-center justify-center bg-[#F8FAFC] border-2 border-dashed border-[#E2E8F0] rounded-full mb-4">
+                                <MapPin className="text-[#4F46E5]" size={40} />
+                            </div>
+                            <span className="text-xl font-semibold text-[#64748B] mb-2">No matching bookings</span>
+                            <span className="text-[14px] text-[#64748B] mb-4">Try a different resource name.</span>
+                        </div>
                     ) : (
-                        bookings.map(b => (
+                        filteredBookings.map(b => (
                             <div key={b.id} className="relative bg-white flex flex-col shadow group" style={{borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.06)', borderLeft: `4px solid ${statusColors[b.status]?.color || '#E2E8F0'}`}}>
                                 <div className="flex justify-between items-start p-5 pb-2">
                                     <div className="flex flex-col gap-1">
