@@ -72,7 +72,7 @@ export default function VerifyPage() {
             <div className="w-6 h-6 border-2 border-[#4F46E5] border-t-transparent rounded-full animate-spin"></div>
             <span className="text-[#0F172A] font-semibold">Verifying check-in…</span>
           </div>
-          <div className="mt-6 text-center text-xs text-[#64748B] font-medium">UniBook</div>
+          <div className="mt-6 text-center text-xs text-[#64748B] font-medium">Spacelink</div>
         </div>
       </div>
     );
@@ -122,7 +122,7 @@ export default function VerifyPage() {
             </div>
           )}
 
-          <div className="mt-7 text-center text-xs text-[#64748B] font-extrabold tracking-widest">UniBook</div>
+          <div className="mt-7 text-center text-xs text-[#64748B] font-extrabold tracking-widest">Spacelink</div>
         </div>
       </div>
     </div>
