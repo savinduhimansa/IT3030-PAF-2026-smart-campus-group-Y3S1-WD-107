@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { authApi } from '../services/api';
-import { Users, Shield, Wrench, Trash2, Search, AlertCircle } from 'lucide-react';
+import { Users, Shield, Wrench, Trash2, Search, AlertCircle, Edit2, X, CheckCircle } from 'lucide-react';
 
 const UserManagement = () => {
     const [users, setUsers] = useState([]);
@@ -9,8 +9,9 @@ const UserManagement = () => {
     const [filterRole, setFilterRole] = useState('ALL');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // NEW: State for the custom delete modal
+    // Modal States
     const [deleteModal, setDeleteModal] = useState({ isOpen: false, userId: null, username: '' });
+    const [editModal, setEditModal] = useState({ isOpen: false, user: null });
 
     // Fetch all users on component mount
     useEffect(() => {
@@ -31,47 +32,69 @@ const UserManagement = () => {
         }
     };
 
-    // Handle Role Update
-    const handleRoleChange = async (userId, newRole) => {
+    // ==========================================
+    // EDIT USER LOGIC
+    // ==========================================
+    const handleEditClick = (user) => {
+        // Open modal with a copy of the user data
+        setEditModal({ isOpen: true, user: { ...user } });
+    };
+
+    const confirmEdit = async (e) => {
+        e.preventDefault();
+
+        const updatedUser = editModal.user;
+
+        // 1. Optimistic UI Update: Close the modal immediately for a snappy UX
+        setEditModal({ isOpen: false, user: null });
+
+        // 2. Update the local state instantly so the table reflects the changes
+        setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+
+        // 3. Send the actual update request to the backend asynchronously
         try {
-            const userToUpdate = users.find(u => u.id === userId);
-
-            setUsers(users.map(user => user.id === userId ? { ...user, role: newRole } : user));
-
-            await authApi.updateUser(userId, {
-                username: userToUpdate.username,
-                email: userToUpdate.email,
-                role: newRole
+            await authApi.updateUser(updatedUser.id, {
+                username: updatedUser.username,
+                email: updatedUser.email,
+                role: updatedUser.role
             });
-
         } catch (err) {
-            console.error("Error updating role:", err);
-            alert("Failed to update role. Reverting changes.");
+            console.error("Error updating user:", err);
+            // Revert changes and alert the user if the API call fails
+            alert("Failed to update user details. Reverting changes.");
             fetchUsers();
         }
     };
+    // ==========================================
 
-    // NEW: Open the custom delete modal
+    // ==========================================
+    // DELETE USER LOGIC
+    // ==========================================
     const handleDeleteClick = (userId, username) => {
         setDeleteModal({ isOpen: true, userId, username });
     };
 
-    // NEW: Execute the delete action from the modal
     const confirmDelete = async () => {
         const { userId } = deleteModal;
         try {
+            // Optimistically remove user from table
             setUsers(users.filter(user => user.id !== userId));
+            // Close modal immediately
+            setDeleteModal({ isOpen: false, userId: null, username: '' });
+
+            // Call API
             await authApi.deleteUser(userId);
-            setDeleteModal({ isOpen: false, userId: null, username: '' }); // Close modal on success
         } catch (err) {
             console.error("Error deleting user:", err);
-            alert("Failed to delete user.");
+            alert("Failed to delete user. Reverting changes.");
             fetchUsers();
-            setDeleteModal({ isOpen: false, userId: null, username: '' }); // Close modal on error
+            setDeleteModal({ isOpen: false, userId: null, username: '' });
         }
     };
 
-    // Filter Logic
+    // ==========================================
+    // FILTER & STATS LOGIC
+    // ==========================================
     const filteredUsers = users.filter(user => {
         const matchesRole = filterRole === 'ALL' || user.role === filterRole;
         const matchesSearch = (user.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -79,7 +102,6 @@ const UserManagement = () => {
         return matchesRole && matchesSearch;
     });
 
-    // Stats Calculation
     const totalUsers = users.length;
     const totalAdmins = users.filter(u => u.role === 'ADMIN').length;
     const totalTechnicians = users.filter(u => u.role === 'TECHNICIAN').length;
@@ -155,7 +177,7 @@ const UserManagement = () => {
                 </div>
             </div>
 
-            {/* Error Message */}
+            {/* Error Message Display */}
             {error && (
                 <div className="mb-6 bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-3 border border-red-100">
                     <AlertCircle size={20} />
@@ -163,24 +185,25 @@ const UserManagement = () => {
                 </div>
             )}
 
-            {/* Main Table */}
+            {/* Main Users Table */}
             <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm text-slate-600">
                         <thead className="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200">
                         <tr>
                             <th scope="col" className="px-6 py-4 font-semibold">User Details</th>
-                            <th scope="col" className="px-6 py-4 font-semibold">System Role</th>
+                            <th scope="col" className="px-6 py-4 font-semibold text-center">System Role</th>
                             <th scope="col" className="px-6 py-4 font-semibold text-right">Actions</th>
                         </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                         {isLoading ? (
+                            // Loading Skeletons
                             [...Array(5)].map((_, i) => (
                                 <tr key={i} className="animate-pulse">
                                     <td className="px-6 py-5"><div className="h-10 bg-slate-200 rounded-lg w-48"></div></td>
-                                    <td className="px-6 py-5"><div className="h-8 bg-slate-200 rounded-full w-32"></div></td>
-                                    <td className="px-6 py-5 text-right"><div className="h-8 bg-slate-200 rounded-lg w-8 ml-auto"></div></td>
+                                    <td className="px-6 py-5"><div className="h-8 bg-slate-200 rounded-full w-32 mx-auto"></div></td>
+                                    <td className="px-6 py-5 text-right"><div className="h-8 bg-slate-200 rounded-lg w-16 ml-auto"></div></td>
                                 </tr>
                             ))
                         ) : filteredUsers.length > 0 ? (
@@ -197,29 +220,33 @@ const UserManagement = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <select
-                                            value={user.role || 'USER'}
-                                            onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                                            className={`text-xs font-bold rounded-full px-4 py-1.5 outline-none cursor-pointer appearance-none text-center transition-all border-2
-                                                    ${user.role === 'ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100' :
-                                                user.role === 'TECHNICIAN' ? 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100' :
-                                                    'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'}
-                                                `}
-                                        >
-                                            <option value="USER">USER</option>
-                                            <option value="TECHNICIAN">TECHNICIAN</option>
-                                            <option value="ADMIN">ADMIN</option>
-                                        </select>
+                                    <td className="px-6 py-4 text-center">
+                                        {/* Role Badge */}
+                                        <span className={`text-[11px] font-bold tracking-wider rounded-full px-4 py-1.5 uppercase border
+                                            ${user.role === 'ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                                            user.role === 'TECHNICIAN' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                                                'bg-slate-50 text-slate-600 border-slate-200'}
+                                        `}>
+                                            {user.role || 'USER'}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button
-                                            onClick={() => handleDeleteClick(user.id, user.username)}
-                                            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                            title="Delete User"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => handleEditClick(user)}
+                                                className="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                                                title="Edit User"
+                                            >
+                                                <Edit2 size={18} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteClick(user.id, user.username)}
+                                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                                title="Delete User"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -238,7 +265,78 @@ const UserManagement = () => {
                 </div>
             </div>
 
-            {/* NEW: Custom Delete Confirmation Modal */}
+            {/* ========================================== */}
+            {/* Edit User Modal */}
+            {/* ========================================== */}
+            {editModal.isOpen && editModal.user && (
+                <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-slate-800">Edit User Profile</h3>
+                            <button onClick={() => setEditModal({ isOpen: false, user: null })} className="text-slate-400 hover:text-slate-600">
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={confirmEdit} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Display Name</label>
+                                <input
+                                    type="text"
+                                    required
+                                    value={editModal.user.username}
+                                    onChange={(e) => setEditModal({ ...editModal, user: { ...editModal.user, username: e.target.value } })}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Email Address</label>
+                                <input
+                                    type="email"
+                                    disabled
+                                    value={editModal.user.email}
+                                    className="w-full bg-slate-100 border border-slate-200 text-slate-500 px-4 py-2.5 rounded-xl cursor-not-allowed"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">System Role</label>
+                                <select
+                                    value={editModal.user.role}
+                                    onChange={(e) => setEditModal({ ...editModal, user: { ...editModal.user, role: e.target.value } })}
+                                    className="w-full bg-slate-50 border border-slate-200 text-slate-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                >
+                                    <option value="USER">Standard User (USER)</option>
+                                    <option value="TECHNICIAN">Technician (TECHNICIAN)</option>
+                                    <option value="ADMIN">System Administrator (ADMIN)</option>
+                                </select>
+                            </div>
+
+                            <div className="pt-4 flex items-center justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditModal({ isOpen: false, user: null })}
+                                    className="px-5 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-5 py-2.5 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-sm hover:shadow transition-all flex items-center gap-2"
+                                >
+                                    <CheckCircle size={16} />
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* ========================================== */}
+            {/* Custom Delete Confirmation Modal */}
+            {/* ========================================== */}
             {deleteModal.isOpen && (
                 <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
