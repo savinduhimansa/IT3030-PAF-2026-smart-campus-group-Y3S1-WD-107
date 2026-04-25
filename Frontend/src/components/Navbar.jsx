@@ -41,7 +41,7 @@ export default function Navbar() {
     const unreadCount = notificationContext?.unreadCount || 0;
     const markAsRead = notificationContext?.markAsRead || (() => {});
 
-    // --- NEW: Function to handle notification clicks and route the user ---
+    // --- Function to handle notification clicks and route the user ---
     const handleNotificationClick = (notif) => {
         // 1. Mark as read if it's unread
         const isUnread = notif.read === false || notif.isRead === false;
@@ -61,17 +61,15 @@ export default function Navbar() {
                 break;
             case 'TICKET':
             case 'ISSUE':
-                navigate('/tickets'); // Change this route if your tickets page is different
+                navigate('/tickets');
                 break;
             case 'RESOURCE':
                 navigate('/catalogue');
                 break;
             case 'WELCOME':
-                // For welcome, they are already on dashboard, maybe just show profile
                 // navigate('/profile');
                 break;
             default:
-                // Default fallback
                 break;
         }
     };
@@ -212,7 +210,8 @@ export default function Navbar() {
                                 >
                                     <Bell size={22} className={`transition-colors duration-300 ${unreadCount > 0 ? 'text-blue-400 group-hover:text-blue-300' : 'text-slate-200 group-hover:text-white'}`} />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-1.5 right-1.5 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-gradient-to-br from-red-500 to-rose-600 rounded-full border border-[#0a0e1a] transform translate-x-1/2 -translate-y-1/2 shadow-lg animate-in zoom-in duration-300">
+                                        // 🔥 NEW: Modern Glassy Notification Badge 🔥
+                                        <span className="absolute top-1 right-1 flex items-center justify-center min-w-[20px] h-[20px] px-1 text-[11px] font-extrabold text-white bg-red-500/80 backdrop-blur-md rounded-full border border-red-400/50 shadow-[0_0_12px_rgba(239,68,68,0.6)] transform translate-x-1/2 -translate-y-1/4 z-10 animate-in zoom-in duration-300">
                                             {unreadCount > 99 ? '99+' : unreadCount}
                                         </span>
                                     )}
@@ -243,7 +242,6 @@ export default function Navbar() {
                                                     return (
                                                         <div
                                                             key={notif.id}
-                                                            // --- NEW: Using the new handleNotificationClick function ---
                                                             onClick={() => handleNotificationClick(notif)}
                                                             className={`p-4 border-b border-slate-700/60 cursor-pointer transition-all duration-300 group relative overflow-hidden ${isUnread ? 'bg-blue-900/30 hover:bg-blue-900/40' : 'bg-transparent hover:bg-slate-800/80'}`}
                                                         >
