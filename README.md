@@ -1,8 +1,8 @@
-# 🏫 Smart Campus Operations Hub
+#  Smart Campus Operations Hub
 
 > A full-stack web application for managing university campus operations, built with Spring Boot 3 and React.
 
-## 📌 Project Overview
+##  Project Overview
 
 The **Smart Campus Operations Hub** is a centralized platform designed to streamline the day-to-day operations of a university campus. It enables students, staff, and administrators to manage campus resources, make bookings, raise support tickets, and handle user accounts — all from a single web application.
 
@@ -10,18 +10,18 @@ This project is developed as part of the **IT3030 / PAF 2026** module by Group *
 
 
 
-## 🧩 Modules
+##  Modules
 
-### 1. 👤 User Management
+### 1.  User Management
 Handles user registration, login, profile management, and role-based access control. Supports OAuth-based authentication. Admins can create, update, and delete user accounts.
 
-### 2. 🏢 Resource Management
+### 2.  Resource Management
 Manages all campus resources such as lecture halls, labs, sports courts, and equipment. Admins can add, update, and remove resources. Maintains a live catalogue with availability status.
 
-### 3. 📅 Booking Management
+### 3.  Booking Management
 Allows registered users to reserve campus resources. Includes conflict detection, approval/rejection workflow, QR code check-in for approved bookings, recurring bookings, and a full audit trail of all status changes.
 
-### 4. 🎫 Ticket Management
+### 4.  Ticket Management
 Allows users to raise incident or maintenance tickets for campus issues. Supports image attachments, priority levels, technician assignment, and comment threads with role-based access.
 
 ---
@@ -37,7 +37,7 @@ Allows users to raise incident or maintenance tickets for campus issues. Support
 
 
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 smart-campus-operations-hub/
@@ -64,7 +64,7 @@ smart-campus-operations-hub/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
