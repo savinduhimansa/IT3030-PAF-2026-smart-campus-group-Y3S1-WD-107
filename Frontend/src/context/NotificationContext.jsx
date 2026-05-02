@@ -3,90 +3,96 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 import { notificationApi } from '../services/api';
 
-const NotificationContext = createContext();
+// Fix 1: Added default value 'null' to createContext
+const NotificationContext = createContext(null);
 
+// Fix 2: Disabled fast refresh warning for this specific hook export
+// eslint-disable-next-line react-refresh/only-export-components
 export const useNotification = () => useContext(NotificationContext);
 
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
-    const [stompClient, setStompClient] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    const userRole = localStorage.getItem('role');
+    // Fix 3: Removed unused variables (userRole, user, stompClient)
     const userIdRaw = localStorage.getItem('userId');
     const userId = userIdRaw ? Number(userIdRaw) : null;
-    const userString = localStorage.getItem('user');
-    const user = userString ? JSON.parse(userString) : null;
 
     useEffect(() => {
+        // Fix 4: Moved fetchInitialData inside useEffect to fix missing dependency warning
+        const fetchInitialData = async () => {
+            setIsLoading(true);
+            try {
+                const countRes = await notificationApi.getUnreadCount(userId);
+                setUnreadCount(countRes.data);
+
+                const notifRes = await notificationApi.getUserNotifications(userId);
+                setNotifications(notifRes.data);
+
+                const unreadNotifs = notifRes.data.filter(n => n.read === false || n.isRead === false);
+                if (unreadNotifs.length > 0 && !sessionStorage.getItem('welcomeToastShown')) {
+                    const event = new CustomEvent('show-toast', {
+                        detail: { message: unreadNotifs[0].message, type: 'success' }
+                    });
+                    window.dispatchEvent(event);
+                    sessionStorage.setItem('welcomeToastShown', 'true');
+                }
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+            } finally {
+                setTimeout(() => {
+                    setIsLoading(false);
+                }, 2000);
+            }
+        };
+
         if (userId) {
-            fetchInitialData();
+            // Fix 5: Handled ignored promise warning
+            void fetchInitialData();
         }
     }, [userId]);
 
-    const fetchInitialData = async () => {
-        try {
-            const countRes = await notificationApi.getUnreadCount(userId);
-            setUnreadCount(countRes.data);
-
-            const notifRes = await notificationApi.getUserNotifications(userId);
-            setNotifications(notifRes.data);
-
-            const unreadNotifs = notifRes.data.filter(n => n.read === false || n.isRead === false);
-            if (unreadNotifs.length > 0 && !sessionStorage.getItem('welcomeToastShown')) {
-                const event = new CustomEvent('show-toast', {
-                    detail: { message: unreadNotifs[0].message, type: 'success' }
-                });
-                window.dispatchEvent(event);
-                sessionStorage.setItem('welcomeToastShown', 'true');
-            }
-        } catch (error) {
-            console.error("Error fetching notifications:", error);
-        }
-    };
-
     useEffect(() => {
-        if (userId) {
-            const client = new Client({
-                webSocketFactory: () => new SockJS('http://localhost:8080/ws-notifications'),
-                reconnectDelay: 5000,
+        if (!userId) return;
 
-                // --- NEW: Enable debugging to see exactly what is happening under the hood ---
-                debug: (str) => {
-                    console.log('STOMP DEBUG: ' + str);
-                },
+        const client = new Client({
+            webSocketFactory: () => new SockJS('http://localhost:8080/ws-notifications'),
+            reconnectDelay: 5000,
 
-                onConnect: () => {
-                    console.log(`✅ SUCCESS: Connected! Subscribing to /topic/user/${userId}/notifications`);
+            debug: (str) => {
+                console.log('STOMP DEBUG: ' + str);
+            },
 
-                    client.subscribe(`/topic/user/${userId}/notifications`, (message) => {
-                        console.log("🔥 LIVE MESSAGE ARRIVED: ", message.body);
-                        const newNotification = JSON.parse(message.body);
+            onConnect: () => {
+                console.log(`✅ SUCCESS: Connected! Subscribing to /topic/user/${userId}/notifications`);
 
-                        const event = new CustomEvent('show-toast', {
-                            detail: { message: newNotification.message, type: 'success' }
-                        });
-                        window.dispatchEvent(event);
+                client.subscribe(`/topic/user/${userId}/notifications`, (message) => {
+                    console.log("🔥 LIVE MESSAGE ARRIVED: ", message.body);
+                    const newNotification = JSON.parse(message.body);
 
-                        setNotifications((prev) => [newNotification, ...prev]);
-                        setUnreadCount((prev) => prev + 1);
+                    const event = new CustomEvent('show-toast', {
+                        detail: { message: newNotification.message, type: 'success' }
                     });
-                },
-                onStompError: (frame) => {
-                    console.error('Broker reported error: ' + frame.headers['message']);
-                    console.error('Additional details: ' + frame.body);
-                },
-            });
+                    window.dispatchEvent(event);
 
-            client.activate();
-            setStompClient(client);
+                    setNotifications((prev) => [newNotification, ...prev]);
+                    setUnreadCount((prev) => prev + 1);
+                });
+            },
+            onStompError: (frame) => {
+                console.error('Broker reported error: ' + frame.headers['message']);
+                console.error('Additional details: ' + frame.body);
+            },
+        });
 
-            return () => {
-                if (client) {
-                    client.deactivate();
-                }
-            };
-        }
+        client.activate();
+
+        return () => {
+            if (client) {
+                client.deactivate();
+            }
+        };
     }, [userId]);
 
     const markAsRead = async (notificationId) => {
@@ -102,7 +108,7 @@ export const NotificationProvider = ({ children }) => {
     };
 
     return (
-        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead }}>
+        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, isLoading }}>
             {children}
         </NotificationContext.Provider>
     );

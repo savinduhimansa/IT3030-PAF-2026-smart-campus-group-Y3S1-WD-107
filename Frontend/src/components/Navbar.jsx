@@ -41,18 +41,16 @@ export default function Navbar() {
     const unreadCount = notificationContext?.unreadCount || 0;
     const markAsRead = notificationContext?.markAsRead || (() => {});
 
-    // --- Function to handle notification clicks and route the user ---
+    const isLoading = notificationContext?.isLoading || false;
+
     const handleNotificationClick = (notif) => {
-        // 1. Mark as read if it's unread
         const isUnread = notif.read === false || notif.isRead === false;
         if (isUnread) {
             markAsRead(notif.id);
         }
 
-        // 2. Close the notification dropdown
         setNotifDropdownOpen(false);
 
-        // 3. Navigate based on notification type
         const type = notif.type ? notif.type.toUpperCase() : '';
 
         switch (type) {
@@ -73,7 +71,6 @@ export default function Navbar() {
                 break;
         }
     };
-    // ----------------------------------------------------------------------
 
     useEffect(() => {
         const handleToast = (e) => {
@@ -210,7 +207,6 @@ export default function Navbar() {
                                 >
                                     <Bell size={22} className={`transition-colors duration-300 ${unreadCount > 0 ? 'text-blue-400 group-hover:text-blue-300' : 'text-slate-200 group-hover:text-white'}`} />
                                     {unreadCount > 0 && (
-                                        // 🔥 NEW: Modern Glassy Notification Badge 🔥
                                         <span className="absolute top-1 right-1 flex items-center justify-center min-w-[20px] h-[20px] px-1 text-[11px] font-extrabold text-white bg-red-500/80 backdrop-blur-md rounded-full border border-red-400/50 shadow-[0_0_12px_rgba(239,68,68,0.6)] transform translate-x-1/2 -translate-y-1/4 z-10 animate-in zoom-in duration-300">
                                             {unreadCount > 99 ? '99+' : unreadCount}
                                         </span>
@@ -228,7 +224,23 @@ export default function Navbar() {
                                             )}
                                         </div>
                                         <div className="max-h-[350px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-500 hover:scrollbar-thumb-slate-400 scrollbar-track-transparent">
-                                            {notifications.length === 0 ? (
+
+                                            {isLoading ? (
+                                                <div className="flex flex-col">
+                                                    {[1, 2, 3].map((skeleton) => (
+                                                        <div key={skeleton} className="p-4 border-b border-slate-700/60 flex gap-4 items-start pl-2">
+                                                            <div className="mt-1 flex-shrink-0 flex items-center justify-center">
+                                                                <div className="w-2.5 h-2.5 rounded-full bg-slate-600 animate-pulse"></div>
+                                                            </div>
+                                                            <div className="flex-1 w-full">
+                                                                <div className="h-3 bg-slate-600 rounded-md w-3/4 mb-3 animate-pulse"></div>
+                                                                <div className="h-3 bg-slate-600 rounded-md w-1/2 mb-3 animate-pulse"></div>
+                                                                <div className="h-2.5 bg-slate-700 rounded-md w-1/3 animate-pulse"></div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : notifications.length === 0 ? (
                                                 <div className="p-10 flex flex-col items-center justify-center text-center">
                                                     <div className="w-14 h-14 rounded-full bg-slate-800 flex items-center justify-center mb-4 border border-slate-700">
                                                         <Bell className="text-slate-400" size={24} />
