@@ -43,6 +43,11 @@ export default function Navbar() {
 
     const isLoading = notificationContext?.isLoading || false;
 
+    // --- NEW: Role-based Avatar variables ---
+    const isAdmin = role === 'ADMIN';
+    const avatarGradient = isAdmin ? 'from-amber-400 to-orange-500' : 'from-blue-500 to-cyan-500';
+    const roleColorText = isAdmin ? '#fbbf24' : '#cbd5e1'; // Admin gets a gold text for the role label too
+
     const handleNotificationClick = (notif) => {
         const isUnread = notif.read === false || notif.isRead === false;
         if (isUnread) {
@@ -141,7 +146,6 @@ export default function Navbar() {
 
     return (
         <>
-            {/* --- SUPER OVERRIDE CSS: This breaks any !important rules from other CSS files --- */}
             <style>
                 {`
                     .force-white-text-glass p,
@@ -222,7 +226,6 @@ export default function Navbar() {
                                 </button>
 
                                 {notifDropdownOpen && (
-                                    // --- BUG FIX: Added 'force-white-text-glass' class here to override external CSS ---
                                     <div className="force-white-text-glass absolute right-0 top-[120%] mt-2 w-80 md:w-[380px] rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.8)] overflow-hidden border border-slate-600 z-[1000] backdrop-blur-3xl transform origin-top-right transition-all duration-200 ease-out animate-in fade-in slide-in-from-top-2" style={{ backgroundColor: 'rgba(15, 23, 42, 0.96)' }}>
 
                                         <div className="px-5 py-4 border-b border-white/10 flex justify-between items-center" style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
@@ -300,11 +303,20 @@ export default function Navbar() {
                                 }} className="flex items-center gap-3 p-1.5 pr-3 rounded-full bg-white/10 border border-white/20 hover:bg-white/20 transition-all focus:outline-none cursor-pointer">
                                     <div className="hidden md:flex flex-col items-end mr-1 ml-3">
                                         <span className="text-[13px] font-bold drop-shadow-sm" style={{ color: '#ffffff' }}>{userName}</span>
-                                        <span className="text-[10px] uppercase tracking-widest drop-shadow-sm" style={{ color: '#cbd5e1' }}>{role}</span>
+                                        <span className="text-[10px] uppercase tracking-widest drop-shadow-sm" style={{ color: roleColorText }}>{role}</span>
                                     </div>
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center font-bold text-sm shadow-inner" style={{ color: '#ffffff' }}>
-                                        {userInitials}
+
+                                    {/* --- NEW: Role-Based Glowing Avatar --- */}
+                                    <div className="relative flex items-center justify-center">
+                                        {/* Glow Layer (Animated Pulse) */}
+                                        <div className={`absolute inset-0 rounded-full bg-gradient-to-r ${avatarGradient} blur-[6px] opacity-60 animate-pulse`}></div>
+
+                                        {/* Actual Avatar */}
+                                        <div className={`relative w-8 h-8 rounded-full bg-gradient-to-r ${avatarGradient} flex items-center justify-center font-bold text-sm shadow-inner border border-white/30`} style={{ color: '#ffffff' }}>
+                                            {userInitials}
+                                        </div>
                                     </div>
+
                                     <ChevronDown size={16} color="#ffffff" className={`transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
                                 </button>
 
