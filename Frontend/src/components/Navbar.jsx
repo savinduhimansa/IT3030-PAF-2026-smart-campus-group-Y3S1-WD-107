@@ -14,9 +14,10 @@ export default function Navbar() {
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const [isLocalLoading, setIsLocalLoading] = useState(false);
-
-    // --- NEW: Track scroll position for dynamic navbar ---
     const [isScrolled, setIsScrolled] = useState(false);
+
+    // --- NEW: State to control the Bell ringing animation ---
+    const [isRinging, setIsRinging] = useState(false);
 
     const dropdownRef = useRef(null);
     const notifRef = useRef(null);
@@ -78,7 +79,6 @@ export default function Navbar() {
         }
     };
 
-    // --- NEW: Event listener to detect scrolling ---
     useEffect(() => {
         const handleScroll = () => {
             if (window.scrollY > 20) {
@@ -109,6 +109,12 @@ export default function Navbar() {
                     secondary: '#ffffff',
                 },
             });
+
+            // --- NEW: Trigger the bell animation when a new notification arrives ---
+            setIsRinging(true);
+            setTimeout(() => {
+                setIsRinging(false);
+            }, 2500); // Stop ringing after 2.5 seconds
         };
 
         window.addEventListener('show-toast', handleToast);
@@ -174,6 +180,21 @@ export default function Navbar() {
                     .force-white-text-glass .time-text span {
                         color: #cbd5e1 !important;
                     }
+
+                    /* --- NEW: Realistic Bell Ringing Animation --- */
+                    @keyframes bell-wiggle {
+                        0%, 100% { transform: rotate(0deg); }
+                        15% { transform: rotate(25deg); }
+                        30% { transform: rotate(-25deg); }
+                        45% { transform: rotate(15deg); }
+                        60% { transform: rotate(-15deg); }
+                        75% { transform: rotate(5deg); }
+                        85% { transform: rotate(-5deg); }
+                    }
+                    .animate-bell-ring {
+                        animation: bell-wiggle 0.6s ease-in-out infinite;
+                        transform-origin: top center; /* Makes it swing from the top like a real bell */
+                    }
                 `}
             </style>
 
@@ -181,7 +202,6 @@ export default function Navbar() {
 
             <Toaster position="top-right" reverseOrder={false} containerStyle={{ top: 80, right: 40 }} />
 
-            {/* --- UPDATED: Dynamic classes applied based on isScrolled state --- */}
             <nav
                 className={`fixed top-0 left-0 right-0 z-[100] px-6 md:px-12 flex items-center justify-between transition-all duration-500 ease-in-out ${
                     isScrolled
@@ -238,10 +258,16 @@ export default function Navbar() {
                                         }
                                         setNotifDropdownOpen(!notifDropdownOpen);
                                         setDropdownOpen(false);
+                                        setIsRinging(false); // Stop ringing if they click it manually
                                     }}
                                     className="relative p-2.5 rounded-xl hover:bg-white/10 transition-all duration-300 focus:outline-none group cursor-pointer border-none bg-transparent"
                                 >
-                                    <Bell size={22} color={unreadCount > 0 ? '#60a5fa' : '#e2e8f0'} className="transition-colors duration-300" />
+                                    {/* --- UPDATED: Bell icon gets the animate-bell-ring class when isRinging is true --- */}
+                                    <Bell
+                                        size={22}
+                                        color={unreadCount > 0 ? '#60a5fa' : '#e2e8f0'}
+                                        className={`transition-colors duration-300 ${isRinging ? 'animate-bell-ring drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]' : ''}`}
+                                    />
                                     {unreadCount > 0 && (
                                         <span className="absolute top-1 right-1 flex items-center justify-center min-w-[20px] h-[20px] px-1 text-[11px] font-extrabold bg-red-500/80 backdrop-blur-md rounded-full border border-red-400/50 shadow-[0_0_12px_rgba(239,68,68,0.6)] transform translate-x-1/2 -translate-y-1/4 z-10 animate-in zoom-in duration-300" style={{ color: '#ffffff' }}>
                                             {unreadCount > 99 ? '99+' : unreadCount}
