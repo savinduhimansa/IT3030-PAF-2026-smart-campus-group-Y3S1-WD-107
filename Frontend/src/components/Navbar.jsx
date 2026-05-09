@@ -6,6 +6,13 @@ import SpaceLoader from './SpaceLoader';
 import { useNotification } from '../context/NotificationContext';
 import toast, { Toaster } from 'react-hot-toast';
 
+// --- NEW: Import NProgress for the Top Loading Bar ---
+import NProgress from 'nprogress';
+import 'nprogress/nprogress.css';
+
+// Configure NProgress (Remove the default loading spinner, keep only the top bar)
+NProgress.configure({ showSpinner: false, speed: 500, minimum: 0.2 });
+
 export default function Navbar() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -15,8 +22,6 @@ export default function Navbar() {
 
     const [isLocalLoading, setIsLocalLoading] = useState(false);
     const [isScrolled, setIsScrolled] = useState(false);
-
-    // --- NEW: State to control the Bell ringing animation ---
     const [isRinging, setIsRinging] = useState(false);
 
     const dropdownRef = useRef(null);
@@ -79,6 +84,22 @@ export default function Navbar() {
         }
     };
 
+    // --- NEW: Trigger Top Progress Bar on Route Change ---
+    useEffect(() => {
+        // Start the progress bar when the route changes
+        NProgress.start();
+
+        // Finish it after a short simulated delay to make it smooth
+        const timer = setTimeout(() => {
+            NProgress.done();
+        }, 500);
+
+        return () => {
+            clearTimeout(timer);
+            NProgress.done();
+        };
+    }, [location.pathname]); // Listen to location changes
+
     useEffect(() => {
         const handleScroll = () => {
             if (window.scrollY > 20) {
@@ -110,11 +131,10 @@ export default function Navbar() {
                 },
             });
 
-            // --- NEW: Trigger the bell animation when a new notification arrives ---
             setIsRinging(true);
             setTimeout(() => {
                 setIsRinging(false);
-            }, 2500); // Stop ringing after 2.5 seconds
+            }, 2500);
         };
 
         window.addEventListener('show-toast', handleToast);
@@ -181,7 +201,6 @@ export default function Navbar() {
                         color: #cbd5e1 !important;
                     }
 
-                    /* --- NEW: Realistic Bell Ringing Animation --- */
                     @keyframes bell-wiggle {
                         0%, 100% { transform: rotate(0deg); }
                         15% { transform: rotate(25deg); }
@@ -193,7 +212,17 @@ export default function Navbar() {
                     }
                     .animate-bell-ring {
                         animation: bell-wiggle 0.6s ease-in-out infinite;
-                        transform-origin: top center; /* Makes it swing from the top like a real bell */
+                        transform-origin: top center; 
+                    }
+
+                    /* --- NEW: Custom Styling for NProgress Bar --- */
+                    #nprogress .bar {
+                        background: #3b82f6 !important; /* SpaceLink Blue */
+                        height: 3px !important; /* Slightly thicker for better visibility */
+                        z-index: 9999 !important;
+                    }
+                    #nprogress .peg {
+                        box-shadow: 0 0 10px #3b82f6, 0 0 5px #3b82f6 !important; /* Glow effect at the tip */
                     }
                 `}
             </style>
@@ -258,11 +287,10 @@ export default function Navbar() {
                                         }
                                         setNotifDropdownOpen(!notifDropdownOpen);
                                         setDropdownOpen(false);
-                                        setIsRinging(false); // Stop ringing if they click it manually
+                                        setIsRinging(false);
                                     }}
                                     className="relative p-2.5 rounded-xl hover:bg-white/10 transition-all duration-300 focus:outline-none group cursor-pointer border-none bg-transparent"
                                 >
-                                    {/* --- UPDATED: Bell icon gets the animate-bell-ring class when isRinging is true --- */}
                                     <Bell
                                         size={22}
                                         color={unreadCount > 0 ? '#60a5fa' : '#e2e8f0'}
